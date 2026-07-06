@@ -1,0 +1,1536 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.5, user-scalable=yes">
+<title>ESV Grein – SplitScreen Meisterschaftssystem</title>
+
+<style>
+/* ===== FARBEN KONFIGURIEREN ===== */
+:root{
+    --green:#1f5e3a;
+    --green-dark:#0d3d22;
+    --red:#b93a32;
+    --gold:#ffdf8c;
+    --dark:#102417;
+    --light:#eef5e9;
+    --border:#d7e4cf;
+    --text-dark:#222222;
+    --text-light:#ffffff;
+    --shadow:rgba(0,0,0,0.3);
+    
+    /* ===== BAHN-FARBEN ===== */
+    --bahn1-color: #4A90D9;      /* Blau */
+    --bahn1-light: #E8F0FE;
+    --bahn2-color: #E67E22;      /* Orange */
+    --bahn2-light: #FEF5E7;
+    --bahn3-color: #27AE60;      /* Grün */
+    --bahn3-light: #E8F8F0;
+    --bahn4-color: #8E44AD;      /* Lila */
+    --bahn4-light: #F4ECF7;
+    
+    /* Tablet-spezifische Größen */
+    --header-height: 60px;
+    --arena-min-height: 400px;
+    --kehren-max-height: 300px;
+    --button-size: 44px;
+}
+
+/* ===== MAIN STYLES ===== */
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+    -webkit-tap-highlight-color: transparent;
+}
+
+body{
+    font-family:Segoe UI,Arial,sans-serif;
+    background:linear-gradient(135deg,#17351f,#0d1f13);
+    color:#222;
+    height:100vh;
+    overflow:hidden;
+    touch-action: manipulation;
+}
+
+#app-content {
+    display: flex;
+    height: 100vh;
+    flex-direction: column;
+}
+
+/* ===== HEADER - TABLET OPTIMIERT ===== */
+.header{
+    position:sticky;
+    top:0;
+    z-index:1000;
+    background:var(--green);
+    color:white;
+    padding:10px 12px;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    flex-wrap:wrap;
+    gap:8px;
+    flex-shrink:0;
+    min-height: var(--header-height);
+}
+
+.header h1{
+    font-size:1.2rem;
+    white-space:nowrap;
+}
+
+.header-controls{
+    display:flex;
+    gap:6px;
+    flex-wrap:wrap;
+    align-items:center;
+}
+
+button,
+select,
+input{
+    border:none;
+    border-radius:10px;
+    padding:8px 12px;
+    font-size:0.9rem;
+    touch-action: manipulation;
+}
+
+button{
+    cursor:pointer;
+    background:var(--green);
+    color:white;
+    font-weight:700;
+    transition: background 0.3s;
+    min-height: var(--button-size);
+    min-width: var(--button-size);
+}
+
+button:hover {
+    background: var(--green-dark);
+}
+
+button:active {
+    transform: scale(0.95);
+}
+
+/* ===== DYNAMISCHES LAYOUT - TABLET ===== */
+.layout-wrapper {
+    flex: 1;
+    overflow-y: auto;
+    padding: 10px;
+    min-height: 0;
+    -webkit-overflow-scrolling: touch;
+}
+
+.layout-wrapper::-webkit-scrollbar {
+    width: 6px;
+}
+
+.layout-wrapper::-webkit-scrollbar-track {
+    background: rgba(255,255,255,0.05);
+    border-radius: 10px;
+}
+
+.layout-wrapper::-webkit-scrollbar-thumb {
+    background: var(--green);
+    border-radius: 10px;
+}
+
+.layout {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 16px;
+    align-content: start;
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+/* Bei 2 Bahnen nebeneinander auf größeren Tablets */
+@media (min-width: 768px) and (max-width: 1024px) {
+    .layout {
+        grid-template-columns: 1fr 1fr;
+        max-width: 1200px;
+        gap: 14px;
+    }
+}
+
+@media (min-width: 1025px) {
+    .layout {
+        grid-template-columns: repeat(auto-fit, minmax(450px, 1fr));
+        max-width: 1600px;
+    }
+}
+
+/* ===== ARENA STYLES - MIT BAHN-FARBEN ===== */
+.arena{
+    border-radius:16px;
+    overflow:hidden;
+    box-shadow:0 8px 24px var(--shadow);
+    display:flex;
+    flex-direction:column;
+    height: fit-content;
+    min-height: var(--arena-min-height);
+    max-height: calc(100vh - 160px);
+    transition: all 0.3s ease;
+}
+
+/* ===== BAHN 1 - BLAU ===== */
+.arena.bahn-1 {
+    background: var(--bahn1-light);
+    border: 3px solid var(--bahn1-color);
+}
+
+.arena.bahn-1 .arena-header {
+    background: var(--bahn1-color);
+    color: white;
+}
+
+.arena.bahn-1 .arena-header input {
+    border-color: var(--bahn1-color);
+}
+
+.arena.bahn-1 .score-card {
+    border-bottom-color: var(--bahn1-color);
+}
+
+/* ===== BAHN 2 - ORANGE ===== */
+.arena.bahn-2 {
+    background: var(--bahn2-light);
+    border: 3px solid var(--bahn2-color);
+}
+
+.arena.bahn-2 .arena-header {
+    background: var(--bahn2-color);
+    color: white;
+}
+
+.arena.bahn-2 .arena-header input {
+    border-color: var(--bahn2-color);
+}
+
+.arena.bahn-2 .score-card {
+    border-bottom-color: var(--bahn2-color);
+}
+
+/* ===== BAHN 3 - GRÜN ===== */
+.arena.bahn-3 {
+    background: var(--bahn3-light);
+    border: 3px solid var(--bahn3-color);
+}
+
+.arena.bahn-3 .arena-header {
+    background: var(--bahn3-color);
+    color: white;
+}
+
+.arena.bahn-3 .arena-header input {
+    border-color: var(--bahn3-color);
+}
+
+.arena.bahn-3 .score-card {
+    border-bottom-color: var(--bahn3-color);
+}
+
+/* ===== BAHN 4 - LILA ===== */
+.arena.bahn-4 {
+    background: var(--bahn4-light);
+    border: 3px solid var(--bahn4-color);
+}
+
+.arena.bahn-4 .arena-header {
+    background: var(--bahn4-color);
+    color: white;
+}
+
+.arena.bahn-4 .arena-header input {
+    border-color: var(--bahn4-color);
+}
+
+.arena.bahn-4 .score-card {
+    border-bottom-color: var(--bahn4-color);
+}
+
+/* ===== ARENA-HEADER ===== */
+.arena-header{
+    padding:10px 12px;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    flex-wrap:wrap;
+    gap:8px;
+    flex-shrink:0;
+    transition: background 0.3s ease;
+}
+
+.arena-header input{
+    font-size:1rem;
+    font-weight:900;
+    border:2px solid rgba(255,255,255,0.3);
+    padding:6px 10px;
+    border-radius:8px;
+    max-width:180px;
+    background:rgba(255,255,255,0.9);
+    color:var(--text-dark);
+}
+
+.arena-header input:focus {
+    outline: none;
+    background:white;
+}
+
+.bahn-selector{
+    display:flex;
+    gap:2px;
+    align-items:center;
+    flex-wrap:wrap;
+}
+
+.bahn-selector strong{
+    font-size:0.8rem;
+    color: white;
+}
+
+.bahn-btn{
+    background:rgba(255,255,255,0.3);
+    color:white;
+    min-width:28px;
+    min-height:28px;
+    padding:4px 10px;
+    font-size:0.85rem;
+    border-radius:8px;
+    border:2px solid transparent;
+}
+
+.bahn-btn.active{
+    background:white;
+    color:var(--text-dark);
+    font-weight:900;
+    border-color:white;
+}
+
+.bahn-btn:hover {
+    background:rgba(255,255,255,0.5);
+}
+
+/* ===== TEAM INPUTS ===== */
+.team-inputs{
+    display:grid;
+    grid-template-columns:1fr auto 1fr;
+    gap:8px;
+    padding:10px 12px;
+    flex-shrink:0;
+}
+
+.team-inputs input{
+    border:2px solid var(--border);
+    padding:6px 10px;
+    border-radius:8px;
+    font-weight:600;
+    font-size:0.9rem;
+    min-height: 40px;
+    background:white;
+}
+
+.team-inputs input:focus {
+    outline: none;
+    border-color: var(--green);
+}
+
+.team-inputs > div {
+    display:flex;
+    align-items:center;
+    font-weight:900;
+    font-size:0.9rem;
+    padding:0 4px;
+    color:var(--text-dark);
+}
+
+/* ===== SCOREBOARD ===== */
+.scoreboard{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:8px;
+    padding:0 12px 10px;
+    flex-shrink:0;
+}
+
+.score-card{
+    background:rgba(255,255,255,0.7);
+    border-radius:14px;
+    padding:12px;
+    text-align:center;
+    border-bottom:6px solid var(--green);
+    backdrop-filter: blur(5px);
+}
+
+.score-card.red{
+    border-bottom-color:var(--red);
+}
+
+.score-card.gold{
+    border-bottom-color:var(--gold);
+    background:rgba(255,223,140,0.3);
+}
+
+.team-name{
+    font-size:1rem;
+    font-weight:900;
+    margin-bottom:6px;
+    color:var(--text-dark);
+}
+
+.team-score{
+    font-size:2.8rem;
+    font-weight:900;
+    color:var(--green);
+}
+
+.team-points{
+    margin-top:6px;
+    font-weight:700;
+    font-size:0.85rem;
+    color:var(--text-dark);
+}
+
+.team-points span{
+    display:inline-block;
+    margin-top:4px;
+    background:var(--dark);
+    color:white;
+    padding:4px 14px;
+    border-radius:8px;
+    font-size:1rem;
+}
+
+/* ===== INFO BAR ===== */
+.info-bar{
+    display:flex;
+    justify-content:center;
+    gap:6px;
+    flex-wrap:wrap;
+    padding:0 12px 8px;
+    flex-shrink:0;
+}
+
+.info-box{
+    background:rgba(255,255,255,0.5);
+    padding:4px 10px;
+    border-radius:8px;
+    font-weight:700;
+    font-size:0.75rem;
+    white-space:nowrap;
+    color:var(--text-dark);
+    backdrop-filter: blur(3px);
+}
+
+/* ===== KEHREN BEREICH ===== */
+.kehren-wrapper {
+    flex: 1;
+    overflow-y: auto;
+    padding: 0 10px 10px;
+    min-height: 150px;
+    max-height: var(--kehren-max-height);
+    -webkit-overflow-scrolling: touch;
+}
+
+.kehren-wrapper::-webkit-scrollbar {
+    width: 5px;
+}
+
+.kehren-wrapper::-webkit-scrollbar-track {
+    background: rgba(255,255,255,0.3);
+    border-radius: 8px;
+}
+
+.kehren-wrapper::-webkit-scrollbar-thumb {
+    background: var(--green);
+    border-radius: 8px;
+}
+
+.kehren{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:10px;
+}
+
+.kehren-title{
+    text-align:center;
+    font-weight:900;
+    margin-bottom:6px;
+    font-size:0.85rem;
+    color:var(--text-dark);
+}
+
+.kehre-row{
+    display:grid;
+    grid-template-columns:60px 1fr 32px;
+    gap:4px;
+    align-items:center;
+    background:rgba(255,255,255,0.7);
+    border:1px solid var(--border);
+    border-radius:10px;
+    padding:4px 6px;
+    margin-bottom:4px;
+    backdrop-filter: blur(3px);
+}
+
+.kehre-row.active{
+    border:3px solid #4caf50;
+    background:rgba(76,175,80,0.15);
+}
+
+.kehre-row.completed{
+    border:3px solid #ff9800;
+    background:rgba(255,152,0,0.15);
+}
+
+.kehre-number{
+    font-size:0.7rem;
+    font-weight:900;
+    color:var(--text-dark);
+}
+
+.points{
+    display:flex;
+    gap:3px;
+    justify-content:center;
+    flex-wrap:wrap;
+}
+
+.point-btn{
+    min-width:44px;
+    min-height:44px;
+    border-radius:6px;
+    border:2px solid var(--border);
+    background:white;
+    color:var(--text-dark);
+    font-weight:900;
+    font-size:0.75rem;
+    transition: all 0.15s;
+    padding:0 2px;
+    touch-action: manipulation;
+}
+
+.point-btn:hover{
+    background:var(--green);
+    color:white;
+    transform:scale(1.05);
+}
+
+.point-btn:active{
+    transform:scale(0.9);
+}
+
+.point-btn.active-point{
+    background:var(--green);
+    color:white;
+    border-color:var(--green);
+}
+
+.point-btn:disabled{
+    opacity:0.4;
+    cursor:not-allowed;
+    transform:none;
+}
+
+.kehre-value{
+    text-align:center;
+    font-weight:900;
+    font-size:0.9rem;
+    color:var(--text-dark);
+}
+
+/* ===== FOOTER ===== */
+.footer{
+    display:flex;
+    justify-content:center;
+    gap:8px;
+    flex-wrap:wrap;
+    padding:10px 12px;
+    border-top:1px solid rgba(255,255,255,0.3);
+    flex-shrink:0;
+}
+
+.footer button {
+    flex: 1;
+    min-width: 80px;
+    padding:8px 12px;
+    font-size:0.85rem;
+    min-height: 40px;
+}
+
+.footer .reset-buttons {
+    display:flex;
+    gap:6px;
+    flex: 1;
+    min-width: 140px;
+}
+
+.footer .reset-buttons button {
+    flex: 1;
+    min-width: 60px;
+}
+
+.gold{
+    background:var(--gold);
+    color:black;
+}
+
+.gold:hover {
+    background: #f5d47a;
+}
+
+.btn-reset-kehren {
+    background: #ff9800;
+    color: white;
+}
+
+.btn-reset-kehren:hover {
+    background: #e68900;
+}
+
+.btn-reset-bahn {
+    background: var(--red);
+    color: white;
+}
+
+.btn-reset-bahn:hover {
+    background: #a8322a;
+}
+
+/* ===== TOAST ===== */
+.toast{
+    position:fixed;
+    bottom:20px;
+    left:50%;
+    transform:translateX(-50%);
+    background:#111;
+    color:white;
+    padding:12px 20px;
+    border-radius:12px;
+    opacity:0;
+    transition:.3s;
+    z-index:9999;
+    font-size:0.9rem;
+    max-width:90%;
+    text-align:center;
+    pointer-events:none;
+}
+
+.toast.show{
+    opacity:1;
+}
+
+/* ===== HEADER CONTROLS ===== */
+.player-selector{
+    display:flex;
+    gap:4px;
+    align-items:center;
+    background:rgba(255,255,255,0.15);
+    padding:2px 10px 2px 6px;
+    border-radius:30px;
+}
+
+.player-selector label{
+    font-weight:600;
+    font-size:0.75rem;
+}
+
+.player-selector select{
+    background:white;
+    color:black;
+    padding:4px 8px;
+    border-radius:20px;
+    font-weight:700;
+    font-size:0.8rem;
+    min-height: 30px;
+}
+
+.header-controls select {
+    background:white;
+    color:black;
+    padding:4px 10px;
+    font-size:0.8rem;
+    min-height: 34px;
+}
+
+.header-controls button {
+    padding:4px 10px;
+    font-size:0.8rem;
+    min-height: 34px;
+}
+
+.point-info {
+    background: rgba(255,255,255,0.1);
+    padding:2px 10px;
+    border-radius:16px;
+    font-size:0.75rem;
+    font-weight:600;
+    white-space:nowrap;
+    color:white;
+}
+
+/* ===== BAHN-FARBEN LEGENDE ===== */
+.bahn-legend {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    padding: 8px 12px;
+    background: rgba(255,255,255,0.1);
+    border-radius: 10px;
+    align-items: center;
+}
+
+.bahn-legend-item {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 0.7rem;
+    color: white;
+}
+
+.bahn-legend-item .color-box {
+    width: 16px;
+    height: 16px;
+    border-radius: 4px;
+    border: 1px solid rgba(255,255,255,0.3);
+}
+
+/* ===== RESPONSIVE ANPASSUNGEN ===== */
+@media (max-width: 767px) {
+    :root {
+        --header-height: 50px;
+        --arena-min-height: 350px;
+        --kehren-max-height: 200px;
+        --button-size: 34px;
+    }
+    
+    .bahn-legend {
+        display: none;
+    }
+    
+    .arena {
+        border-width: 2px;
+    }
+    
+    .arena-header input {
+        max-width: 120px;
+        font-size: 0.85rem;
+    }
+}
+
+@media (min-width: 768px) and (max-width: 1024px) {
+    :root {
+        --header-height: 55px;
+        --arena-min-height: 380px;
+        --kehren-max-height: 250px;
+        --button-size: 38px;
+    }
+}
+
+@media (orientation: landscape) and (max-height: 600px) {
+    :root {
+        --arena-min-height: 280px;
+        --kehren-max-height: 150px;
+        --header-height: 45px;
+    }
+    
+    .arena {
+        max-height: calc(100vh - 100px);
+        min-height: 250px;
+    }
+    
+    .team-score {
+        font-size: 1.8rem;
+    }
+    
+    .score-card {
+        padding: 6px 10px;
+    }
+}
+
+/* ===== TOUCH-OPTIMIERUNGEN ===== */
+@media (hover: none) {
+    button:hover {
+        transform: none;
+    }
+    
+    .point-btn:hover {
+        transform: none;
+    }
+    
+    button:active {
+        transform: scale(0.95);
+    }
+    
+    .point-btn:active {
+        transform: scale(0.9);
+    }
+}
+
+.kehren-wrapper {
+    scroll-behavior: smooth;
+}
+
+/* ===== LADE-ANIMATION ===== */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.arena {
+    animation: fadeIn 0.3s ease-out;
+}
+
+/* ===== LEGENDE IM HEADER ===== */
+.header .bahn-legend {
+    display: none;
+}
+
+@media (min-width: 1024px) {
+    .header .bahn-legend {
+        display: flex;
+    }
+}
+</style>
+</head>
+<body>
+
+<!-- ===== APP CONTENT ===== -->
+<div id="app-content">
+    <div class="header">
+        <h1>🥌 ESV Grein</h1>
+
+        <div class="header-controls">
+            <!-- Bahn-Farben Legende -->
+            <div class="bahn-legend">
+                <div class="bahn-legend-item">
+                    <div class="color-box" style="background:#4A90D9;"></div>
+                    <span>B1</span>
+                </div>
+                <div class="bahn-legend-item">
+                    <div class="color-box" style="background:#E67E22;"></div>
+                    <span>B2</span>
+                </div>
+                <div class="bahn-legend-item">
+                    <div class="color-box" style="background:#27AE60;"></div>
+                    <span>B3</span>
+                </div>
+                <div class="bahn-legend-item">
+                    <div class="color-box" style="background:#8E44AD;"></div>
+                    <span>B4</span>
+                </div>
+            </div>
+
+            <div class="player-selector">
+                <label for="playerCount">👥</label>
+                <select id="playerCount">
+                    <option value="3">3</option>
+                    <option value="4" selected>4</option>
+                    <option value="5">5</option>
+                    <option value="6">6</option>
+                    <option value="7">7</option>
+                </select>
+            </div>
+
+            <select id="gamesSelect">
+                <option value="2">2🏆</option>
+                <option value="3">3🏆</option>
+                <option value="4">4🏆</option>
+                <option value="5" selected>5🏆</option>
+                <option value="6">6🏆</option>
+            </select>
+
+            <select id="kehrenSelect">
+                <option value="4">4K</option>
+                <option value="6" selected>6K</option>
+                <option value="8">8K</option>
+                <option value="10">10K</option>
+                <option value="12">12K</option>
+            </select>
+
+            <span class="point-info" id="pointInfo">⭐4</span>
+
+            <button onclick="openSpectatorWindow()" title="Zuschauer-Monitor">📺</button>
+            <button onclick="addArena()" title="Bahn hinzufügen">➕</button>
+            <button onclick="resetAllArenas()" style="background:var(--red);" title="Alle Bahnen zurücksetzen">🔄</button>
+        </div>
+    </div>
+
+    <div class="layout-wrapper">
+        <div class="layout" id="layout"></div>
+    </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ===== SPEICHER-SYSTEM =====
+const TEAM_NAMES_KEY = 'esv_grein_meisterschaft_team_names';
+const ARENA_COUNT_KEY = 'esv_grein_meisterschaft_arena_count';
+
+function getTeamNames(arenaId) {
+    let allNames = localStorage.getItem(TEAM_NAMES_KEY);
+    if (!allNames) {
+        allNames = JSON.stringify({
+            '1': { teamA: 'Team 1A', teamB: 'Team 1B' },
+            '2': { teamA: 'Team 2A', teamB: 'Team 2B' }
+        });
+        localStorage.setItem(TEAM_NAMES_KEY, allNames);
+    }
+    const parsed = JSON.parse(allNames);
+    return parsed[arenaId] || { teamA: `Team ${arenaId}A`, teamB: `Team ${arenaId}B` };
+}
+
+function saveTeamNames(arenaId, teamA, teamB) {
+    let allNames = JSON.parse(localStorage.getItem(TEAM_NAMES_KEY) || '{}');
+    allNames[arenaId] = { teamA, teamB };
+    localStorage.setItem(TEAM_NAMES_KEY, JSON.stringify(allNames));
+}
+
+function getArenaCount() {
+    let count = localStorage.getItem(ARENA_COUNT_KEY);
+    if (!count) {
+        count = '2';
+        localStorage.setItem(ARENA_COUNT_KEY, count);
+    }
+    return parseInt(count);
+}
+
+function setArenaCount(count) {
+    localStorage.setItem(ARENA_COUNT_KEY, count.toString());
+}
+
+// ===== MAX POINTS =====
+const MAX_POINTS_KEY = 'esv_grein_max_points';
+
+function getMaxPoints() {
+    let max = localStorage.getItem(MAX_POINTS_KEY);
+    if (!max) {
+        max = '4';
+        localStorage.setItem(MAX_POINTS_KEY, max);
+    }
+    return parseInt(max);
+}
+
+function setMaxPoints(value) {
+    localStorage.setItem(MAX_POINTS_KEY, value.toString());
+    updatePointInfo(value);
+}
+
+function updatePointInfo(maxPoints) {
+    document.getElementById('pointInfo').textContent = `⭐${maxPoints}`;
+}
+
+// ===== BAHN-FARBEN =====
+const BAHN_COLORS = {
+    1: { color: '#4A90D9', light: '#E8F0FE', name: 'Blau' },
+    2: { color: '#E67E22', light: '#FEF5E7', name: 'Orange' },
+    3: { color: '#27AE60', light: '#E8F8F0', name: 'Grün' },
+    4: { color: '#8E44AD', light: '#F4ECF7', name: 'Lila' }
+};
+
+function getBahnColor(bahn) {
+    return BAHN_COLORS[bahn] || BAHN_COLORS[1];
+}
+
+// ===== ARENA MANAGEMENT =====
+const state = {
+    kehren:6,
+    winsToChampion:5,
+    playerCount:4,
+    maxPoints:4,
+    arenas:[]
+};
+
+function createArena(id){
+    const names = getTeamNames(id);
+    return {
+        id,
+        arenaName:`Bahn ${id}`,
+        bahn:id,
+        teamA: names.teamA || `Team ${id}A`,
+        teamB: names.teamB || `Team ${id}B`,
+        pointsA:Array(12).fill(null),
+        pointsB:Array(12).fill(null),
+        winsA:0,
+        winsB:0
+    };
+}
+
+function initArenas() {
+    const count = getArenaCount();
+    state.arenas = [];
+    for (let i = 1; i <= count; i++) {
+        state.arenas.push(createArena(i));
+    }
+    render();
+}
+
+function addArena() {
+    const newId = state.arenas.length + 1;
+    state.arenas.push(createArena(newId));
+    setArenaCount(state.arenas.length);
+    render();
+    toast(`➕ Bahn ${newId} hinzugefügt (${getBahnColor(newId).name})`);
+    
+    setTimeout(() => {
+        const layout = document.getElementById('layout');
+        const lastArena = layout.lastElementChild;
+        if (lastArena) {
+            lastArena.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+    }, 100);
+}
+
+function removeArena(id) {
+    if (state.arenas.length <= 1) {
+        toast('❌ Mindestens eine Bahn!');
+        return;
+    }
+    if (!confirm(`Bahn ${id} löschen?`)) return;
+    
+    state.arenas = state.arenas.filter(a => a.id !== id);
+    setArenaCount(state.arenas.length);
+    render();
+    toast(`🗑️ Bahn ${id} gelöscht`);
+}
+
+function render(){
+    document.getElementById('layout').innerHTML = state.arenas.map(renderArena).join('');
+    updateSpectatorWindow();
+    updatePointInfo(getMaxPoints());
+    
+    document.querySelectorAll('.kehren-wrapper').forEach(wrapper => {
+        const kehrenCount = state.kehren;
+        const rowHeight = 42;
+        const maxHeight = Math.min(kehrenCount * rowHeight + 20, 300);
+        wrapper.style.maxHeight = Math.max(150, maxHeight) + 'px';
+    });
+}
+
+function renderArena(arena){
+    const scoreA = sum(arena.pointsA);
+    const scoreB = sum(arena.pointsB);
+    const maxPoints = getMaxPoints();
+    const isWinner = hasWinner(arena);
+    const isAChampion = isWinner && arena.winsA >= state.winsToChampion;
+    const isBChampion = isWinner && arena.winsB >= state.winsToChampion;
+    const bahnColor = getBahnColor(arena.bahn);
+
+    return `
+    <div class="arena bahn-${arena.bahn}" id="arena-${arena.id}">
+        <div class="arena-header" style="background: ${bahnColor.color};">
+            <input
+                value="${arena.arenaName}"
+                onchange="setArenaName(${arena.id},this.value)"
+                placeholder="Bahn Name"
+                style="border-color: ${bahnColor.color};"
+            >
+
+            <div class="bahn-selector">
+                <strong>🎯 Bahn</strong>
+                ${[1,2,3,4].map(b=>`
+                    <button
+                        class="bahn-btn ${arena.bahn===b?'active':''}"
+                        onclick="setBahn(${arena.id},${b})"
+                        style="${arena.bahn===b ? 'background:white;color:black;' : ''}">
+                        ${b}
+                    </button>
+                `).join('')}
+                <button onclick="removeArena(${arena.id})" style="background:rgba(255,255,255,0.3);padding:4px 8px;min-width:30px;font-size:0.8rem;color:white;">✕</button>
+            </div>
+        </div>
+
+        <div class="team-inputs">
+            <input value="${arena.teamA}" onchange="setTeam(${arena.id},'A',this.value)" placeholder="Team A">
+            <div>VS</div>
+            <input value="${arena.teamB}" onchange="setTeam(${arena.id},'B',this.value)" placeholder="Team B">
+        </div>
+
+        <div class="scoreboard">
+            <div class="score-card ${isAChampion ? 'gold' : ''}">
+                <div class="team-name">${isAChampion ? '🏆 ' : ''}${arena.teamA}</div>
+                <div class="team-score">${scoreA}</div>
+                <div class="team-points">
+                    Siege<br>
+                    <span>${arena.winsA}</span>
+                </div>
+            </div>
+
+            <div class="score-card red ${isBChampion ? 'gold' : ''}">
+                <div class="team-name">${isBChampion ? '🏆 ' : ''}${arena.teamB}</div>
+                <div class="team-score">${scoreB}</div>
+                <div class="team-points">
+                    Siege<br>
+                    <span>${arena.winsB}</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="info-bar">
+            <div class="info-box">🎯${arena.bahn}</div>
+            <div class="info-box">🏆${arena.winsA}:${arena.winsB}</div>
+            <div class="info-box">🎯${state.winsToChampion}</div>
+            <div class="info-box">⭐${maxPoints}</div>
+            ${isWinner ? '<div class="info-box" style="background:var(--gold);color:black;">🏆MEISTER</div>' : ''}
+        </div>
+
+        <div class="kehren-wrapper">
+            <div class="kehren">
+                <div>
+                    <div class="kehren-title">${arena.teamA}</div>
+                    ${renderKehren(arena,'A')}
+                </div>
+
+                <div>
+                    <div class="kehren-title">${arena.teamB}</div>
+                    ${renderKehren(arena,'B')}
+                </div>
+            </div>
+        </div>
+
+        <div class="footer">
+            <button class="gold" onclick="evaluateGame(${arena.id})" ${isWinner ? 'disabled style="opacity:0.5;cursor:not-allowed;"' : ''}>
+                ${isWinner ? '🏆 Meister' : '🏆 Spiel'}
+            </button>
+            <div class="reset-buttons">
+                <button class="btn-reset-kehren" onclick="resetCurrentKehren(${arena.id})">🔄 Kehren</button>
+                <button class="btn-reset-bahn" onclick="resetBahn(${arena.id})">🔄 Bahn</button>
+            </div>
+        </div>
+
+    </div>
+    `;
+}
+
+function renderKehren(arena,team){
+    let html='';
+    const arr = team==='A' ? arena.pointsA : arena.pointsB;
+    const maxPoints = getMaxPoints();
+    const isWinner = hasWinner(arena);
+
+    for(let i=0;i<state.kehren;i++){
+        const active = activeKehre(arena)===i+1;
+        const isCompleted = arr[i] !== null;
+
+        html += `
+        <div class="kehre-row ${active?'active':''} ${isCompleted?'completed':''}">
+            <div class="kehre-number">K${i+1}</div>
+            <div class="points">
+                ${Array.from({length: maxPoints + 1}, (_, v) => `
+                    <button
+                        class="point-btn ${arr[i] === v ? 'active-point' : ''}"
+                        onclick="setPoints(${arena.id},'${team}',${i},${v})"
+                        ${isWinner ? 'disabled' : ''}>
+                        ${v}
+                    </button>
+                `).join('')}
+            </div>
+            <div class="kehre-value">${arr[i] ?? '-'}</div>
+        </div>
+        `;
+    }
+
+    return html;
+}
+
+// ===== CORE FUNCTIONS =====
+function setPoints(id,team,index,value){
+    const arena = getArena(id);
+
+    if(hasWinner(arena)){
+        toast('Meisterschaft beendet!');
+        return;
+    }
+
+    if(team==='A'){
+        arena.pointsA[index]=value;
+        if(arena.pointsB[index]===null) arena.pointsB[index]=0;
+    }else{
+        arena.pointsB[index]=value;
+        if(arena.pointsA[index]===null) arena.pointsA[index]=0;
+    }
+
+    render();
+
+    if(allKehrenFilled(arena)){
+        setTimeout(() => {
+            autoEvaluateGame(id);
+        }, 300);
+    }
+}
+
+function allKehrenFilled(arena){
+    for(let i=0;i<state.kehren;i++){
+        if(arena.pointsA[i]===null || arena.pointsB[i]===null){
+            return false;
+        }
+    }
+    return true;
+}
+
+function autoEvaluateGame(id){
+    const arena = getArena(id);
+
+    if(hasWinner(arena)){
+        return;
+    }
+
+    const a = sum(arena.pointsA);
+    const b = sum(arena.pointsB);
+
+    if(a>b){
+        arena.winsA++;
+        toast(`⚪ ${arena.teamA} gewinnt (${a}:${b})`);
+    }
+    else if(b>a){
+        arena.winsB++;
+        toast(`🔴 ${arena.teamB} gewinnt (${a}:${b})`);
+    }
+    else{
+        toast(`Unentschieden (${a}:${b})`);
+    }
+
+    arena.pointsA = Array(state.kehren).fill(null);
+    arena.pointsB = Array(state.kehren).fill(null);
+
+    if(hasWinner(arena)){
+        toast(`🏆 ${winnerName(arena)} MEISTER! 🎉`);
+    }
+
+    render();
+}
+
+function evaluateGame(id){
+    const arena = getArena(id);
+
+    if(hasWinner(arena)){
+        toast('Meisterschaft beendet!');
+        return;
+    }
+
+    for(let i=0;i<state.kehren;i++){
+        if(arena.pointsA[i]===null || arena.pointsB[i]===null){
+            toast('Alle Kehren ausfüllen!');
+            return;
+        }
+    }
+
+    const a = sum(arena.pointsA);
+    const b = sum(arena.pointsB);
+
+    if(a>b){
+        arena.winsA++;
+        toast(`⚪ ${arena.teamA} gewinnt (${a}:${b})`);
+    }
+    else if(b>a){
+        arena.winsB++;
+        toast(`🔴 ${arena.teamB} gewinnt (${a}:${b})`);
+    }
+    else{
+        toast(`Unentschieden (${a}:${b})`);
+    }
+
+    arena.pointsA = Array(state.kehren).fill(null);
+    arena.pointsB = Array(state.kehren).fill(null);
+
+    if(hasWinner(arena)){
+        toast(`🏆 ${winnerName(arena)} MEISTER! 🎉`);
+    }
+
+    render();
+}
+
+function activeKehre(arena){
+    for(let i=0;i<state.kehren;i++){
+        if(arena.pointsA[i]===null || arena.pointsB[i]===null){
+            return i+1;
+        }
+    }
+    return state.kehren;
+}
+
+function hasWinner(arena){
+    return arena.winsA >= state.winsToChampion || arena.winsB >= state.winsToChampion;
+}
+
+function winnerName(arena){
+    if(arena.winsA >= state.winsToChampion) return arena.teamA;
+    if(arena.winsB >= state.winsToChampion) return arena.teamB;
+    return '';
+}
+
+function sum(arr){
+    return arr.reduce((a,b)=>a+(b||0),0);
+}
+
+function getArena(id){
+    return state.arenas.find(a=>a.id===id);
+}
+
+// ===== SETTER FUNCTIONS =====
+function setBahn(id,bahn){
+    getArena(id).bahn = bahn;
+    render();
+}
+
+function setArenaName(id,name){
+    getArena(id).arenaName = name;
+    render();
+}
+
+function setTeam(id,team,name){
+    const arena = getArena(id);
+    if(team==='A') {
+        arena.teamA = name || `Team ${id}A`;
+        saveTeamNames(id, arena.teamA, arena.teamB);
+    } else {
+        arena.teamB = name || `Team ${id}B`;
+        saveTeamNames(id, arena.teamA, arena.teamB);
+    }
+    render();
+}
+
+// ===== RESET-FUNKTIONEN =====
+function resetCurrentKehren(id){
+    const arena = getArena(id);
+    if (hasWinner(arena)) {
+        if (!confirm(`Meisterschaft auf Bahn ${arena.bahn} beendet. Trotzdem Kehren löschen?`)) return;
+    }
+    arena.pointsA = Array(state.kehren).fill(null);
+    arena.pointsB = Array(state.kehren).fill(null);
+    render();
+    toast(`🔄 Kehren Bahn ${arena.bahn} gelöscht`);
+}
+
+function resetBahn(id){
+    const arena = getArena(id);
+    if (!confirm(`Bahn ${arena.bahn} komplett zurücksetzen?`)) return;
+    
+    arena.pointsA = Array(state.kehren).fill(null);
+    arena.pointsB = Array(state.kehren).fill(null);
+    arena.winsA = 0;
+    arena.winsB = 0;
+    render();
+    toast(`🔄 Bahn ${arena.bahn} zurückgesetzt`);
+}
+
+function resetAllArenas(){
+    if (!confirm('ALLE Bahnen zurücksetzen?')) return;
+    
+    state.arenas.forEach(arena => {
+        arena.pointsA = Array(state.kehren).fill(null);
+        arena.pointsB = Array(state.kehren).fill(null);
+        arena.winsA = 0;
+        arena.winsB = 0;
+    });
+    render();
+    toast('🔄 Alle Bahnen zurückgesetzt');
+}
+
+// ===== SPECTATOR WINDOW =====
+let spectatorWindow=null;
+
+function openSpectatorWindow(){
+    spectatorWindow = window.open('','spectator','width=1024,height=768');
+
+    spectatorWindow.document.write(`
+    <html>
+    <head>
+    <title>Zuschauer Monitor</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+    body{
+        margin:0;
+        background:#102417;
+        color:white;
+        font-family:Segoe UI,Arial,sans-serif;
+        padding:20px;
+        overflow-y:auto;
+    }
+    .grid{
+        display:grid;
+        grid-template-columns:1fr 1fr;
+        gap:20px;
+    }
+    .card{
+        background:white;
+        color:black;
+        border-radius:24px;
+        padding:25px;
+        border-left: 8px solid #4A90D9;
+    }
+    .card.bahn-1 { border-left-color: #4A90D9; }
+    .card.bahn-2 { border-left-color: #E67E22; }
+    .card.bahn-3 { border-left-color: #27AE60; }
+    .card.bahn-4 { border-left-color: #8E44AD; }
+    
+    .title{
+        font-size:2rem;
+        font-weight:900;
+        margin-bottom:15px;
+        color:#1f5e3a;
+    }
+    .bahn{
+        display:inline-block;
+        padding:8px 14px;
+        border-radius:10px;
+        font-weight:900;
+        margin-bottom:15px;
+        font-size:0.9rem;
+        color:white;
+    }
+    .bahn.bahn-1 { background: #4A90D9; }
+    .bahn.bahn-2 { background: #E67E22; }
+    .bahn.bahn-3 { background: #27AE60; }
+    .bahn.bahn-4 { background: #8E44AD; }
+    
+    .teams{
+        display:grid;
+        grid-template-columns:1fr 1fr;
+        gap:15px;
+    }
+    .team{
+        background:#f5f8f3;
+        border-radius:20px;
+        padding:20px;
+        text-align:center;
+        border:3px solid transparent;
+    }
+    .team.champion{
+        border-color:#ffdf8c;
+    }
+    .name{
+        font-size:1.5rem;
+        font-weight:900;
+    }
+    .score{
+        font-size:5rem;
+        font-weight:900;
+        color:#1f5e3a;
+    }
+    .wins{
+        margin-top:8px;
+        font-size:1.5rem;
+        font-weight:700;
+    }
+    .info-line{
+        text-align:center;
+        font-size:1rem;
+        margin-bottom:15px;
+        color:#555;
+    }
+    .champion-badge{
+        background:#ffdf8c;
+        color:black;
+        padding:4px 12px;
+        border-radius:8px;
+        font-weight:900;
+        display:inline-block;
+        margin-top:8px;
+        font-size:0.9rem;
+    }
+    @media(max-width:768px){
+        .grid{grid-template-columns:1fr;}
+        .score{font-size:3.5rem;}
+        .title{font-size:1.5rem;}
+        .name{font-size:1.2rem;}
+    }
+    </style>
+    </head>
+    <body>
+        <div class="grid" id="specGrid"></div>
+    </body>
+    </html>
+    `);
+
+    spectatorWindow.document.close();
+    updateSpectatorWindow();
+}
+
+function updateSpectatorWindow(){
+    if(!spectatorWindow || spectatorWindow.closed) return;
+
+    const grid = spectatorWindow.document.getElementById('specGrid');
+    if(!grid) return;
+
+    grid.innerHTML = state.arenas.map(arena => {
+        const isWinner = hasWinner(arena);
+        const isAChampion = isWinner && arena.winsA >= state.winsToChampion;
+        const isBChampion = isWinner && arena.winsB >= state.winsToChampion;
+        const bahnColor = getBahnColor(arena.bahn);
+        return `
+        <div class="card bahn-${arena.bahn}">
+            <div class="title">${arena.arenaName}</div>
+            <div class="bahn bahn-${arena.bahn}">🎯 Bahn ${arena.bahn}</div>
+            <div class="info-line">🏆 ${state.winsToChampion} Siege  |  ⭐ ${getMaxPoints()} Pkt</div>
+            <div class="teams">
+                <div class="team ${isAChampion ? 'champion' : ''}">
+                    <div class="name">${isAChampion ? '🏆 ' : ''}${arena.teamA}</div>
+                    <div class="score">${sum(arena.pointsA)}</div>
+                    <div class="wins">🏆 ${arena.winsA}</div>
+                    ${isAChampion ? '<div class="champion-badge">👑 MEISTER</div>' : ''}
+                </div>
+                <div class="team ${isBChampion ? 'champion' : ''}">
+                    <div class="name">${isBChampion ? '🏆 ' : ''}${arena.teamB}</div>
+                    <div class="score">${sum(arena.pointsB)}</div>
+                    <div class="wins">🏆 ${arena.winsB}</div>
+                    ${isBChampion ? '<div class="champion-badge">👑 MEISTER</div>' : ''}
+                </div>
+            </div>
+        </div>
+    `}).join('');
+}
+
+function toast(msg){
+    const t=document.getElementById('toast');
+    t.textContent=msg;
+    t.classList.add('show');
+    clearTimeout(t._timeout);
+    t._timeout = setTimeout(()=>t.classList.remove('show'),2500);
+}
+
+// ===== EVENT-LISTENER =====
+document.getElementById('playerCount').addEventListener('change', function(e){
+    const playerCount = Number(e.target.value);
+    state.playerCount = playerCount;
+    setMaxPoints(playerCount);
+    render();
+    toast(`👥 ${playerCount} Spieler – ⭐${playerCount} Pkt`);
+});
+
+document.getElementById('kehrenSelect').addEventListener('change', function(e){
+    state.kehren = Number(e.target.value);
+    state.arenas.forEach(arena => {
+        arena.pointsA = Array(state.kehren).fill(null);
+        arena.pointsB = Array(state.kehren).fill(null);
+    });
+    render();
+    toast(`🎯 ${state.kehren} Kehren`);
+});
+
+document.getElementById('gamesSelect').addEventListener('change', function(e){
+    state.winsToChampion = Number(e.target.value);
+    render();
+    toast(`🏆 ${state.winsToChampion} Siege zum Meister`);
+});
+
+// ===== APP START =====
+initArenas();
+
+// ===== TOUCH-OPTIMIERUNGEN =====
+document.addEventListener('dblclick', function(e) {
+    e.preventDefault();
+}, { passive: false });
+
+document.addEventListener('touchmove', function(e) {
+    // Nichts tun, nur passives Scrolling ermöglichen
+}, { passive: true });
+</script>
+
+</body>
+</html>
