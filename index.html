@@ -19,24 +19,21 @@
     --text-light:#ffffff;
     --shadow:rgba(0,0,0,0.3);
     
-    /* ===== BAHN-FARBEN ===== */
-    --bahn1-color: #4A90D9;      /* Blau */
+    --bahn1-color: #4A90D9;
     --bahn1-light: #E8F0FE;
-    --bahn2-color: #E67E22;      /* Orange */
+    --bahn2-color: #E67E22;
     --bahn2-light: #FEF5E7;
-    --bahn3-color: #27AE60;      /* Grün */
+    --bahn3-color: #27AE60;
     --bahn3-light: #E8F8F0;
-    --bahn4-color: #8E44AD;      /* Lila */
+    --bahn4-color: #8E44AD;
     --bahn4-light: #F4ECF7;
     
-    /* Tablet-spezifische Größen */
     --header-height: 60px;
-    --arena-min-height: 400px;
+    --arena-min-height: 450px;
     --kehren-max-height: 300px;
     --button-size: 44px;
 }
 
-/* ===== MAIN STYLES ===== */
 *{
     margin:0;
     padding:0;
@@ -59,7 +56,6 @@ body{
     flex-direction: column;
 }
 
-/* ===== HEADER - TABLET OPTIMIERT ===== */
 .header{
     position:sticky;
     top:0;
@@ -116,7 +112,6 @@ button:active {
     transform: scale(0.95);
 }
 
-/* ===== DYNAMISCHES LAYOUT - TABLET ===== */
 .layout-wrapper {
     flex: 1;
     overflow-y: auto;
@@ -148,7 +143,6 @@ button:active {
     margin: 0 auto;
 }
 
-/* Bei 2 Bahnen nebeneinander auf größeren Tablets */
 @media (min-width: 768px) and (max-width: 1024px) {
     .layout {
         grid-template-columns: 1fr 1fr;
@@ -164,7 +158,6 @@ button:active {
     }
 }
 
-/* ===== ARENA STYLES - MIT BAHN-FARBEN ===== */
 .arena{
     border-radius:16px;
     overflow:hidden;
@@ -177,7 +170,6 @@ button:active {
     transition: all 0.3s ease;
 }
 
-/* ===== BAHN 1 - BLAU ===== */
 .arena.bahn-1 {
     background: var(--bahn1-light);
     border: 3px solid var(--bahn1-color);
@@ -196,7 +188,6 @@ button:active {
     border-bottom-color: var(--bahn1-color);
 }
 
-/* ===== BAHN 2 - ORANGE ===== */
 .arena.bahn-2 {
     background: var(--bahn2-light);
     border: 3px solid var(--bahn2-color);
@@ -215,7 +206,6 @@ button:active {
     border-bottom-color: var(--bahn2-color);
 }
 
-/* ===== BAHN 3 - GRÜN ===== */
 .arena.bahn-3 {
     background: var(--bahn3-light);
     border: 3px solid var(--bahn3-color);
@@ -234,7 +224,6 @@ button:active {
     border-bottom-color: var(--bahn3-color);
 }
 
-/* ===== BAHN 4 - LILA ===== */
 .arena.bahn-4 {
     background: var(--bahn4-light);
     border: 3px solid var(--bahn4-color);
@@ -253,7 +242,7 @@ button:active {
     border-bottom-color: var(--bahn4-color);
 }
 
-/* ===== ARENA-HEADER ===== */
+/* ===== ARENA-HEADER MIT EINSTELLUNGEN ===== */
 .arena-header{
     padding:10px 12px;
     display:flex;
@@ -265,6 +254,14 @@ button:active {
     transition: background 0.3s ease;
 }
 
+.arena-header .left-section {
+    display:flex;
+    align-items:center;
+    gap:8px;
+    flex-wrap:wrap;
+    flex:1;
+}
+
 .arena-header input{
     font-size:1rem;
     font-weight:900;
@@ -274,6 +271,7 @@ button:active {
     max-width:180px;
     background:rgba(255,255,255,0.9);
     color:var(--text-dark);
+    min-height: 36px;
 }
 
 .arena-header input:focus {
@@ -315,7 +313,113 @@ button:active {
     background:rgba(255,255,255,0.5);
 }
 
-/* ===== TEAM INPUTS ===== */
+/* ===== BAHN-EINSTELLUNGEN IM HEADER ===== */
+.bahn-settings-top {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+    flex-wrap: wrap;
+    background: rgba(255,255,255,0.15);
+    padding: 4px 10px;
+    border-radius: 12px;
+    border: 1px solid rgba(255,255,255,0.1);
+}
+
+.bahn-settings-top .setting-group {
+    display: flex;
+    align-items: center;
+    gap: 3px;
+}
+
+.bahn-settings-top .setting-label {
+    font-size: 0.65rem;
+    font-weight: 700;
+    color: white;
+    opacity: 0.9;
+}
+
+.bahn-settings-top select {
+    padding: 3px 6px;
+    border-radius: 6px;
+    border: 2px solid rgba(255,255,255,0.3);
+    font-size: 0.7rem;
+    font-weight: 600;
+    background: rgba(255,255,255,0.9);
+    min-height: 28px;
+    min-width: 38px;
+    color: var(--text-dark);
+    cursor: pointer;
+}
+
+.bahn-settings-top select:focus {
+    outline: none;
+    border-color: white;
+    background: white;
+}
+
+.bahn-settings-top select:hover {
+    background: white;
+}
+
+/* ===== ÜBERNEHMEN BUTTON ===== */
+.btn-apply-settings {
+    background: #4CAF50;
+    color: white;
+    border: 2px solid rgba(255,255,255,0.3);
+    padding: 3px 10px;
+    min-height: 28px;
+    min-width: 28px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    border-radius: 8px;
+    transition: all 0.3s;
+}
+
+.btn-apply-settings:hover {
+    background: #45a049;
+    transform: scale(1.05);
+}
+
+.btn-apply-settings:active {
+    transform: scale(0.95);
+}
+
+.btn-apply-settings.has-changes {
+    background: #ff9800;
+    animation: pulse 1s infinite;
+}
+
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); }
+}
+
+.remove-btn {
+    background: rgba(255,255,255,0.2);
+    padding: 3px 8px;
+    min-width: 26px;
+    font-size: 0.75rem;
+    color: white;
+    border-radius: 6px;
+    border: 1px solid rgba(255,255,255,0.2);
+    min-height: 26px;
+}
+
+.remove-btn:hover {
+    background: rgba(255,0,0,0.4);
+}
+
+/* ===== SETTINGS STATUS ANZEIGE ===== */
+.settings-status {
+    font-size: 0.55rem;
+    color: rgba(255,255,255,0.7);
+    padding: 2px 6px;
+    background: rgba(0,0,0,0.2);
+    border-radius: 4px;
+    white-space: nowrap;
+}
+
 .team-inputs{
     display:grid;
     grid-template-columns:1fr auto 1fr;
@@ -348,7 +452,6 @@ button:active {
     color:var(--text-dark);
 }
 
-/* ===== SCOREBOARD ===== */
 .scoreboard{
     display:grid;
     grid-template-columns:1fr 1fr;
@@ -405,7 +508,6 @@ button:active {
     font-size:1rem;
 }
 
-/* ===== INFO BAR ===== */
 .info-bar{
     display:flex;
     justify-content:center;
@@ -426,7 +528,12 @@ button:active {
     backdrop-filter: blur(3px);
 }
 
-/* ===== KEHREN BEREICH ===== */
+.info-box.active-setting {
+    background: var(--gold);
+    color: black;
+    border: 2px solid var(--green);
+}
+
 .kehren-wrapper {
     flex: 1;
     overflow-y: auto;
@@ -501,8 +608,8 @@ button:active {
 }
 
 .point-btn{
-    min-width:44px;
-    min-height:44px;
+    min-width:40px;
+    min-height:40px;
     border-radius:6px;
     border:2px solid var(--border);
     background:white;
@@ -543,7 +650,6 @@ button:active {
     color:var(--text-dark);
 }
 
-/* ===== FOOTER ===== */
 .footer{
     display:flex;
     justify-content:center;
@@ -601,7 +707,6 @@ button:active {
     background: #a8322a;
 }
 
-/* ===== TOAST ===== */
 .toast{
     position:fixed;
     bottom:20px;
@@ -624,56 +729,6 @@ button:active {
     opacity:1;
 }
 
-/* ===== HEADER CONTROLS ===== */
-.player-selector{
-    display:flex;
-    gap:4px;
-    align-items:center;
-    background:rgba(255,255,255,0.15);
-    padding:2px 10px 2px 6px;
-    border-radius:30px;
-}
-
-.player-selector label{
-    font-weight:600;
-    font-size:0.75rem;
-}
-
-.player-selector select{
-    background:white;
-    color:black;
-    padding:4px 8px;
-    border-radius:20px;
-    font-weight:700;
-    font-size:0.8rem;
-    min-height: 30px;
-}
-
-.header-controls select {
-    background:white;
-    color:black;
-    padding:4px 10px;
-    font-size:0.8rem;
-    min-height: 34px;
-}
-
-.header-controls button {
-    padding:4px 10px;
-    font-size:0.8rem;
-    min-height: 34px;
-}
-
-.point-info {
-    background: rgba(255,255,255,0.1);
-    padding:2px 10px;
-    border-radius:16px;
-    font-size:0.75rem;
-    font-weight:600;
-    white-space:nowrap;
-    color:white;
-}
-
-/* ===== BAHN-FARBEN LEGENDE ===== */
 .bahn-legend {
     display: flex;
     gap: 10px;
@@ -699,11 +754,10 @@ button:active {
     border: 1px solid rgba(255,255,255,0.3);
 }
 
-/* ===== RESPONSIVE ANPASSUNGEN ===== */
 @media (max-width: 767px) {
     :root {
         --header-height: 50px;
-        --arena-min-height: 350px;
+        --arena-min-height: 380px;
         --kehren-max-height: 200px;
         --button-size: 34px;
     }
@@ -717,15 +771,49 @@ button:active {
     }
     
     .arena-header input {
-        max-width: 120px;
-        font-size: 0.85rem;
+        max-width: 90px;
+        font-size: 0.75rem;
+        min-height: 28px;
+        padding: 4px 6px;
+    }
+    
+    .bahn-settings-top {
+        padding: 3px 6px;
+        gap: 3px;
+    }
+    
+    .bahn-settings-top select {
+        font-size: 0.6rem;
+        padding: 2px 4px;
+        min-height: 22px;
+        min-width: 28px;
+    }
+    
+    .bahn-settings-top .setting-label {
+        font-size: 0.5rem;
+    }
+    
+    .btn-apply-settings {
+        font-size: 0.6rem;
+        padding: 2px 6px;
+        min-height: 22px;
+        min-width: 22px;
+    }
+    
+    .arena-header .left-section {
+        gap: 4px;
+    }
+    
+    .settings-status {
+        font-size: 0.5rem;
+        padding: 1px 4px;
     }
 }
 
 @media (min-width: 768px) and (max-width: 1024px) {
     :root {
         --header-height: 55px;
-        --arena-min-height: 380px;
+        --arena-min-height: 400px;
         --kehren-max-height: 250px;
         --button-size: 38px;
     }
@@ -733,14 +821,14 @@ button:active {
 
 @media (orientation: landscape) and (max-height: 600px) {
     :root {
-        --arena-min-height: 280px;
+        --arena-min-height: 300px;
         --kehren-max-height: 150px;
         --header-height: 45px;
     }
     
     .arena {
         max-height: calc(100vh - 100px);
-        min-height: 250px;
+        min-height: 280px;
     }
     
     .team-score {
@@ -752,7 +840,6 @@ button:active {
     }
 }
 
-/* ===== TOUCH-OPTIMIERUNGEN ===== */
 @media (hover: none) {
     button:hover {
         transform: none;
@@ -775,7 +862,6 @@ button:active {
     scroll-behavior: smooth;
 }
 
-/* ===== LADE-ANIMATION ===== */
 @keyframes fadeIn {
     from { opacity: 0; transform: translateY(10px); }
     to { opacity: 1; transform: translateY(0); }
@@ -785,7 +871,6 @@ button:active {
     animation: fadeIn 0.3s ease-out;
 }
 
-/* ===== LEGENDE IM HEADER ===== */
 .header .bahn-legend {
     display: none;
 }
@@ -799,13 +884,11 @@ button:active {
 </head>
 <body>
 
-<!-- ===== APP CONTENT ===== -->
 <div id="app-content">
     <div class="header">
         <h1>🥌 ESV Grein</h1>
 
         <div class="header-controls">
-            <!-- Bahn-Farben Legende -->
             <div class="bahn-legend">
                 <div class="bahn-legend-item">
                     <div class="color-box" style="background:#4A90D9;"></div>
@@ -825,35 +908,6 @@ button:active {
                 </div>
             </div>
 
-            <div class="player-selector">
-                <label for="playerCount">👥</label>
-                <select id="playerCount">
-                    <option value="3">3</option>
-                    <option value="4" selected>4</option>
-                    <option value="5">5</option>
-                    <option value="6">6</option>
-                    <option value="7">7</option>
-                </select>
-            </div>
-
-            <select id="gamesSelect">
-                <option value="2">2🏆</option>
-                <option value="3">3🏆</option>
-                <option value="4">4🏆</option>
-                <option value="5" selected>5🏆</option>
-                <option value="6">6🏆</option>
-            </select>
-
-            <select id="kehrenSelect">
-                <option value="4">4K</option>
-                <option value="6" selected>6K</option>
-                <option value="8">8K</option>
-                <option value="10">10K</option>
-                <option value="12">12K</option>
-            </select>
-
-            <span class="point-info" id="pointInfo">⭐4</span>
-
             <button onclick="openSpectatorWindow()" title="Zuschauer-Monitor">📺</button>
             <button onclick="addArena()" title="Bahn hinzufügen">➕</button>
             <button onclick="resetAllArenas()" style="background:var(--red);" title="Alle Bahnen zurücksetzen">🔄</button>
@@ -871,6 +925,7 @@ button:active {
 // ===== SPEICHER-SYSTEM =====
 const TEAM_NAMES_KEY = 'esv_grein_meisterschaft_team_names';
 const ARENA_COUNT_KEY = 'esv_grein_meisterschaft_arena_count';
+const ARENA_SETTINGS_KEY = 'esv_grein_arena_settings';
 
 function getTeamNames(arenaId) {
     let allNames = localStorage.getItem(TEAM_NAMES_KEY);
@@ -904,28 +959,25 @@ function setArenaCount(count) {
     localStorage.setItem(ARENA_COUNT_KEY, count.toString());
 }
 
-// ===== MAX POINTS =====
-const MAX_POINTS_KEY = 'esv_grein_max_points';
-
-function getMaxPoints() {
-    let max = localStorage.getItem(MAX_POINTS_KEY);
-    if (!max) {
-        max = '4';
-        localStorage.setItem(MAX_POINTS_KEY, max);
+function getArenaSettings(arenaId) {
+    let allSettings = JSON.parse(localStorage.getItem(ARENA_SETTINGS_KEY) || '{}');
+    if (!allSettings[arenaId]) {
+        allSettings[arenaId] = {
+            maxPoints: 4,
+            kehren: 6,
+            winsToChampion: 5
+        };
+        localStorage.setItem(ARENA_SETTINGS_KEY, JSON.stringify(allSettings));
     }
-    return parseInt(max);
+    return allSettings[arenaId];
 }
 
-function setMaxPoints(value) {
-    localStorage.setItem(MAX_POINTS_KEY, value.toString());
-    updatePointInfo(value);
+function saveArenaSettings(arenaId, settings) {
+    let allSettings = JSON.parse(localStorage.getItem(ARENA_SETTINGS_KEY) || '{}');
+    allSettings[arenaId] = settings;
+    localStorage.setItem(ARENA_SETTINGS_KEY, JSON.stringify(allSettings));
 }
 
-function updatePointInfo(maxPoints) {
-    document.getElementById('pointInfo').textContent = `⭐${maxPoints}`;
-}
-
-// ===== BAHN-FARBEN =====
 const BAHN_COLORS = {
     1: { color: '#4A90D9', light: '#E8F0FE', name: 'Blau' },
     2: { color: '#E67E22', light: '#FEF5E7', name: 'Orange' },
@@ -937,33 +989,91 @@ function getBahnColor(bahn) {
     return BAHN_COLORS[bahn] || BAHN_COLORS[1];
 }
 
-// ===== ARENA MANAGEMENT =====
 const state = {
-    kehren:6,
-    winsToChampion:5,
-    playerCount:4,
-    maxPoints:4,
-    arenas:[]
+    arenas: [],
+    pendingSettings: {}
 };
 
-function createArena(id){
+// ===== RENDER-OPTIMIERUNG =====
+let renderTimeout = null;
+let needsRender = false;
+
+function scheduleRender() {
+    if (renderTimeout) {
+        clearTimeout(renderTimeout);
+    }
+    needsRender = true;
+    renderTimeout = setTimeout(() => {
+        if (needsRender) {
+            performRender();
+            needsRender = false;
+        }
+        renderTimeout = null;
+    }, 16);
+}
+
+function performRender() {
+    const layout = document.getElementById('layout');
+    
+    const currentIds = state.arenas.map(a => a.id).join(',');
+    const existingIds = Array.from(layout.querySelectorAll('.arena')).map(el => el.id.replace('arena-', '')).join(',');
+    
+    if (currentIds !== existingIds || layout.children.length === 0) {
+        layout.innerHTML = state.arenas.map(renderArena).join('');
+        updateKehrenHeights();
+        updateSpectatorWindow();
+        return;
+    }
+    
+    state.arenas.forEach(arena => {
+        const element = document.getElementById(`arena-${arena.id}`);
+        if (element) {
+            updateArenaElement(element, arena);
+        }
+    });
+    
+    updateSpectatorWindow();
+}
+
+function updateKehrenHeights() {
+    document.querySelectorAll('.kehren-wrapper').forEach(wrapper => {
+        const arenaId = parseInt(wrapper.id.replace('kehren-wrapper-', ''));
+        const arena = getArena(arenaId);
+        if (arena) {
+            const rowHeight = 42;
+            const maxHeight = Math.min(arena.kehren * rowHeight + 20, 300);
+            wrapper.style.maxHeight = Math.max(150, maxHeight) + 'px';
+        }
+    });
+}
+
+function render() {
+    scheduleRender();
+}
+
+function createArena(id) {
     const names = getTeamNames(id);
+    const settings = getArenaSettings(id);
     return {
         id,
-        arenaName:`Bahn ${id}`,
-        bahn:id,
+        arenaName: `Bahn ${id}`,
+        bahn: id,
         teamA: names.teamA || `Team ${id}A`,
         teamB: names.teamB || `Team ${id}B`,
-        pointsA:Array(12).fill(null),
-        pointsB:Array(12).fill(null),
-        winsA:0,
-        winsB:0
+        pointsA: Array(settings.kehren).fill(null),
+        pointsB: Array(settings.kehren).fill(null),
+        winsA: 0,
+        winsB: 0,
+        maxPoints: settings.maxPoints || 4,
+        kehren: settings.kehren || 6,
+        winsToChampion: settings.winsToChampion || 5
     };
 }
 
 function initArenas() {
     const count = getArenaCount();
     state.arenas = [];
+    state.pendingSettings = {};
     for (let i = 1; i <= count; i++) {
         state.arenas.push(createArena(i));
     }
@@ -994,101 +1104,127 @@ function removeArena(id) {
     if (!confirm(`Bahn ${id} löschen?`)) return;
     
     state.arenas = state.arenas.filter(a => a.id !== id);
+    delete state.pendingSettings[id];
     setArenaCount(state.arenas.length);
     render();
     toast(`🗑️ Bahn ${id} gelöscht`);
 }
 
-function render(){
-    document.getElementById('layout').innerHTML = state.arenas.map(renderArena).join('');
-    updateSpectatorWindow();
-    updatePointInfo(getMaxPoints());
-    
-    document.querySelectorAll('.kehren-wrapper').forEach(wrapper => {
-        const kehrenCount = state.kehren;
-        const rowHeight = 42;
-        const maxHeight = Math.min(kehrenCount * rowHeight + 20, 300);
-        wrapper.style.maxHeight = Math.max(150, maxHeight) + 'px';
-    });
-}
-
-function renderArena(arena){
+function renderArena(arena) {
     const scoreA = sum(arena.pointsA);
     const scoreB = sum(arena.pointsB);
-    const maxPoints = getMaxPoints();
     const isWinner = hasWinner(arena);
-    const isAChampion = isWinner && arena.winsA >= state.winsToChampion;
-    const isBChampion = isWinner && arena.winsB >= state.winsToChampion;
+    const isAChampion = isWinner && arena.winsA >= arena.winsToChampion;
+    const isBChampion = isWinner && arena.winsB >= arena.winsToChampion;
     const bahnColor = getBahnColor(arena.bahn);
+    
+    const hasPending = state.pendingSettings[arena.id] !== undefined;
+    const pending = state.pendingSettings[arena.id] || {};
+    const currentMaxPoints = pending.maxPoints !== undefined ? pending.maxPoints : arena.maxPoints;
+    const currentKehren = pending.kehren !== undefined ? pending.kehren : arena.kehren;
+    const currentWins = pending.winsToChampion !== undefined ? pending.winsToChampion : arena.winsToChampion;
 
     return `
-    <div class="arena bahn-${arena.bahn}" id="arena-${arena.id}">
+    <div class="arena bahn-${arena.bahn}" id="arena-${arena.id}" data-arena-id="${arena.id}">
         <div class="arena-header" style="background: ${bahnColor.color};">
-            <input
-                value="${arena.arenaName}"
-                onchange="setArenaName(${arena.id},this.value)"
-                placeholder="Bahn Name"
-                style="border-color: ${bahnColor.color};"
-            >
+            <div class="left-section">
+                <input
+                    value="${escapeHtml(arena.arenaName)}"
+                    onchange="setArenaName(${arena.id},this.value)"
+                    placeholder="Bahn Name"
+                    style="border-color: ${bahnColor.color};"
+                    id="name-input-${arena.id}"
+                >
 
-            <div class="bahn-selector">
-                <strong>🎯 Bahn</strong>
-                ${[1,2,3,4].map(b=>`
-                    <button
-                        class="bahn-btn ${arena.bahn===b?'active':''}"
-                        onclick="setBahn(${arena.id},${b})"
-                        style="${arena.bahn===b ? 'background:white;color:black;' : ''}">
-                        ${b}
-                    </button>
-                `).join('')}
-                <button onclick="removeArena(${arena.id})" style="background:rgba(255,255,255,0.3);padding:4px 8px;min-width:30px;font-size:0.8rem;color:white;">✕</button>
+                <div class="bahn-selector">
+                    <strong>🎯</strong>
+                    ${[1,2,3,4].map(b => `
+                        <button
+                            class="bahn-btn ${arena.bahn === b ? 'active' : ''}"
+                            onclick="setBahn(${arena.id},${b})"
+                            style="${arena.bahn === b ? 'background:white;color:black;' : ''}">
+                            ${b}
+                        </button>
+                    `).join('')}
+                </div>
+            </div>
+
+            <div class="bahn-settings-top">
+                <div class="setting-group">
+                    <span class="setting-label">⭐</span>
+                    <select onchange="onSettingChange(${arena.id},'maxPoints',parseInt(this.value))" id="maxpoints-${arena.id}">
+                        ${[3,4,5,6,7].map(v => `<option value="${v}" ${currentMaxPoints === v ? 'selected' : ''}>${v}</option>`).join('')}
+                    </select>
+                </div>
+                <div class="setting-group">
+                    <span class="setting-label">🎯</span>
+                    <select onchange="onSettingChange(${arena.id},'kehren',parseInt(this.value))" id="kehren-${arena.id}">
+                        ${[4,6,8,10,12].map(v => `<option value="${v}" ${currentKehren === v ? 'selected' : ''}>${v}</option>`).join('')}
+                    </select>
+                </div>
+                <div class="setting-group">
+                    <span class="setting-label">🏆</span>
+                    <select onchange="onSettingChange(${arena.id},'winsToChampion',parseInt(this.value))" id="wins-${arena.id}">
+                        ${[2,3,4,5,6,7].map(v => `<option value="${v}" ${currentWins === v ? 'selected' : ''}>${v}</option>`).join('')}
+                    </select>
+                </div>
+                
+                <button class="btn-apply-settings ${hasPending ? 'has-changes' : ''}" 
+                        onclick="applySettings(${arena.id})" 
+                        title="Einstellungen übernehmen">
+                    ${hasPending ? '✅ Übernehmen' : '✓'}
+                </button>
+                
+                ${hasPending ? '<span class="settings-status">⚡ Änderungen</span>' : ''}
+                
+                <button class="remove-btn" onclick="removeArena(${arena.id})" title="Bahn löschen">✕</button>
             </div>
         </div>
 
         <div class="team-inputs">
-            <input value="${arena.teamA}" onchange="setTeam(${arena.id},'A',this.value)" placeholder="Team A">
+            <input value="${escapeHtml(arena.teamA)}" onchange="setTeam(${arena.id},'A',this.value)" placeholder="Team A" id="team-a-${arena.id}">
             <div>VS</div>
-            <input value="${arena.teamB}" onchange="setTeam(${arena.id},'B',this.value)" placeholder="Team B">
+            <input value="${escapeHtml(arena.teamB)}" onchange="setTeam(${arena.id},'B',this.value)" placeholder="Team B" id="team-b-${arena.id}">
         </div>
 
         <div class="scoreboard">
-            <div class="score-card ${isAChampion ? 'gold' : ''}">
-                <div class="team-name">${isAChampion ? '🏆 ' : ''}${arena.teamA}</div>
-                <div class="team-score">${scoreA}</div>
+            <div class="score-card ${isAChampion ? 'gold' : ''}" id="score-a-${arena.id}">
+                <div class="team-name">${isAChampion ? '🏆 ' : ''}${escapeHtml(arena.teamA)}</div>
+                <div class="team-score" id="score-a-value-${arena.id}">${scoreA}</div>
                 <div class="team-points">
                     Siege<br>
-                    <span>${arena.winsA}</span>
+                    <span id="wins-a-${arena.id}">${arena.winsA}</span>
                 </div>
             </div>
 
-            <div class="score-card red ${isBChampion ? 'gold' : ''}">
-                <div class="team-name">${isBChampion ? '🏆 ' : ''}${arena.teamB}</div>
-                <div class="team-score">${scoreB}</div>
+            <div class="score-card red ${isBChampion ? 'gold' : ''}" id="score-b-${arena.id}">
+                <div class="team-name">${isBChampion ? '🏆 ' : ''}${escapeHtml(arena.teamB)}</div>
+                <div class="team-score" id="score-b-value-${arena.id}">${scoreB}</div>
                 <div class="team-points">
                     Siege<br>
-                    <span>${arena.winsB}</span>
+                    <span id="wins-b-${arena.id}">${arena.winsB}</span>
                 </div>
             </div>
         </div>
 
         <div class="info-bar">
-            <div class="info-box">🎯${arena.bahn}</div>
+            <div class="info-box ${hasPending ? 'active-setting' : ''}">🎯${arena.bahn}</div>
             <div class="info-box">🏆${arena.winsA}:${arena.winsB}</div>
-            <div class="info-box">🎯${state.winsToChampion}</div>
-            <div class="info-box">⭐${maxPoints}</div>
+            <div class="info-box ${hasPending ? 'active-setting' : ''}">🎯${currentWins}</div>
+            <div class="info-box ${hasPending ? 'active-setting' : ''}">⭐${currentMaxPoints}</div>
             ${isWinner ? '<div class="info-box" style="background:var(--gold);color:black;">🏆MEISTER</div>' : ''}
         </div>
 
-        <div class="kehren-wrapper">
+        <div class="kehren-wrapper" id="kehren-wrapper-${arena.id}">
             <div class="kehren">
                 <div>
-                    <div class="kehren-title">${arena.teamA}</div>
-                    ${renderKehren(arena,'A')}
+                    <div class="kehren-title">${escapeHtml(arena.teamA)}</div>
+                    ${renderKehren(arena, 'A')}
                 </div>
 
                 <div>
-                    <div class="kehren-title">${arena.teamB}</div>
-                    ${renderKehren(arena,'B')}
+                    <div class="kehren-title">${escapeHtml(arena.teamB)}</div>
+                    ${renderKehren(arena, 'B')}
                 </div>
             </div>
         </div>
@@ -1102,35 +1238,42 @@ function renderArena(arena){
                 <button class="btn-reset-bahn" onclick="resetBahn(${arena.id})">🔄 Bahn</button>
             </div>
         </div>
-
     </div>
     `;
 }
 
-function renderKehren(arena,team){
-    let html='';
-    const arr = team==='A' ? arena.pointsA : arena.pointsB;
-    const maxPoints = getMaxPoints();
+function renderKehren(arena, team) {
+    let html = '';
+    const arr = team === 'A' ? arena.pointsA : arena.pointsB;
+    const hasPending = state.pendingSettings[arena.id] !== undefined;
+    const pending = state.pendingSettings[arena.id] || {};
+    const maxPoints = pending.maxPoints !== undefined ? pending.maxPoints : arena.maxPoints;
     const isWinner = hasWinner(arena);
+    const teamPrefix = team === 'A' ? 'a' : 'b';
 
-    for(let i=0;i<state.kehren;i++){
-        const active = activeKehre(arena)===i+1;
+    for (let i = 0; i < arena.kehren; i++) {
+        const active = activeKehre(arena) === i + 1;
         const isCompleted = arr[i] !== null;
+        const value = arr[i] !== null ? arr[i] : '-';
 
         html += `
-        <div class="kehre-row ${active?'active':''} ${isCompleted?'completed':''}">
+        <div class="kehre-row ${active ? 'active' : ''} ${isCompleted ? 'completed' : ''}" id="kehre-row-${arena.id}-${teamPrefix}-${i}">
             <div class="kehre-number">K${i+1}</div>
-            <div class="points">
+            <div class="points" id="points-${arena.id}-${teamPrefix}-${i}">
                 ${Array.from({length: maxPoints + 1}, (_, v) => `
                     <button
                         class="point-btn ${arr[i] === v ? 'active-point' : ''}"
                         onclick="setPoints(${arena.id},'${team}',${i},${v})"
-                        ${isWinner ? 'disabled' : ''}>
+                        ${isWinner ? 'disabled' : ''}
+                        data-arena="${arena.id}"
+                        data-team="${team}"
+                        data-index="${i}"
+                        data-value="${v}">
                         ${v}
                     </button>
                 `).join('')}
             </div>
-            <div class="kehre-value">${arr[i] ?? '-'}</div>
+            <div class="kehre-value" id="kehre-value-${arena.id}-${teamPrefix}-${i}">${value}</div>
         </div>
         `;
     }
@@ -1138,83 +1281,490 @@ function renderKehren(arena,team){
     return html;
 }
 
+function escapeHtml(text) {
+    if (!text) return '';
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+function updateArenaElement(element, arena) {
+    const scoreA = sum(arena.pointsA);
+    const scoreB = sum(arena.pointsB);
+    const isWinner = hasWinner(arena);
+    const isAChampion = isWinner && arena.winsA >= arena.winsToChampion;
+    const isBChampion = isWinner && arena.winsB >= arena.winsToChampion;
+    const hasPending = state.pendingSettings[arena.id] !== undefined;
+    const pending = state.pendingSettings[arena.id] || {};
+    const currentMaxPoints = pending.maxPoints !== undefined ? pending.maxPoints : arena.maxPoints;
+    const currentKehren = pending.kehren !== undefined ? pending.kehren : arena.kehren;
+    const currentWins = pending.winsToChampion !== undefined ? pending.winsToChampion : arena.winsToChampion;
+    
+    element.className = `arena bahn-${arena.bahn}`;
+    
+    const header = element.querySelector('.arena-header');
+    const bahnColor = getBahnColor(arena.bahn);
+    header.style.background = bahnColor.color;
+    
+    const bahnBtns = element.querySelectorAll('.bahn-btn');
+    bahnBtns.forEach((btn, index) => {
+        const bahnNum = index + 1;
+        if (bahnNum === arena.bahn) {
+            btn.classList.add('active');
+            btn.style.background = 'white';
+            btn.style.color = 'black';
+        } else {
+            btn.classList.remove('active');
+            btn.style.background = '';
+            btn.style.color = '';
+        }
+    });
+    
+    const teamAInput = document.getElementById(`team-a-${arena.id}`);
+    if (teamAInput && teamAInput.value !== arena.teamA) {
+        teamAInput.value = arena.teamA;
+    }
+    const teamBInput = document.getElementById(`team-b-${arena.id}`);
+    if (teamBInput && teamBInput.value !== arena.teamB) {
+        teamBInput.value = arena.teamB;
+    }
+    
+    const nameInput = document.getElementById(`name-input-${arena.id}`);
+    if (nameInput && nameInput.value !== arena.arenaName) {
+        nameInput.value = arena.arenaName;
+    }
+    
+    const maxPointsSelect = document.getElementById(`maxpoints-${arena.id}`);
+    if (maxPointsSelect && parseInt(maxPointsSelect.value) !== currentMaxPoints) {
+        maxPointsSelect.value = currentMaxPoints;
+    }
+    const kehrenSelect = document.getElementById(`kehren-${arena.id}`);
+    if (kehrenSelect && parseInt(kehrenSelect.value) !== currentKehren) {
+        kehrenSelect.value = currentKehren;
+    }
+    const winsSelect = document.getElementById(`wins-${arena.id}`);
+    if (winsSelect && parseInt(winsSelect.value) !== currentWins) {
+        winsSelect.value = currentWins;
+    }
+    
+    const applyBtn = element.querySelector('.btn-apply-settings');
+    if (applyBtn) {
+        if (hasPending) {
+            applyBtn.classList.add('has-changes');
+            applyBtn.textContent = '✅ Übernehmen';
+        } else {
+            applyBtn.classList.remove('has-changes');
+            applyBtn.textContent = '✓';
+        }
+    }
+    
+    const statusSpan = element.querySelector('.settings-status');
+    if (hasPending) {
+        if (!statusSpan) {
+            const newStatus = document.createElement('span');
+            newStatus.className = 'settings-status';
+            newStatus.textContent = '⚡ Änderungen';
+            applyBtn.parentNode.insertBefore(newStatus, applyBtn.nextSibling);
+        }
+    } else {
+        if (statusSpan) {
+            statusSpan.remove();
+        }
+    }
+    
+    const scoreAEl = document.getElementById(`score-a-value-${arena.id}`);
+    if (scoreAEl) scoreAEl.textContent = scoreA;
+    const scoreBEl = document.getElementById(`score-b-value-${arena.id}`);
+    if (scoreBEl) scoreBEl.textContent = scoreB;
+    
+    const winsAEl = document.getElementById(`wins-a-${arena.id}`);
+    if (winsAEl) winsAEl.textContent = arena.winsA;
+    const winsBEl = document.getElementById(`wins-b-${arena.id}`);
+    if (winsBEl) winsBEl.textContent = arena.winsB;
+    
+    const scoreCardA = document.getElementById(`score-a-${arena.id}`);
+    if (scoreCardA) {
+        scoreCardA.className = `score-card ${isAChampion ? 'gold' : ''}`;
+        const nameDiv = scoreCardA.querySelector('.team-name');
+        if (nameDiv) {
+            nameDiv.textContent = (isAChampion ? '🏆 ' : '') + arena.teamA;
+        }
+    }
+    const scoreCardB = document.getElementById(`score-b-${arena.id}`);
+    if (scoreCardB) {
+        scoreCardB.className = `score-card red ${isBChampion ? 'gold' : ''}`;
+        const nameDiv = scoreCardB.querySelector('.team-name');
+        if (nameDiv) {
+            nameDiv.textContent = (isBChampion ? '🏆 ' : '') + arena.teamB;
+        }
+    }
+    
+    const infoBoxes = element.querySelectorAll('.info-box');
+    if (infoBoxes.length >= 4) {
+        infoBoxes[0].textContent = `🎯${arena.bahn}`;
+        infoBoxes[0].className = `info-box ${hasPending ? 'active-setting' : ''}`;
+        infoBoxes[1].textContent = `🏆${arena.winsA}:${arena.winsB}`;
+        infoBoxes[2].textContent = `🎯${currentWins}`;
+        infoBoxes[2].className = `info-box ${hasPending ? 'active-setting' : ''}`;
+        infoBoxes[3].textContent = `⭐${currentMaxPoints}`;
+        infoBoxes[3].className = `info-box ${hasPending ? 'active-setting' : ''}`;
+        const meisterBox = infoBoxes[4];
+        if (isWinner) {
+            if (!meisterBox || meisterBox.textContent !== '🏆MEISTER') {
+                if (meisterBox) {
+                    meisterBox.textContent = '🏆MEISTER';
+                    meisterBox.style.background = 'var(--gold)';
+                    meisterBox.style.color = 'black';
+                } else {
+                    const newBox = document.createElement('div');
+                    newBox.className = 'info-box';
+                    newBox.style.background = 'var(--gold)';
+                    newBox.style.color = 'black';
+                    newBox.textContent = '🏆MEISTER';
+                    element.querySelector('.info-bar').appendChild(newBox);
+                }
+            }
+        } else {
+            if (meisterBox && meisterBox.textContent === '🏆MEISTER') {
+                meisterBox.remove();
+            }
+        }
+    }
+    
+    // KOMPLETTES NEU-RENDERN DER KEHREN BEI ÄNDERUNG
+    const kehrenWrapper = document.getElementById(`kehren-wrapper-${arena.id}`);
+    if (kehrenWrapper) {
+        // Prüfen ob sich die Kehren-Anzahl geändert hat
+        const kehren = kehrenWrapper.querySelector('.kehren');
+        if (kehren) {
+            const children = kehren.children;
+            if (children.length >= 2) {
+                children[0].querySelector('.kehren-title').textContent = arena.teamA;
+                children[1].querySelector('.kehren-title').textContent = arena.teamB;
+                
+                // Prüfen ob die Anzahl der Kehren-Reihen mit der aktuellen Kehren-Anzahl übereinstimmt
+                const teamAKehren = children[0].querySelectorAll('.kehre-row');
+                const teamBKehren = children[1].querySelectorAll('.kehre-row');
+                
+                if (teamAKehren.length !== arena.kehren) {
+                    // Komplett neu rendern
+                    const teamADiv = children[0];
+                    const teamBDiv = children[1];
+                    teamADiv.innerHTML = `<div class="kehren-title">${escapeHtml(arena.teamA)}</div>` + renderKehrenRows(arena, 'A');
+                    teamBDiv.innerHTML = `<div class="kehren-title">${escapeHtml(arena.teamB)}</div>` + renderKehrenRows(arena, 'B');
+                } else {
+                    // Nur Werte aktualisieren
+                    const maxPoints = currentMaxPoints;
+                    const isWinner = hasWinner(arena);
+                    const activeKehreNum = activeKehre(arena);
+                    
+                    for (let i = 0; i < arena.kehren; i++) {
+                        // Team A
+                        const rowA = teamAKehren[i];
+                        if (rowA) {
+                            const val = arena.pointsA[i];
+                            const valDisplay = val !== null ? val : '-';
+                            const valueEl = rowA.querySelector('.kehre-value');
+                            if (valueEl) valueEl.textContent = valDisplay;
+                            rowA.className = `kehre-row ${activeKehreNum === i+1 ? 'active' : ''} ${val !== null ? 'completed' : ''}`;
+                            
+                            const pointsDiv = document.getElementById(`points-${arena.id}-a-${i}`);
+                            if (pointsDiv) {
+                                // Prüfen ob die Anzahl der Buttons mit maxPoints übereinstimmt
+                                const btns = pointsDiv.querySelectorAll('.point-btn');
+                                if (btns.length !== maxPoints + 1) {
+                                    // Buttons neu erstellen
+                                    let newBtns = '';
+                                    for (let v = 0; v <= maxPoints; v++) {
+                                        newBtns += `
+                                            <button
+                                                class="point-btn ${val === v ? 'active-point' : ''}"
+                                                onclick="setPoints(${arena.id},'A',${i},${v})"
+                                                ${isWinner ? 'disabled' : ''}
+                                                data-arena="${arena.id}"
+                                                data-team="A"
+                                                data-index="${i}"
+                                                data-value="${v}">
+                                                ${v}
+                                            </button>
+                                        `;
+                                    }
+                                    pointsDiv.innerHTML = newBtns;
+                                } else {
+                                    btns.forEach(btn => {
+                                        const valNum = parseInt(btn.dataset.value);
+                                        btn.classList.toggle('active-point', valNum === val);
+                                        btn.disabled = isWinner;
+                                    });
+                                }
+                            }
+                        }
+                        
+                        // Team B
+                        const rowB = teamBKehren[i];
+                        if (rowB) {
+                            const val = arena.pointsB[i];
+                            const valDisplay = val !== null ? val : '-';
+                            const valueEl = rowB.querySelector('.kehre-value');
+                            if (valueEl) valueEl.textContent = valDisplay;
+                            rowB.className = `kehre-row ${activeKehreNum === i+1 ? 'active' : ''} ${val !== null ? 'completed' : ''}`;
+                            
+                            const pointsDiv = document.getElementById(`points-${arena.id}-b-${i}`);
+                            if (pointsDiv) {
+                                const btns = pointsDiv.querySelectorAll('.point-btn');
+                                if (btns.length !== maxPoints + 1) {
+                                    let newBtns = '';
+                                    for (let v = 0; v <= maxPoints; v++) {
+                                        newBtns += `
+                                            <button
+                                                class="point-btn ${val === v ? 'active-point' : ''}"
+                                                onclick="setPoints(${arena.id},'B',${i},${v})"
+                                                ${isWinner ? 'disabled' : ''}
+                                                data-arena="${arena.id}"
+                                                data-team="B"
+                                                data-index="${i}"
+                                                data-value="${v}">
+                                                ${v}
+                                            </button>
+                                        `;
+                                    }
+                                    pointsDiv.innerHTML = newBtns;
+                                } else {
+                                    btns.forEach(btn => {
+                                        const valNum = parseInt(btn.dataset.value);
+                                        btn.classList.toggle('active-point', valNum === val);
+                                        btn.disabled = isWinner;
+                                    });
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
+    const footerBtn = element.querySelector('.footer .gold');
+    if (footerBtn) {
+        if (isWinner) {
+            footerBtn.disabled = true;
+            footerBtn.style.opacity = '0.5';
+            footerBtn.style.cursor = 'not-allowed';
+            footerBtn.textContent = '🏆 Meister';
+        } else {
+            footerBtn.disabled = false;
+            footerBtn.style.opacity = '';
+            footerBtn.style.cursor = '';
+            footerBtn.textContent = '🏆 Spiel';
+        }
+    }
+    
+    const wrapper = document.getElementById(`kehren-wrapper-${arena.id}`);
+    if (wrapper) {
+        const rowHeight = 42;
+        const maxHeight = Math.min(arena.kehren * rowHeight + 20, 300);
+        wrapper.style.maxHeight = Math.max(150, maxHeight) + 'px';
+    }
+}
+
+// Hilfsfunktion für Kehren-Rows
+function renderKehrenRows(arena, team) {
+    let html = '';
+    const arr = team === 'A' ? arena.pointsA : arena.pointsB;
+    const hasPending = state.pendingSettings[arena.id] !== undefined;
+    const pending = state.pendingSettings[arena.id] || {};
+    const maxPoints = pending.maxPoints !== undefined ? pending.maxPoints : arena.maxPoints;
+    const isWinner = hasWinner(arena);
+    const teamPrefix = team === 'A' ? 'a' : 'b';
+
+    for (let i = 0; i < arena.kehren; i++) {
+        const active = activeKehre(arena) === i + 1;
+        const isCompleted = arr[i] !== null;
+        const value = arr[i] !== null ? arr[i] : '-';
+
+        html += `
+        <div class="kehre-row ${active ? 'active' : ''} ${isCompleted ? 'completed' : ''}" id="kehre-row-${arena.id}-${teamPrefix}-${i}">
+            <div class="kehre-number">K${i+1}</div>
+            <div class="points" id="points-${arena.id}-${teamPrefix}-${i}">
+                ${Array.from({length: maxPoints + 1}, (_, v) => `
+                    <button
+                        class="point-btn ${arr[i] === v ? 'active-point' : ''}"
+                        onclick="setPoints(${arena.id},'${team}',${i},${v})"
+                        ${isWinner ? 'disabled' : ''}
+                        data-arena="${arena.id}"
+                        data-team="${team}"
+                        data-index="${i}"
+                        data-value="${v}">
+                        ${v}
+                    </button>
+                `).join('')}
+            </div>
+            <div class="kehre-value" id="kehre-value-${arena.id}-${teamPrefix}-${i}">${value}</div>
+        </div>
+        `;
+    }
+    return html;
+}
+
+// ===== SETTINGS MANAGEMENT =====
+function onSettingChange(id, setting, value) {
+    if (!state.pendingSettings[id]) {
+        state.pendingSettings[id] = {};
+    }
+    state.pendingSettings[id][setting] = value;
+    
+    const element = document.getElementById(`arena-${id}`);
+    if (element) {
+        const arena = getArena(id);
+        updateArenaElement(element, arena);
+    }
+}
+
+function applySettings(id) {
+    const arena = getArena(id);
+    if (!arena) return;
+    
+    const pending = state.pendingSettings[id];
+    if (!pending) {
+        toast('Keine Änderungen zum Übernehmen');
+        return;
+    }
+    
+    const oldKehren = arena.kehren;
+    const newKehren = pending.kehren !== undefined ? pending.kehren : arena.kehren;
+    const newMaxPoints = pending.maxPoints !== undefined ? pending.maxPoints : arena.maxPoints;
+    const newWins = pending.winsToChampion !== undefined ? pending.winsToChampion : arena.winsToChampion;
+    
+    // Werte übernehmen
+    arena.maxPoints = newMaxPoints;
+    arena.kehren = newKehren;
+    arena.winsToChampion = newWins;
+    
+    // Bei Kehren-Änderung Arrays komplett neu erstellen
+    if (newKehren !== oldKehren) {
+        const newPointsA = Array(newKehren).fill(null);
+        const newPointsB = Array(newKehren).fill(null);
+        for (let i = 0; i < Math.min(oldKehren, newKehren); i++) {
+            newPointsA[i] = arena.pointsA[i] !== undefined ? arena.pointsA[i] : null;
+            newPointsB[i] = arena.pointsB[i] !== undefined ? arena.pointsB[i] : null;
+        }
+        arena.pointsA = newPointsA;
+        arena.pointsB = newPointsB;
+    }
+    
+    // In localStorage speichern
+    saveArenaSettings(id, {
+        maxPoints: arena.maxPoints,
+        kehren: arena.kehren,
+        winsToChampion: arena.winsToChampion
+    });
+    
+    // Pending zurücksetzen
+    delete state.pendingSettings[id];
+    
+    // Komplett neu rendern
+    const element = document.getElementById(`arena-${id}`);
+    if (element) {
+        // Komplett neuen HTML-Inhalt für die Arena erstellen
+        const newArenaHTML = renderArena(arena);
+        const wrapper = element.parentNode;
+        const newElement = document.createElement('div');
+        newElement.innerHTML = newArenaHTML;
+        const newArena = newElement.firstElementChild;
+        wrapper.replaceChild(newArena, element);
+        
+        // Kehren-Höhen aktualisieren
+        updateKehrenHeights();
+    } else {
+        render();
+    }
+    updateSpectatorWindow();
+    
+    toast(`✅ Einstellungen für Bahn ${arena.bahn} übernommen (⭐${newMaxPoints} 🎯${newKehren} 🏆${newWins})`);
+}
+
 // ===== CORE FUNCTIONS =====
-function setPoints(id,team,index,value){
+function setPoints(id, team, index, value) {
     const arena = getArena(id);
 
-    if(hasWinner(arena)){
+    if (hasWinner(arena)) {
         toast('Meisterschaft beendet!');
         return;
     }
 
-    if(team==='A'){
-        arena.pointsA[index]=value;
-        if(arena.pointsB[index]===null) arena.pointsB[index]=0;
-    }else{
-        arena.pointsB[index]=value;
-        if(arena.pointsA[index]===null) arena.pointsA[index]=0;
+    if (team === 'A') {
+        arena.pointsA[index] = value;
+        if (arena.pointsB[index] === null) arena.pointsB[index] = 0;
+    } else {
+        arena.pointsB[index] = value;
+        if (arena.pointsA[index] === null) arena.pointsA[index] = 0;
     }
 
-    render();
+    const element = document.getElementById(`arena-${id}`);
+    if (element) {
+        updateArenaElement(element, arena);
+    } else {
+        render();
+    }
+    
+    updateSpectatorWindow();
 
-    if(allKehrenFilled(arena)){
+    if (allKehrenFilled(arena)) {
         setTimeout(() => {
             autoEvaluateGame(id);
         }, 300);
     }
 }
 
-function allKehrenFilled(arena){
-    for(let i=0;i<state.kehren;i++){
-        if(arena.pointsA[i]===null || arena.pointsB[i]===null){
+function allKehrenFilled(arena) {
+    for (let i = 0; i < arena.kehren; i++) {
+        if (arena.pointsA[i] === null || arena.pointsB[i] === null) {
             return false;
         }
     }
     return true;
 }
 
-function autoEvaluateGame(id){
+function autoEvaluateGame(id) {
     const arena = getArena(id);
 
-    if(hasWinner(arena)){
+    if (hasWinner(arena)) {
         return;
     }
 
     const a = sum(arena.pointsA);
     const b = sum(arena.pointsB);
 
-    if(a>b){
+    if (a > b) {
         arena.winsA++;
         toast(`⚪ ${arena.teamA} gewinnt (${a}:${b})`);
-    }
-    else if(b>a){
+    } else if (b > a) {
         arena.winsB++;
         toast(`🔴 ${arena.teamB} gewinnt (${a}:${b})`);
-    }
-    else{
+    } else {
         toast(`Unentschieden (${a}:${b})`);
     }
 
-    arena.pointsA = Array(state.kehren).fill(null);
-    arena.pointsB = Array(state.kehren).fill(null);
+    arena.pointsA = Array(arena.kehren).fill(null);
+    arena.pointsB = Array(arena.kehren).fill(null);
 
-    if(hasWinner(arena)){
+    if (hasWinner(arena)) {
         toast(`🏆 ${winnerName(arena)} MEISTER! 🎉`);
     }
 
     render();
 }
 
-function evaluateGame(id){
+function evaluateGame(id) {
     const arena = getArena(id);
 
-    if(hasWinner(arena)){
+    if (hasWinner(arena)) {
         toast('Meisterschaft beendet!');
         return;
     }
 
-    for(let i=0;i<state.kehren;i++){
-        if(arena.pointsA[i]===null || arena.pointsB[i]===null){
+    for (let i = 0; i < arena.kehren; i++) {
+        if (arena.pointsA[i] === null || arena.pointsB[i] === null) {
             toast('Alle Kehren ausfüllen!');
             return;
         }
@@ -1223,69 +1773,67 @@ function evaluateGame(id){
     const a = sum(arena.pointsA);
     const b = sum(arena.pointsB);
 
-    if(a>b){
+    if (a > b) {
         arena.winsA++;
         toast(`⚪ ${arena.teamA} gewinnt (${a}:${b})`);
-    }
-    else if(b>a){
+    } else if (b > a) {
         arena.winsB++;
         toast(`🔴 ${arena.teamB} gewinnt (${a}:${b})`);
-    }
-    else{
+    } else {
         toast(`Unentschieden (${a}:${b})`);
     }
 
-    arena.pointsA = Array(state.kehren).fill(null);
-    arena.pointsB = Array(state.kehren).fill(null);
+    arena.pointsA = Array(arena.kehren).fill(null);
+    arena.pointsB = Array(arena.kehren).fill(null);
 
-    if(hasWinner(arena)){
+    if (hasWinner(arena)) {
         toast(`🏆 ${winnerName(arena)} MEISTER! 🎉`);
     }
 
     render();
 }
 
-function activeKehre(arena){
-    for(let i=0;i<state.kehren;i++){
-        if(arena.pointsA[i]===null || arena.pointsB[i]===null){
-            return i+1;
+function activeKehre(arena) {
+    for (let i = 0; i < arena.kehren; i++) {
+        if (arena.pointsA[i] === null || arena.pointsB[i] === null) {
+            return i + 1;
         }
     }
-    return state.kehren;
+    return arena.kehren;
 }
 
-function hasWinner(arena){
-    return arena.winsA >= state.winsToChampion || arena.winsB >= state.winsToChampion;
+function hasWinner(arena) {
+    return arena.winsA >= arena.winsToChampion || arena.winsB >= arena.winsToChampion;
 }
 
-function winnerName(arena){
-    if(arena.winsA >= state.winsToChampion) return arena.teamA;
-    if(arena.winsB >= state.winsToChampion) return arena.teamB;
+function winnerName(arena) {
+    if (arena.winsA >= arena.winsToChampion) return arena.teamA;
+    if (arena.winsB >= arena.winsToChampion) return arena.teamB;
     return '';
 }
 
-function sum(arr){
-    return arr.reduce((a,b)=>a+(b||0),0);
+function sum(arr) {
+    return arr.reduce((a, b) => a + (b || 0), 0);
 }
 
-function getArena(id){
-    return state.arenas.find(a=>a.id===id);
+function getArena(id) {
+    return state.arenas.find(a => a.id === id);
 }
 
 // ===== SETTER FUNCTIONS =====
-function setBahn(id,bahn){
+function setBahn(id, bahn) {
     getArena(id).bahn = bahn;
     render();
 }
 
-function setArenaName(id,name){
+function setArenaName(id, name) {
     getArena(id).arenaName = name;
     render();
 }
 
-function setTeam(id,team,name){
+function setTeam(id, team, name) {
     const arena = getArena(id);
-    if(team==='A') {
+    if (team === 'A') {
         arena.teamA = name || `Team ${id}A`;
         saveTeamNames(id, arena.teamA, arena.teamB);
     } else {
@@ -1296,35 +1844,35 @@ function setTeam(id,team,name){
 }
 
 // ===== RESET-FUNKTIONEN =====
-function resetCurrentKehren(id){
+function resetCurrentKehren(id) {
     const arena = getArena(id);
     if (hasWinner(arena)) {
         if (!confirm(`Meisterschaft auf Bahn ${arena.bahn} beendet. Trotzdem Kehren löschen?`)) return;
     }
-    arena.pointsA = Array(state.kehren).fill(null);
-    arena.pointsB = Array(state.kehren).fill(null);
+    arena.pointsA = Array(arena.kehren).fill(null);
+    arena.pointsB = Array(arena.kehren).fill(null);
     render();
     toast(`🔄 Kehren Bahn ${arena.bahn} gelöscht`);
 }
 
-function resetBahn(id){
+function resetBahn(id) {
     const arena = getArena(id);
     if (!confirm(`Bahn ${arena.bahn} komplett zurücksetzen?`)) return;
     
-    arena.pointsA = Array(state.kehren).fill(null);
-    arena.pointsB = Array(state.kehren).fill(null);
+    arena.pointsA = Array(arena.kehren).fill(null);
+    arena.pointsB = Array(arena.kehren).fill(null);
     arena.winsA = 0;
     arena.winsB = 0;
     render();
     toast(`🔄 Bahn ${arena.bahn} zurückgesetzt`);
 }
 
-function resetAllArenas(){
+function resetAllArenas() {
     if (!confirm('ALLE Bahnen zurücksetzen?')) return;
     
     state.arenas.forEach(arena => {
-        arena.pointsA = Array(state.kehren).fill(null);
-        arena.pointsB = Array(state.kehren).fill(null);
+        arena.pointsA = Array(arena.kehren).fill(null);
+        arena.pointsB = Array(arena.kehren).fill(null);
         arena.winsA = 0;
         arena.winsB = 0;
     });
@@ -1333,10 +1881,10 @@ function resetAllArenas(){
 }
 
 // ===== SPECTATOR WINDOW =====
-let spectatorWindow=null;
+let spectatorWindow = null;
 
-function openSpectatorWindow(){
-    spectatorWindow = window.open('','spectator','width=1024,height=768');
+function openSpectatorWindow() {
+    spectatorWindow = window.open('', 'spectator', 'width=1024,height=768');
 
     spectatorWindow.document.write(`
     <html>
@@ -1389,6 +1937,20 @@ function openSpectatorWindow(){
     .bahn.bahn-3 { background: #27AE60; }
     .bahn.bahn-4 { background: #8E44AD; }
     
+    .settings-info {
+        display:flex;
+        gap:15px;
+        justify-content:center;
+        margin-bottom:15px;
+        font-size:0.85rem;
+        color:#555;
+    }
+    .settings-info span {
+        background:#f0f0f0;
+        padding:4px 12px;
+        border-radius:8px;
+    }
+    
     .teams{
         display:grid;
         grid-template-columns:1fr 1fr;
@@ -1418,12 +1980,6 @@ function openSpectatorWindow(){
         font-size:1.5rem;
         font-weight:700;
     }
-    .info-line{
-        text-align:center;
-        font-size:1rem;
-        margin-bottom:15px;
-        color:#555;
-    }
     .champion-badge{
         background:#ffdf8c;
         color:black;
@@ -1452,31 +2008,34 @@ function openSpectatorWindow(){
     updateSpectatorWindow();
 }
 
-function updateSpectatorWindow(){
-    if(!spectatorWindow || spectatorWindow.closed) return;
+function updateSpectatorWindow() {
+    if (!spectatorWindow || spectatorWindow.closed) return;
 
     const grid = spectatorWindow.document.getElementById('specGrid');
-    if(!grid) return;
+    if (!grid) return;
 
     grid.innerHTML = state.arenas.map(arena => {
         const isWinner = hasWinner(arena);
-        const isAChampion = isWinner && arena.winsA >= state.winsToChampion;
-        const isBChampion = isWinner && arena.winsB >= state.winsToChampion;
-        const bahnColor = getBahnColor(arena.bahn);
+        const isAChampion = isWinner && arena.winsA >= arena.winsToChampion;
+        const isBChampion = isWinner && arena.winsB >= arena.winsToChampion;
         return `
         <div class="card bahn-${arena.bahn}">
-            <div class="title">${arena.arenaName}</div>
+            <div class="title">${escapeHtml(arena.arenaName)}</div>
             <div class="bahn bahn-${arena.bahn}">🎯 Bahn ${arena.bahn}</div>
-            <div class="info-line">🏆 ${state.winsToChampion} Siege  |  ⭐ ${getMaxPoints()} Pkt</div>
+            <div class="settings-info">
+                <span>⭐ ${arena.maxPoints} Pkt</span>
+                <span>🎯 ${arena.kehren} K</span>
+                <span>🏆 ${arena.winsToChampion} Siege</span>
+            </div>
             <div class="teams">
                 <div class="team ${isAChampion ? 'champion' : ''}">
-                    <div class="name">${isAChampion ? '🏆 ' : ''}${arena.teamA}</div>
+                    <div class="name">${isAChampion ? '🏆 ' : ''}${escapeHtml(arena.teamA)}</div>
                     <div class="score">${sum(arena.pointsA)}</div>
                     <div class="wins">🏆 ${arena.winsA}</div>
                     ${isAChampion ? '<div class="champion-badge">👑 MEISTER</div>' : ''}
                 </div>
                 <div class="team ${isBChampion ? 'champion' : ''}">
-                    <div class="name">${isBChampion ? '🏆 ' : ''}${arena.teamB}</div>
+                    <div class="name">${isBChampion ? '🏆 ' : ''}${escapeHtml(arena.teamB)}</div>
                     <div class="score">${sum(arena.pointsB)}</div>
                     <div class="wins">🏆 ${arena.winsB}</div>
                     ${isBChampion ? '<div class="champion-badge">👑 MEISTER</div>' : ''}
@@ -1486,38 +2045,13 @@ function updateSpectatorWindow(){
     `}).join('');
 }
 
-function toast(msg){
-    const t=document.getElementById('toast');
-    t.textContent=msg;
+function toast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
     t.classList.add('show');
     clearTimeout(t._timeout);
-    t._timeout = setTimeout(()=>t.classList.remove('show'),2500);
+    t._timeout = setTimeout(() => t.classList.remove('show'), 2500);
 }
-
-// ===== EVENT-LISTENER =====
-document.getElementById('playerCount').addEventListener('change', function(e){
-    const playerCount = Number(e.target.value);
-    state.playerCount = playerCount;
-    setMaxPoints(playerCount);
-    render();
-    toast(`👥 ${playerCount} Spieler – ⭐${playerCount} Pkt`);
-});
-
-document.getElementById('kehrenSelect').addEventListener('change', function(e){
-    state.kehren = Number(e.target.value);
-    state.arenas.forEach(arena => {
-        arena.pointsA = Array(state.kehren).fill(null);
-        arena.pointsB = Array(state.kehren).fill(null);
-    });
-    render();
-    toast(`🎯 ${state.kehren} Kehren`);
-});
-
-document.getElementById('gamesSelect').addEventListener('change', function(e){
-    state.winsToChampion = Number(e.target.value);
-    render();
-    toast(`🏆 ${state.winsToChampion} Siege zum Meister`);
-});
 
 // ===== APP START =====
 initArenas();
@@ -1528,7 +2062,7 @@ document.addEventListener('dblclick', function(e) {
 }, { passive: false });
 
 document.addEventListener('touchmove', function(e) {
-    // Nichts tun, nur passives Scrolling ermöglichen
+    // Passives Scrolling ermöglichen
 }, { passive: true });
 </script>
 
