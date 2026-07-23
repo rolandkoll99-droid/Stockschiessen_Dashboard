@@ -1,2070 +1,880 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.5, user-scalable=yes">
-<title>ESV Grein – SplitScreen Meisterschaftssystem</title>
-
-<style>
-/* ===== FARBEN KONFIGURIEREN ===== */
-:root{
-    --green:#1f5e3a;
-    --green-dark:#0d3d22;
-    --red:#b93a32;
-    --gold:#ffdf8c;
-    --dark:#102417;
-    --light:#eef5e9;
-    --border:#d7e4cf;
-    --text-dark:#222222;
-    --text-light:#ffffff;
-    --shadow:rgba(0,0,0,0.3);
-    
-    --bahn1-color: #4A90D9;
-    --bahn1-light: #E8F0FE;
-    --bahn2-color: #E67E22;
-    --bahn2-light: #FEF5E7;
-    --bahn3-color: #27AE60;
-    --bahn3-light: #E8F8F0;
-    --bahn4-color: #8E44AD;
-    --bahn4-light: #F4ECF7;
-    
-    --header-height: 60px;
-    --arena-min-height: 450px;
-    --kehren-max-height: 300px;
-    --button-size: 44px;
-}
-
-*{
-    margin:0;
-    padding:0;
-    box-sizing:border-box;
-    -webkit-tap-highlight-color: transparent;
-}
-
-body{
-    font-family:Segoe UI,Arial,sans-serif;
-    background:linear-gradient(135deg,#17351f,#0d1f13);
-    color:#222;
-    height:100vh;
-    overflow:hidden;
-    touch-action: manipulation;
-}
-
-#app-content {
-    display: flex;
-    height: 100vh;
-    flex-direction: column;
-}
-
-.header{
-    position:sticky;
-    top:0;
-    z-index:1000;
-    background:var(--green);
-    color:white;
-    padding:10px 12px;
-    display:flex;
-    justify-content:space-between;
-    align-items:center;
-    flex-wrap:wrap;
-    gap:8px;
-    flex-shrink:0;
-    min-height: var(--header-height);
-}
-
-.header h1{
-    font-size:1.2rem;
-    white-space:nowrap;
-}
-
-.header-controls{
-    display:flex;
-    gap:6px;
-    flex-wrap:wrap;
-    align-items:center;
-}
-
-button,
-select,
-input{
-    border:none;
-    border-radius:10px;
-    padding:8px 12px;
-    font-size:0.9rem;
-    touch-action: manipulation;
-}
-
-button{
-    cursor:pointer;
-    background:var(--green);
-    color:white;
-    font-weight:700;
-    transition: background 0.3s;
-    min-height: var(--button-size);
-    min-width: var(--button-size);
-}
-
-button:hover {
-    background: var(--green-dark);
-}
-
-button:active {
-    transform: scale(0.95);
-}
-
-.layout-wrapper {
-    flex: 1;
-    overflow-y: auto;
-    padding: 10px;
-    min-height: 0;
-    -webkit-overflow-scrolling: touch;
-}
-
-.layout-wrapper::-webkit-scrollbar {
-    width: 6px;
-}
-
-.layout-wrapper::-webkit-scrollbar-track {
-    background: rgba(255,255,255,0.05);
-    border-radius: 10px;
-}
-
-.layout-wrapper::-webkit-scrollbar-thumb {
-    background: var(--green);
-    border-radius: 10px;
-}
-
-.layout {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 16px;
-    align-content: start;
-    max-width: 800px;
-    margin: 0 auto;
-}
-
-@media (min-width: 768px) and (max-width: 1024px) {
-    .layout {
-        grid-template-columns: 1fr 1fr;
-        max-width: 1200px;
-        gap: 14px;
-    }
-}
-
-@media (min-width: 1025px) {
-    .layout {
-        grid-template-columns: repeat(auto-fit, minmax(450px, 1fr));
-        max-width: 1600px;
-    }
-}
-
-.arena{
-    border-radius:16px;
-    overflow:hidden;
-    box-shadow:0 8px 24px var(--shadow);
-    display:flex;
-    flex-direction:column;
-    height: fit-content;
-    min-height: var(--arena-min-height);
-    max-height: calc(100vh - 160px);
-    transition: all 0.3s ease;
-}
-
-.arena.bahn-1 {
-    background: var(--bahn1-light);
-    border: 3px solid var(--bahn1-color);
-}
-
-.arena.bahn-1 .arena-header {
-    background: var(--bahn1-color);
-    color: white;
-}
-
-.arena.bahn-1 .arena-header input {
-    border-color: var(--bahn1-color);
-}
-
-.arena.bahn-1 .score-card {
-    border-bottom-color: var(--bahn1-color);
-}
-
-.arena.bahn-2 {
-    background: var(--bahn2-light);
-    border: 3px solid var(--bahn2-color);
-}
-
-.arena.bahn-2 .arena-header {
-    background: var(--bahn2-color);
-    color: white;
-}
-
-.arena.bahn-2 .arena-header input {
-    border-color: var(--bahn2-color);
-}
-
-.arena.bahn-2 .score-card {
-    border-bottom-color: var(--bahn2-color);
-}
-
-.arena.bahn-3 {
-    background: var(--bahn3-light);
-    border: 3px solid var(--bahn3-color);
-}
-
-.arena.bahn-3 .arena-header {
-    background: var(--bahn3-color);
-    color: white;
-}
-
-.arena.bahn-3 .arena-header input {
-    border-color: var(--bahn3-color);
-}
-
-.arena.bahn-3 .score-card {
-    border-bottom-color: var(--bahn3-color);
-}
-
-.arena.bahn-4 {
-    background: var(--bahn4-light);
-    border: 3px solid var(--bahn4-color);
-}
-
-.arena.bahn-4 .arena-header {
-    background: var(--bahn4-color);
-    color: white;
-}
-
-.arena.bahn-4 .arena-header input {
-    border-color: var(--bahn4-color);
-}
-
-.arena.bahn-4 .score-card {
-    border-bottom-color: var(--bahn4-color);
-}
-
-/* ===== ARENA-HEADER MIT EINSTELLUNGEN ===== */
-.arena-header{
-    padding:10px 12px;
-    display:flex;
-    justify-content:space-between;
-    align-items:center;
-    flex-wrap:wrap;
-    gap:8px;
-    flex-shrink:0;
-    transition: background 0.3s ease;
-}
-
-.arena-header .left-section {
-    display:flex;
-    align-items:center;
-    gap:8px;
-    flex-wrap:wrap;
-    flex:1;
-}
-
-.arena-header input{
-    font-size:1rem;
-    font-weight:900;
-    border:2px solid rgba(255,255,255,0.3);
-    padding:6px 10px;
-    border-radius:8px;
-    max-width:180px;
-    background:rgba(255,255,255,0.9);
-    color:var(--text-dark);
-    min-height: 36px;
-}
-
-.arena-header input:focus {
-    outline: none;
-    background:white;
-}
-
-.bahn-selector{
-    display:flex;
-    gap:2px;
-    align-items:center;
-    flex-wrap:wrap;
-}
-
-.bahn-selector strong{
-    font-size:0.8rem;
-    color: white;
-}
-
-.bahn-btn{
-    background:rgba(255,255,255,0.3);
-    color:white;
-    min-width:28px;
-    min-height:28px;
-    padding:4px 10px;
-    font-size:0.85rem;
-    border-radius:8px;
-    border:2px solid transparent;
-}
-
-.bahn-btn.active{
-    background:white;
-    color:var(--text-dark);
-    font-weight:900;
-    border-color:white;
-}
-
-.bahn-btn:hover {
-    background:rgba(255,255,255,0.5);
-}
-
-/* ===== BAHN-EINSTELLUNGEN IM HEADER ===== */
-.bahn-settings-top {
-    display: flex;
-    gap: 6px;
-    align-items: center;
-    flex-wrap: wrap;
-    background: rgba(255,255,255,0.15);
-    padding: 4px 10px;
-    border-radius: 12px;
-    border: 1px solid rgba(255,255,255,0.1);
-}
-
-.bahn-settings-top .setting-group {
-    display: flex;
-    align-items: center;
-    gap: 3px;
-}
-
-.bahn-settings-top .setting-label {
-    font-size: 0.65rem;
-    font-weight: 700;
-    color: white;
-    opacity: 0.9;
-}
-
-.bahn-settings-top select {
-    padding: 3px 6px;
-    border-radius: 6px;
-    border: 2px solid rgba(255,255,255,0.3);
-    font-size: 0.7rem;
-    font-weight: 600;
-    background: rgba(255,255,255,0.9);
-    min-height: 28px;
-    min-width: 38px;
-    color: var(--text-dark);
-    cursor: pointer;
-}
-
-.bahn-settings-top select:focus {
-    outline: none;
-    border-color: white;
-    background: white;
-}
-
-.bahn-settings-top select:hover {
-    background: white;
-}
-
-/* ===== ÜBERNEHMEN BUTTON ===== */
-.btn-apply-settings {
-    background: #4CAF50;
-    color: white;
-    border: 2px solid rgba(255,255,255,0.3);
-    padding: 3px 10px;
-    min-height: 28px;
-    min-width: 28px;
-    font-size: 0.7rem;
-    font-weight: 700;
-    border-radius: 8px;
-    transition: all 0.3s;
-}
-
-.btn-apply-settings:hover {
-    background: #45a049;
-    transform: scale(1.05);
-}
-
-.btn-apply-settings:active {
-    transform: scale(0.95);
-}
-
-.btn-apply-settings.has-changes {
-    background: #ff9800;
-    animation: pulse 1s infinite;
-}
-
-@keyframes pulse {
-    0% { transform: scale(1); }
-    50% { transform: scale(1.05); }
-    100% { transform: scale(1); }
-}
-
-.remove-btn {
-    background: rgba(255,255,255,0.2);
-    padding: 3px 8px;
-    min-width: 26px;
-    font-size: 0.75rem;
-    color: white;
-    border-radius: 6px;
-    border: 1px solid rgba(255,255,255,0.2);
-    min-height: 26px;
-}
-
-.remove-btn:hover {
-    background: rgba(255,0,0,0.4);
-}
-
-/* ===== SETTINGS STATUS ANZEIGE ===== */
-.settings-status {
-    font-size: 0.55rem;
-    color: rgba(255,255,255,0.7);
-    padding: 2px 6px;
-    background: rgba(0,0,0,0.2);
-    border-radius: 4px;
-    white-space: nowrap;
-}
-
-.team-inputs{
-    display:grid;
-    grid-template-columns:1fr auto 1fr;
-    gap:8px;
-    padding:10px 12px;
-    flex-shrink:0;
-}
-
-.team-inputs input{
-    border:2px solid var(--border);
-    padding:6px 10px;
-    border-radius:8px;
-    font-weight:600;
-    font-size:0.9rem;
-    min-height: 40px;
-    background:white;
-}
-
-.team-inputs input:focus {
-    outline: none;
-    border-color: var(--green);
-}
-
-.team-inputs > div {
-    display:flex;
-    align-items:center;
-    font-weight:900;
-    font-size:0.9rem;
-    padding:0 4px;
-    color:var(--text-dark);
-}
-
-.scoreboard{
-    display:grid;
-    grid-template-columns:1fr 1fr;
-    gap:8px;
-    padding:0 12px 10px;
-    flex-shrink:0;
-}
-
-.score-card{
-    background:rgba(255,255,255,0.7);
-    border-radius:14px;
-    padding:12px;
-    text-align:center;
-    border-bottom:6px solid var(--green);
-    backdrop-filter: blur(5px);
-}
-
-.score-card.red{
-    border-bottom-color:var(--red);
-}
-
-.score-card.gold{
-    border-bottom-color:var(--gold);
-    background:rgba(255,223,140,0.3);
-}
-
-.team-name{
-    font-size:1rem;
-    font-weight:900;
-    margin-bottom:6px;
-    color:var(--text-dark);
-}
-
-.team-score{
-    font-size:2.8rem;
-    font-weight:900;
-    color:var(--green);
-}
-
-.team-points{
-    margin-top:6px;
-    font-weight:700;
-    font-size:0.85rem;
-    color:var(--text-dark);
-}
-
-.team-points span{
-    display:inline-block;
-    margin-top:4px;
-    background:var(--dark);
-    color:white;
-    padding:4px 14px;
-    border-radius:8px;
-    font-size:1rem;
-}
-
-.info-bar{
-    display:flex;
-    justify-content:center;
-    gap:6px;
-    flex-wrap:wrap;
-    padding:0 12px 8px;
-    flex-shrink:0;
-}
-
-.info-box{
-    background:rgba(255,255,255,0.5);
-    padding:4px 10px;
-    border-radius:8px;
-    font-weight:700;
-    font-size:0.75rem;
-    white-space:nowrap;
-    color:var(--text-dark);
-    backdrop-filter: blur(3px);
-}
-
-.info-box.active-setting {
-    background: var(--gold);
-    color: black;
-    border: 2px solid var(--green);
-}
-
-.kehren-wrapper {
-    flex: 1;
-    overflow-y: auto;
-    padding: 0 10px 10px;
-    min-height: 150px;
-    max-height: var(--kehren-max-height);
-    -webkit-overflow-scrolling: touch;
-}
-
-.kehren-wrapper::-webkit-scrollbar {
-    width: 5px;
-}
-
-.kehren-wrapper::-webkit-scrollbar-track {
-    background: rgba(255,255,255,0.3);
-    border-radius: 8px;
-}
-
-.kehren-wrapper::-webkit-scrollbar-thumb {
-    background: var(--green);
-    border-radius: 8px;
-}
-
-.kehren{
-    display:grid;
-    grid-template-columns:1fr 1fr;
-    gap:10px;
-}
-
-.kehren-title{
-    text-align:center;
-    font-weight:900;
-    margin-bottom:6px;
-    font-size:0.85rem;
-    color:var(--text-dark);
-}
-
-.kehre-row{
-    display:grid;
-    grid-template-columns:60px 1fr 32px;
-    gap:4px;
-    align-items:center;
-    background:rgba(255,255,255,0.7);
-    border:1px solid var(--border);
-    border-radius:10px;
-    padding:4px 6px;
-    margin-bottom:4px;
-    backdrop-filter: blur(3px);
-}
-
-.kehre-row.active{
-    border:3px solid #4caf50;
-    background:rgba(76,175,80,0.15);
-}
-
-.kehre-row.completed{
-    border:3px solid #ff9800;
-    background:rgba(255,152,0,0.15);
-}
-
-.kehre-number{
-    font-size:0.7rem;
-    font-weight:900;
-    color:var(--text-dark);
-}
-
-.points{
-    display:flex;
-    gap:3px;
-    justify-content:center;
-    flex-wrap:wrap;
-}
-
-.point-btn{
-    min-width:40px;
-    min-height:40px;
-    border-radius:6px;
-    border:2px solid var(--border);
-    background:white;
-    color:var(--text-dark);
-    font-weight:900;
-    font-size:0.75rem;
-    transition: all 0.15s;
-    padding:0 2px;
-    touch-action: manipulation;
-}
-
-.point-btn:hover{
-    background:var(--green);
-    color:white;
-    transform:scale(1.05);
-}
-
-.point-btn:active{
-    transform:scale(0.9);
-}
-
-.point-btn.active-point{
-    background:var(--green);
-    color:white;
-    border-color:var(--green);
-}
-
-.point-btn:disabled{
-    opacity:0.4;
-    cursor:not-allowed;
-    transform:none;
-}
-
-.kehre-value{
-    text-align:center;
-    font-weight:900;
-    font-size:0.9rem;
-    color:var(--text-dark);
-}
-
-.footer{
-    display:flex;
-    justify-content:center;
-    gap:8px;
-    flex-wrap:wrap;
-    padding:10px 12px;
-    border-top:1px solid rgba(255,255,255,0.3);
-    flex-shrink:0;
-}
-
-.footer button {
-    flex: 1;
-    min-width: 80px;
-    padding:8px 12px;
-    font-size:0.85rem;
-    min-height: 40px;
-}
-
-.footer .reset-buttons {
-    display:flex;
-    gap:6px;
-    flex: 1;
-    min-width: 140px;
-}
-
-.footer .reset-buttons button {
-    flex: 1;
-    min-width: 60px;
-}
-
-.gold{
-    background:var(--gold);
-    color:black;
-}
-
-.gold:hover {
-    background: #f5d47a;
-}
-
-.btn-reset-kehren {
-    background: #ff9800;
-    color: white;
-}
-
-.btn-reset-kehren:hover {
-    background: #e68900;
-}
-
-.btn-reset-bahn {
-    background: var(--red);
-    color: white;
-}
-
-.btn-reset-bahn:hover {
-    background: #a8322a;
-}
-
-.toast{
-    position:fixed;
-    bottom:20px;
-    left:50%;
-    transform:translateX(-50%);
-    background:#111;
-    color:white;
-    padding:12px 20px;
-    border-radius:12px;
-    opacity:0;
-    transition:.3s;
-    z-index:9999;
-    font-size:0.9rem;
-    max-width:90%;
-    text-align:center;
-    pointer-events:none;
-}
-
-.toast.show{
-    opacity:1;
-}
-
-.bahn-legend {
-    display: flex;
-    gap: 10px;
-    flex-wrap: wrap;
-    padding: 8px 12px;
-    background: rgba(255,255,255,0.1);
-    border-radius: 10px;
-    align-items: center;
-}
-
-.bahn-legend-item {
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    font-size: 0.7rem;
-    color: white;
-}
-
-.bahn-legend-item .color-box {
-    width: 16px;
-    height: 16px;
-    border-radius: 4px;
-    border: 1px solid rgba(255,255,255,0.3);
-}
-
-@media (max-width: 767px) {
-    :root {
-        --header-height: 50px;
-        --arena-min-height: 380px;
-        --kehren-max-height: 200px;
-        --button-size: 34px;
-    }
-    
-    .bahn-legend {
-        display: none;
-    }
-    
-    .arena {
-        border-width: 2px;
-    }
-    
-    .arena-header input {
-        max-width: 90px;
-        font-size: 0.75rem;
-        min-height: 28px;
-        padding: 4px 6px;
-    }
-    
-    .bahn-settings-top {
-        padding: 3px 6px;
-        gap: 3px;
-    }
-    
-    .bahn-settings-top select {
-        font-size: 0.6rem;
-        padding: 2px 4px;
-        min-height: 22px;
-        min-width: 28px;
-    }
-    
-    .bahn-settings-top .setting-label {
-        font-size: 0.5rem;
-    }
-    
-    .btn-apply-settings {
-        font-size: 0.6rem;
-        padding: 2px 6px;
-        min-height: 22px;
-        min-width: 22px;
-    }
-    
-    .arena-header .left-section {
-        gap: 4px;
-    }
-    
-    .settings-status {
-        font-size: 0.5rem;
-        padding: 1px 4px;
-    }
-}
-
-@media (min-width: 768px) and (max-width: 1024px) {
-    :root {
-        --header-height: 55px;
-        --arena-min-height: 400px;
-        --kehren-max-height: 250px;
-        --button-size: 38px;
-    }
-}
-
-@media (orientation: landscape) and (max-height: 600px) {
-    :root {
-        --arena-min-height: 300px;
-        --kehren-max-height: 150px;
-        --header-height: 45px;
-    }
-    
-    .arena {
-        max-height: calc(100vh - 100px);
-        min-height: 280px;
-    }
-    
-    .team-score {
-        font-size: 1.8rem;
-    }
-    
-    .score-card {
-        padding: 6px 10px;
-    }
-}
-
-@media (hover: none) {
-    button:hover {
-        transform: none;
-    }
-    
-    .point-btn:hover {
-        transform: none;
-    }
-    
-    button:active {
-        transform: scale(0.95);
-    }
-    
-    .point-btn:active {
-        transform: scale(0.9);
-    }
-}
-
-.kehren-wrapper {
-    scroll-behavior: smooth;
-}
-
-@keyframes fadeIn {
-    from { opacity: 0; transform: translateY(10px); }
-    to { opacity: 1; transform: translateY(0); }
-}
-
-.arena {
-    animation: fadeIn 0.3s ease-out;
-}
-
-.header .bahn-legend {
-    display: none;
-}
-
-@media (min-width: 1024px) {
-    .header .bahn-legend {
-        display: flex;
-    }
-}
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no">
+    <title>ESV Grein – Trainingssystem</title>
+    <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+    <style>
+        /* ===== MASTER CSS ===== */
+        :root {
+            --green: #1f5e3a;
+            --green-dark: #0d3d22;
+            --red: #b93a32;
+            --gold: #ffdf8c;
+            --dark: #102417;
+            --light: #eef5e9;
+            --border: #d7e4cf;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        html,
+        body {
+            height: 100%;
+            height: 100dvh;
+            overflow: hidden;
+            font-family: 'Segoe UI', Arial, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #17351f, #0d1f13);
+            color: #222;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* ===== LOGO ALS HINTERGRUND ===== */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 80vmin;
+            height: 80vmin;
+            background: radial-gradient(circle, rgba(31, 94, 58, 0.08) 0%, transparent 70%);
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 400'%3E%3Ccircle cx='200' cy='200' r='180' fill='none' stroke='%231f5e3a' stroke-width='2' opacity='0.08'/%3E%3Ctext x='200' y='175' text-anchor='middle' font-family='Arial,sans-serif' font-weight='900' font-size='52' fill='%231f5e3a' opacity='0.07' letter-spacing='3'%3ESTOCKSCHIESSEN%3C/text%3E%3Ctext x='200' y='235' text-anchor='middle' font-family='Arial,sans-serif' font-weight='700' font-size='38' fill='%231f5e3a' opacity='0.06' letter-spacing='5'%3ETRAININGSAPP%3C/text%3E%3Cline x1='60' y1='195' x2='140' y2='195' stroke='%231f5e3a' stroke-width='2' opacity='0.06'/%3E%3Cline x1='260' y1='195' x2='340' y2='195' stroke='%231f5e3a' stroke-width='2' opacity='0.06'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: center;
+            background-size: contain;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        /* ===== DARK MODE ===== */
+        @media (prefers-color-scheme: dark) {
+            body::before {
+                background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 400'%3E%3Ccircle cx='200' cy='200' r='180' fill='none' stroke='%236abf8a' stroke-width='2' opacity='0.06'/%3E%3Ctext x='200' y='175' text-anchor='middle' font-family='Arial,sans-serif' font-weight='900' font-size='52' fill='%236abf8a' opacity='0.05' letter-spacing='3'%3ESTOCKSCHIESSEN%3C/text%3E%3Ctext x='200' y='235' text-anchor='middle' font-family='Arial,sans-serif' font-weight='700' font-size='38' fill='%236abf8a' opacity='0.04' letter-spacing='5'%3ETRAININGSAPP%3C/text%3E%3Cline x1='60' y1='195' x2='140' y2='195' stroke='%236abf8a' stroke-width='2' opacity='0.04'/%3E%3Cline x1='260' y1='195' x2='340' y2='195' stroke='%236abf8a' stroke-width='2' opacity='0.04'/%3E%3C/svg%3E");
+            }
+        }
+
+        /* ===== HEADER ===== */
+        .header {
+            position: sticky;
+            top: 0;
+            z-index: 500;
+            background: var(--green);
+            color: white;
+            padding: 12px 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+            flex-shrink: 0;
+        }
+
+        .header h1 {
+            font-size: 1.3rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .header .header-logo {
+            width: 36px;
+            height: 36px;
+            flex-shrink: 0;
+        }
+
+        .header-controls {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .header-controls button {
+            padding: 6px 14px;
+            font-size: 0.85rem;
+            border-radius: 10px;
+            min-height: 36px;
+            background: rgba(255, 255, 255, 0.15);
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+            transition: background 0.2s;
+        }
+
+        .header-controls button:hover {
+            background: rgba(255, 255, 255, 0.25);
+        }
+
+        .header-controls button.active {
+            background: var(--gold);
+            color: #222;
+        }
+
+        .header-controls button:active {
+            transform: scale(0.95);
+        }
+
+        /* ===== MAIN CONTENT ===== */
+        .layout {
+            flex: 1;
+            padding: 12px;
+            overflow: hidden;
+            min-height: 0;
+            position: relative;
+            z-index: 1;
+        }
+
+        .arena {
+            width: 100%;
+            max-width: 1200px;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.92);
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            display: flex;
+            flex-direction: column;
+            margin: 0 auto;
+        }
+
+        .arena-content {
+            flex: 1;
+            overflow: hidden;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* ===== DASHBOARD ===== */
+        .dashboard {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            gap: 16px;
+        }
+
+        .dashboard-top {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr 1fr;
+            gap: 12px;
+            flex-shrink: 0;
+        }
+
+        .dashboard-card {
+            background: white;
+            border-radius: 14px;
+            padding: 16px 18px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+            border: 1px solid var(--border);
+            text-align: center;
+        }
+
+        .dashboard-card .label {
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: #888;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .dashboard-card .value {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: var(--green);
+            margin-top: 4px;
+        }
+
+        .dashboard-card .value .icon {
+            font-size: 1.4rem;
+            margin-right: 4px;
+        }
+
+        .dashboard-menu {
+            flex: 1;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 14px;
+            align-content: center;
+            padding: 10px 0;
+        }
+
+        .menu-card {
+            background: white;
+            border-radius: 18px;
+            padding: 25px 20px;
+            text-align: center;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            border: 2px solid var(--border);
+            transition: all 0.2s;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+            min-height: 160px;
+            justify-content: center;
+        }
+
+        .menu-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+            border-color: var(--green);
+        }
+
+        .menu-card:active {
+            transform: scale(0.96);
+        }
+
+        .menu-card .icon {
+            font-size: 2.8rem;
+        }
+
+        .menu-card .title {
+            font-size: 1.1rem;
+            font-weight: 800;
+            color: var(--green);
+        }
+
+        .menu-card .desc {
+            font-size: 0.8rem;
+            color: #666;
+            line-height: 1.4;
+        }
+
+        .menu-card .badge {
+            background: var(--gold);
+            color: #222;
+            padding: 2px 12px;
+            border-radius: 20px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            margin-top: 2px;
+        }
+
+        .menu-card .badge-new {
+            background: var(--red);
+            color: white;
+        }
+
+        /* ===== QR-CODE KARTE ===== */
+        .qr-card {
+            background: white;
+            border-radius: 18px;
+            padding: 25px 20px;
+            text-align: center;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            border: 2px solid var(--gold);
+            transition: all 0.2s;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+            min-height: 160px;
+            justify-content: center;
+        }
+
+        .qr-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+            border-color: var(--green);
+        }
+
+        .qr-card:active {
+            transform: scale(0.96);
+        }
+
+        .qr-card .icon {
+            font-size: 2.8rem;
+        }
+
+        .qr-card .title {
+            font-size: 1.1rem;
+            font-weight: 800;
+            color: var(--green);
+        }
+
+        .qr-card .desc {
+            font-size: 0.8rem;
+            color: #666;
+            line-height: 1.4;
+        }
+
+        .qr-card .badge {
+            background: var(--gold);
+            color: #222;
+            padding: 2px 12px;
+            border-radius: 20px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            margin-top: 2px;
+        }
+
+        .qr-container {
+            background: white;
+            padding: 8px;
+            border-radius: 12px;
+            display: inline-block;
+            margin: 4px 0;
+        }
+
+        .qr-container canvas,
+        .qr-container img {
+            display: block !important;
+        }
+
+        .dashboard-footer {
+            flex-shrink: 0;
+            text-align: center;
+            font-size: 0.75rem;
+            color: #999;
+            padding-top: 8px;
+            border-top: 1px solid var(--border);
+        }
+
+        /* ===== TOAST ===== */
+        .toast {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #111;
+            color: white;
+            padding: 12px 20px;
+            border-radius: 12px;
+            opacity: 0;
+            transition: opacity 0.3s;
+            z-index: 9999;
+            pointer-events: none;
+            font-size: 0.95rem;
+            max-width: 90%;
+            text-align: center;
+        }
+
+        .toast.show {
+            opacity: 1;
+        }
+
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 900px) {
+            .dashboard-top {
+                grid-template-columns: 1fr 1fr;
+                gap: 10px;
+            }
+            .dashboard-card {
+                padding: 12px 14px;
+            }
+            .dashboard-card .value {
+                font-size: 1rem;
+            }
+        }
+
+        @media (max-width: 600px) {
+            .header h1 {
+                font-size: 1rem;
+            }
+            .header .header-logo {
+                width: 28px;
+                height: 28px;
+            }
+            .header-controls button {
+                font-size: 0.75rem;
+                padding: 4px 10px;
+                min-height: 30px;
+            }
+            .dashboard-top {
+                grid-template-columns: 1fr 1fr;
+                gap: 8px;
+            }
+            .dashboard-card {
+                padding: 10px 10px;
+            }
+            .dashboard-card .value {
+                font-size: 0.9rem;
+            }
+            .dashboard-card .label {
+                font-size: 0.65rem;
+            }
+            .dashboard-menu {
+                grid-template-columns: 1fr 1fr;
+                gap: 10px;
+                padding: 6px 0;
+            }
+            .menu-card {
+                padding: 16px 12px;
+                min-height: 120px;
+            }
+            .menu-card .icon {
+                font-size: 2rem;
+            }
+            .menu-card .title {
+                font-size: 0.9rem;
+            }
+            .menu-card .desc {
+                font-size: 0.7rem;
+            }
+            .qr-card {
+                padding: 16px 12px;
+                min-height: 120px;
+            }
+            .qr-card .icon {
+                font-size: 2rem;
+            }
+            .qr-card .title {
+                font-size: 0.9rem;
+            }
+            .qr-card .desc {
+                font-size: 0.7rem;
+            }
+            .arena-content {
+                padding: 12px;
+            }
+            body::before {
+                width: 95vmin;
+                height: 95vmin;
+            }
+            .qr-container canvas,
+            .qr-container img {
+                width: 80px !important;
+                height: 80px !important;
+            }
+        }
+
+        @media (min-width: 601px) and (max-width: 1024px) {
+            .dashboard-menu {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            .menu-card {
+                min-height: 150px;
+            }
+            .qr-card {
+                min-height: 150px;
+            }
+        }
+
+        /* ===== DARK MODE ===== */
+        @media (prefers-color-scheme: dark) {
+            .arena {
+                background: rgba(26, 31, 28, 0.92);
+            }
+            .dashboard-card {
+                background: #1a1f1c;
+                border-color: #2a3a2e;
+                color: #e8f0e5;
+            }
+            .dashboard-card .value {
+                color: #6abf8a;
+            }
+            .dashboard-card .label {
+                color: #889988;
+            }
+            .menu-card {
+                background: #1a1f1c;
+                border-color: #2a3a2e;
+                color: #e8f0e5;
+            }
+            .menu-card .title {
+                color: #6abf8a;
+            }
+            .menu-card .desc {
+                color: #a0b0a0;
+            }
+            .menu-card:hover {
+                border-color: #6abf8a;
+            }
+            .qr-card {
+                background: #1a1f1c;
+                border-color: #6abf8a;
+                color: #e8f0e5;
+            }
+            .qr-card .title {
+                color: #6abf8a;
+            }
+            .qr-card .desc {
+                color: #a0b0a0;
+            }
+            .qr-card:hover {
+                border-color: #ffdf8c;
+            }
+            .header-controls button {
+                background: rgba(255, 255, 255, 0.08);
+            }
+            .header-controls button.active {
+                background: var(--gold);
+                color: #222;
+            }
+            .dashboard-footer {
+                border-color: #2a3a2e;
+                color: #667766;
+            }
+        }
+    </style>
 </head>
 <body>
 
-<div id="app-content">
+    <!-- ===== HEADER ===== -->
     <div class="header">
-        <h1>🥌 ESV Grein</h1>
+        <h1>
+            <svg class="header-logo" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="100" cy="100" r="95" fill="#1f5e3a" stroke="#ffdf8c" stroke-width="2"/>
+                <text x="100" y="78" text-anchor="middle" font-family="Arial,sans-serif" font-weight="900" font-size="30" fill="#ffdf8c" letter-spacing="1.5">STOCKSCHIESSEN</text>
+                <text x="100" y="112" text-anchor="middle" font-family="Arial,sans-serif" font-weight="700" font-size="20" fill="#c8e6c9" letter-spacing="2.5">TRAININGSAPP</text>
+                <line x1="30" y1="85" x2="70" y2="85" stroke="#ffdf8c" stroke-width="1.5" opacity="0.3"/>
+                <line x1="130" y1="85" x2="170" y2="85" stroke="#ffdf8c" stroke-width="1.5" opacity="0.3"/>
+            </svg>
+            ESV Grein
+        </h1>
 
         <div class="header-controls">
-            <div class="bahn-legend">
-                <div class="bahn-legend-item">
-                    <div class="color-box" style="background:#4A90D9;"></div>
-                    <span>B1</span>
-                </div>
-                <div class="bahn-legend-item">
-                    <div class="color-box" style="background:#E67E22;"></div>
-                    <span>B2</span>
-                </div>
-                <div class="bahn-legend-item">
-                    <div class="color-box" style="background:#27AE60;"></div>
-                    <span>B3</span>
-                </div>
-                <div class="bahn-legend-item">
-                    <div class="color-box" style="background:#8E44AD;"></div>
-                    <span>B4</span>
-                </div>
-            </div>
-
-            <button onclick="openSpectatorWindow()" title="Zuschauer-Monitor">📺</button>
-            <button onclick="addArena()" title="Bahn hinzufügen">➕</button>
-            <button onclick="resetAllArenas()" style="background:var(--red);" title="Alle Bahnen zurücksetzen">🔄</button>
+            <button class="active" onclick="showDashboard()" id="btnMenu">🏠 Dashboard</button>
+            <button onclick="toggleTheme()" id="btnTheme">🌓</button>
+            <button onclick="fullReset()" style="background:rgba(185,58,50,0.8);">↺</button>
         </div>
     </div>
 
-    <div class="layout-wrapper">
-        <div class="layout" id="layout"></div>
+    <!-- ===== MAIN CONTENT ===== -->
+    <div class="layout" id="layout">
+        <div class="arena">
+            <div class="arena-content" id="arenaContent">
+                <!-- Wird dynamisch befüllt -->
+            </div>
+        </div>
     </div>
-</div>
 
-<div class="toast" id="toast"></div>
+    <!-- ===== TOAST ===== -->
+    <div class="toast" id="toast"></div>
 
-<script>
-// ===== SPEICHER-SYSTEM =====
-const TEAM_NAMES_KEY = 'esv_grein_meisterschaft_team_names';
-const ARENA_COUNT_KEY = 'esv_grein_meisterschaft_arena_count';
-const ARENA_SETTINGS_KEY = 'esv_grein_arena_settings';
-
-function getTeamNames(arenaId) {
-    let allNames = localStorage.getItem(TEAM_NAMES_KEY);
-    if (!allNames) {
-        allNames = JSON.stringify({
-            '1': { teamA: 'Team 1A', teamB: 'Team 1B' },
-            '2': { teamA: 'Team 2A', teamB: 'Team 2B' }
-        });
-        localStorage.setItem(TEAM_NAMES_KEY, allNames);
-    }
-    const parsed = JSON.parse(allNames);
-    return parsed[arenaId] || { teamA: `Team ${arenaId}A`, teamB: `Team ${arenaId}B` };
-}
-
-function saveTeamNames(arenaId, teamA, teamB) {
-    let allNames = JSON.parse(localStorage.getItem(TEAM_NAMES_KEY) || '{}');
-    allNames[arenaId] = { teamA, teamB };
-    localStorage.setItem(TEAM_NAMES_KEY, JSON.stringify(allNames));
-}
-
-function getArenaCount() {
-    let count = localStorage.getItem(ARENA_COUNT_KEY);
-    if (!count) {
-        count = '2';
-        localStorage.setItem(ARENA_COUNT_KEY, count);
-    }
-    return parseInt(count);
-}
-
-function setArenaCount(count) {
-    localStorage.setItem(ARENA_COUNT_KEY, count.toString());
-}
-
-function getArenaSettings(arenaId) {
-    let allSettings = JSON.parse(localStorage.getItem(ARENA_SETTINGS_KEY) || '{}');
-    if (!allSettings[arenaId]) {
-        allSettings[arenaId] = {
-            maxPoints: 4,
-            kehren: 6,
-            winsToChampion: 5
+    <script>
+        // ===== KONFIGURATION =====
+        const MODULES = {
+            training: {
+                url: 'https://rolandkoll99-droid.github.io/Training_6Per/',
+                name: 'Trainingsmodus',
+                icon: '🥌'
+            },
+            championship: {
+                url: 'https://rolandkoll99-droid.github.io/Stockschiessen_Meisterschaft/',
+                name: 'Meisterschaftsmodus',
+                icon: '🏆'
+            },
+            simple: {
+                url: 'simple.html',
+                name: 'Training einfach',
+                icon: '📊'
+            }
         };
-        localStorage.setItem(ARENA_SETTINGS_KEY, JSON.stringify(allSettings));
-    }
-    return allSettings[arenaId];
-}
 
-function saveArenaSettings(arenaId, settings) {
-    let allSettings = JSON.parse(localStorage.getItem(ARENA_SETTINGS_KEY) || '{}');
-    allSettings[arenaId] = settings;
-    localStorage.setItem(ARENA_SETTINGS_KEY, JSON.stringify(allSettings));
-}
+        // ===== STATE =====
+        let currentMode = 'dashboard';
+        let theme = localStorage.getItem('stockschuetzen_theme') || 'light';
+        let weatherData = { temperature: '--', condition: '☀️', wind: '--' };
 
-const BAHN_COLORS = {
-    1: { color: '#4A90D9', light: '#E8F0FE', name: 'Blau' },
-    2: { color: '#E67E22', light: '#FEF5E7', name: 'Orange' },
-    3: { color: '#27AE60', light: '#E8F8F0', name: 'Grün' },
-    4: { color: '#8E44AD', light: '#F4ECF7', name: 'Lila' }
-};
+        // ===== WETTER API =====
+        const WEATHER_API_KEY = '';
+        const WEATHER_LOCATION = 'Grein,AT';
 
-function getBahnColor(bahn) {
-    return BAHN_COLORS[bahn] || BAHN_COLORS[1];
-}
-
-const state = {
-    arenas: [],
-    pendingSettings: {}
-};
-
-// ===== RENDER-OPTIMIERUNG =====
-let renderTimeout = null;
-let needsRender = false;
-
-function scheduleRender() {
-    if (renderTimeout) {
-        clearTimeout(renderTimeout);
-    }
-    needsRender = true;
-    renderTimeout = setTimeout(() => {
-        if (needsRender) {
-            performRender();
-            needsRender = false;
-        }
-        renderTimeout = null;
-    }, 16);
-}
-
-function performRender() {
-    const layout = document.getElementById('layout');
-    
-    const currentIds = state.arenas.map(a => a.id).join(',');
-    const existingIds = Array.from(layout.querySelectorAll('.arena')).map(el => el.id.replace('arena-', '')).join(',');
-    
-    if (currentIds !== existingIds || layout.children.length === 0) {
-        layout.innerHTML = state.arenas.map(renderArena).join('');
-        updateKehrenHeights();
-        updateSpectatorWindow();
-        return;
-    }
-    
-    state.arenas.forEach(arena => {
-        const element = document.getElementById(`arena-${arena.id}`);
-        if (element) {
-            updateArenaElement(element, arena);
-        }
-    });
-    
-    updateSpectatorWindow();
-}
-
-function updateKehrenHeights() {
-    document.querySelectorAll('.kehren-wrapper').forEach(wrapper => {
-        const arenaId = parseInt(wrapper.id.replace('kehren-wrapper-', ''));
-        const arena = getArena(arenaId);
-        if (arena) {
-            const rowHeight = 42;
-            const maxHeight = Math.min(arena.kehren * rowHeight + 20, 300);
-            wrapper.style.maxHeight = Math.max(150, maxHeight) + 'px';
-        }
-    });
-}
-
-function render() {
-    scheduleRender();
-}
-
-function createArena(id) {
-    const names = getTeamNames(id);
-    const settings = getArenaSettings(id);
-    return {
-        id,
-        arenaName: `Bahn ${id}`,
-        bahn: id,
-        teamA: names.teamA || `Team ${id}A`,
-        teamB: names.teamB || `Team ${id}B`,
-        pointsA: Array(settings.kehren).fill(null),
-        pointsB: Array(settings.kehren).fill(null),
-        winsA: 0,
-        winsB: 0,
-        maxPoints: settings.maxPoints || 4,
-        kehren: settings.kehren || 6,
-        winsToChampion: settings.winsToChampion || 5
-    };
-}
-
-function initArenas() {
-    const count = getArenaCount();
-    state.arenas = [];
-    state.pendingSettings = {};
-    for (let i = 1; i <= count; i++) {
-        state.arenas.push(createArena(i));
-    }
-    render();
-}
-
-function addArena() {
-    const newId = state.arenas.length + 1;
-    state.arenas.push(createArena(newId));
-    setArenaCount(state.arenas.length);
-    render();
-    toast(`➕ Bahn ${newId} hinzugefügt (${getBahnColor(newId).name})`);
-    
-    setTimeout(() => {
-        const layout = document.getElementById('layout');
-        const lastArena = layout.lastElementChild;
-        if (lastArena) {
-            lastArena.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        }
-    }, 100);
-}
-
-function removeArena(id) {
-    if (state.arenas.length <= 1) {
-        toast('❌ Mindestens eine Bahn!');
-        return;
-    }
-    if (!confirm(`Bahn ${id} löschen?`)) return;
-    
-    state.arenas = state.arenas.filter(a => a.id !== id);
-    delete state.pendingSettings[id];
-    setArenaCount(state.arenas.length);
-    render();
-    toast(`🗑️ Bahn ${id} gelöscht`);
-}
-
-function renderArena(arena) {
-    const scoreA = sum(arena.pointsA);
-    const scoreB = sum(arena.pointsB);
-    const isWinner = hasWinner(arena);
-    const isAChampion = isWinner && arena.winsA >= arena.winsToChampion;
-    const isBChampion = isWinner && arena.winsB >= arena.winsToChampion;
-    const bahnColor = getBahnColor(arena.bahn);
-    
-    const hasPending = state.pendingSettings[arena.id] !== undefined;
-    const pending = state.pendingSettings[arena.id] || {};
-    const currentMaxPoints = pending.maxPoints !== undefined ? pending.maxPoints : arena.maxPoints;
-    const currentKehren = pending.kehren !== undefined ? pending.kehren : arena.kehren;
-    const currentWins = pending.winsToChampion !== undefined ? pending.winsToChampion : arena.winsToChampion;
-
-    return `
-    <div class="arena bahn-${arena.bahn}" id="arena-${arena.id}" data-arena-id="${arena.id}">
-        <div class="arena-header" style="background: ${bahnColor.color};">
-            <div class="left-section">
-                <input
-                    value="${escapeHtml(arena.arenaName)}"
-                    onchange="setArenaName(${arena.id},this.value)"
-                    placeholder="Bahn Name"
-                    style="border-color: ${bahnColor.color};"
-                    id="name-input-${arena.id}"
-                >
-
-                <div class="bahn-selector">
-                    <strong>🎯</strong>
-                    ${[1,2,3,4].map(b => `
-                        <button
-                            class="bahn-btn ${arena.bahn === b ? 'active' : ''}"
-                            onclick="setBahn(${arena.id},${b})"
-                            style="${arena.bahn === b ? 'background:white;color:black;' : ''}">
-                            ${b}
-                        </button>
-                    `).join('')}
-                </div>
-            </div>
-
-            <div class="bahn-settings-top">
-                <div class="setting-group">
-                    <span class="setting-label">⭐</span>
-                    <select onchange="onSettingChange(${arena.id},'maxPoints',parseInt(this.value))" id="maxpoints-${arena.id}">
-                        ${[3,4,5,6,7].map(v => `<option value="${v}" ${currentMaxPoints === v ? 'selected' : ''}>${v}</option>`).join('')}
-                    </select>
-                </div>
-                <div class="setting-group">
-                    <span class="setting-label">🎯</span>
-                    <select onchange="onSettingChange(${arena.id},'kehren',parseInt(this.value))" id="kehren-${arena.id}">
-                        ${[4,6,8,10,12].map(v => `<option value="${v}" ${currentKehren === v ? 'selected' : ''}>${v}</option>`).join('')}
-                    </select>
-                </div>
-                <div class="setting-group">
-                    <span class="setting-label">🏆</span>
-                    <select onchange="onSettingChange(${arena.id},'winsToChampion',parseInt(this.value))" id="wins-${arena.id}">
-                        ${[2,3,4,5,6,7].map(v => `<option value="${v}" ${currentWins === v ? 'selected' : ''}>${v}</option>`).join('')}
-                    </select>
-                </div>
-                
-                <button class="btn-apply-settings ${hasPending ? 'has-changes' : ''}" 
-                        onclick="applySettings(${arena.id})" 
-                        title="Einstellungen übernehmen">
-                    ${hasPending ? '✅ Übernehmen' : '✓'}
-                </button>
-                
-                ${hasPending ? '<span class="settings-status">⚡ Änderungen</span>' : ''}
-                
-                <button class="remove-btn" onclick="removeArena(${arena.id})" title="Bahn löschen">✕</button>
-            </div>
-        </div>
-
-        <div class="team-inputs">
-            <input value="${escapeHtml(arena.teamA)}" onchange="setTeam(${arena.id},'A',this.value)" placeholder="Team A" id="team-a-${arena.id}">
-            <div>VS</div>
-            <input value="${escapeHtml(arena.teamB)}" onchange="setTeam(${arena.id},'B',this.value)" placeholder="Team B" id="team-b-${arena.id}">
-        </div>
-
-        <div class="scoreboard">
-            <div class="score-card ${isAChampion ? 'gold' : ''}" id="score-a-${arena.id}">
-                <div class="team-name">${isAChampion ? '🏆 ' : ''}${escapeHtml(arena.teamA)}</div>
-                <div class="team-score" id="score-a-value-${arena.id}">${scoreA}</div>
-                <div class="team-points">
-                    Siege<br>
-                    <span id="wins-a-${arena.id}">${arena.winsA}</span>
-                </div>
-            </div>
-
-            <div class="score-card red ${isBChampion ? 'gold' : ''}" id="score-b-${arena.id}">
-                <div class="team-name">${isBChampion ? '🏆 ' : ''}${escapeHtml(arena.teamB)}</div>
-                <div class="team-score" id="score-b-value-${arena.id}">${scoreB}</div>
-                <div class="team-points">
-                    Siege<br>
-                    <span id="wins-b-${arena.id}">${arena.winsB}</span>
-                </div>
-            </div>
-        </div>
-
-        <div class="info-bar">
-            <div class="info-box ${hasPending ? 'active-setting' : ''}">🎯${arena.bahn}</div>
-            <div class="info-box">🏆${arena.winsA}:${arena.winsB}</div>
-            <div class="info-box ${hasPending ? 'active-setting' : ''}">🎯${currentWins}</div>
-            <div class="info-box ${hasPending ? 'active-setting' : ''}">⭐${currentMaxPoints}</div>
-            ${isWinner ? '<div class="info-box" style="background:var(--gold);color:black;">🏆MEISTER</div>' : ''}
-        </div>
-
-        <div class="kehren-wrapper" id="kehren-wrapper-${arena.id}">
-            <div class="kehren">
-                <div>
-                    <div class="kehren-title">${escapeHtml(arena.teamA)}</div>
-                    ${renderKehren(arena, 'A')}
-                </div>
-
-                <div>
-                    <div class="kehren-title">${escapeHtml(arena.teamB)}</div>
-                    ${renderKehren(arena, 'B')}
-                </div>
-            </div>
-        </div>
-
-        <div class="footer">
-            <button class="gold" onclick="evaluateGame(${arena.id})" ${isWinner ? 'disabled style="opacity:0.5;cursor:not-allowed;"' : ''}>
-                ${isWinner ? '🏆 Meister' : '🏆 Spiel'}
-            </button>
-            <div class="reset-buttons">
-                <button class="btn-reset-kehren" onclick="resetCurrentKehren(${arena.id})">🔄 Kehren</button>
-                <button class="btn-reset-bahn" onclick="resetBahn(${arena.id})">🔄 Bahn</button>
-            </div>
-        </div>
-    </div>
-    `;
-}
-
-function renderKehren(arena, team) {
-    let html = '';
-    const arr = team === 'A' ? arena.pointsA : arena.pointsB;
-    const hasPending = state.pendingSettings[arena.id] !== undefined;
-    const pending = state.pendingSettings[arena.id] || {};
-    const maxPoints = pending.maxPoints !== undefined ? pending.maxPoints : arena.maxPoints;
-    const isWinner = hasWinner(arena);
-    const teamPrefix = team === 'A' ? 'a' : 'b';
-
-    for (let i = 0; i < arena.kehren; i++) {
-        const active = activeKehre(arena) === i + 1;
-        const isCompleted = arr[i] !== null;
-        const value = arr[i] !== null ? arr[i] : '-';
-
-        html += `
-        <div class="kehre-row ${active ? 'active' : ''} ${isCompleted ? 'completed' : ''}" id="kehre-row-${arena.id}-${teamPrefix}-${i}">
-            <div class="kehre-number">K${i+1}</div>
-            <div class="points" id="points-${arena.id}-${teamPrefix}-${i}">
-                ${Array.from({length: maxPoints + 1}, (_, v) => `
-                    <button
-                        class="point-btn ${arr[i] === v ? 'active-point' : ''}"
-                        onclick="setPoints(${arena.id},'${team}',${i},${v})"
-                        ${isWinner ? 'disabled' : ''}
-                        data-arena="${arena.id}"
-                        data-team="${team}"
-                        data-index="${i}"
-                        data-value="${v}">
-                        ${v}
-                    </button>
-                `).join('')}
-            </div>
-            <div class="kehre-value" id="kehre-value-${arena.id}-${teamPrefix}-${i}">${value}</div>
-        </div>
-        `;
-    }
-
-    return html;
-}
-
-function escapeHtml(text) {
-    if (!text) return '';
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
-}
-
-function updateArenaElement(element, arena) {
-    const scoreA = sum(arena.pointsA);
-    const scoreB = sum(arena.pointsB);
-    const isWinner = hasWinner(arena);
-    const isAChampion = isWinner && arena.winsA >= arena.winsToChampion;
-    const isBChampion = isWinner && arena.winsB >= arena.winsToChampion;
-    const hasPending = state.pendingSettings[arena.id] !== undefined;
-    const pending = state.pendingSettings[arena.id] || {};
-    const currentMaxPoints = pending.maxPoints !== undefined ? pending.maxPoints : arena.maxPoints;
-    const currentKehren = pending.kehren !== undefined ? pending.kehren : arena.kehren;
-    const currentWins = pending.winsToChampion !== undefined ? pending.winsToChampion : arena.winsToChampion;
-    
-    element.className = `arena bahn-${arena.bahn}`;
-    
-    const header = element.querySelector('.arena-header');
-    const bahnColor = getBahnColor(arena.bahn);
-    header.style.background = bahnColor.color;
-    
-    const bahnBtns = element.querySelectorAll('.bahn-btn');
-    bahnBtns.forEach((btn, index) => {
-        const bahnNum = index + 1;
-        if (bahnNum === arena.bahn) {
-            btn.classList.add('active');
-            btn.style.background = 'white';
-            btn.style.color = 'black';
-        } else {
-            btn.classList.remove('active');
-            btn.style.background = '';
-            btn.style.color = '';
-        }
-    });
-    
-    const teamAInput = document.getElementById(`team-a-${arena.id}`);
-    if (teamAInput && teamAInput.value !== arena.teamA) {
-        teamAInput.value = arena.teamA;
-    }
-    const teamBInput = document.getElementById(`team-b-${arena.id}`);
-    if (teamBInput && teamBInput.value !== arena.teamB) {
-        teamBInput.value = arena.teamB;
-    }
-    
-    const nameInput = document.getElementById(`name-input-${arena.id}`);
-    if (nameInput && nameInput.value !== arena.arenaName) {
-        nameInput.value = arena.arenaName;
-    }
-    
-    const maxPointsSelect = document.getElementById(`maxpoints-${arena.id}`);
-    if (maxPointsSelect && parseInt(maxPointsSelect.value) !== currentMaxPoints) {
-        maxPointsSelect.value = currentMaxPoints;
-    }
-    const kehrenSelect = document.getElementById(`kehren-${arena.id}`);
-    if (kehrenSelect && parseInt(kehrenSelect.value) !== currentKehren) {
-        kehrenSelect.value = currentKehren;
-    }
-    const winsSelect = document.getElementById(`wins-${arena.id}`);
-    if (winsSelect && parseInt(winsSelect.value) !== currentWins) {
-        winsSelect.value = currentWins;
-    }
-    
-    const applyBtn = element.querySelector('.btn-apply-settings');
-    if (applyBtn) {
-        if (hasPending) {
-            applyBtn.classList.add('has-changes');
-            applyBtn.textContent = '✅ Übernehmen';
-        } else {
-            applyBtn.classList.remove('has-changes');
-            applyBtn.textContent = '✓';
-        }
-    }
-    
-    const statusSpan = element.querySelector('.settings-status');
-    if (hasPending) {
-        if (!statusSpan) {
-            const newStatus = document.createElement('span');
-            newStatus.className = 'settings-status';
-            newStatus.textContent = '⚡ Änderungen';
-            applyBtn.parentNode.insertBefore(newStatus, applyBtn.nextSibling);
-        }
-    } else {
-        if (statusSpan) {
-            statusSpan.remove();
-        }
-    }
-    
-    const scoreAEl = document.getElementById(`score-a-value-${arena.id}`);
-    if (scoreAEl) scoreAEl.textContent = scoreA;
-    const scoreBEl = document.getElementById(`score-b-value-${arena.id}`);
-    if (scoreBEl) scoreBEl.textContent = scoreB;
-    
-    const winsAEl = document.getElementById(`wins-a-${arena.id}`);
-    if (winsAEl) winsAEl.textContent = arena.winsA;
-    const winsBEl = document.getElementById(`wins-b-${arena.id}`);
-    if (winsBEl) winsBEl.textContent = arena.winsB;
-    
-    const scoreCardA = document.getElementById(`score-a-${arena.id}`);
-    if (scoreCardA) {
-        scoreCardA.className = `score-card ${isAChampion ? 'gold' : ''}`;
-        const nameDiv = scoreCardA.querySelector('.team-name');
-        if (nameDiv) {
-            nameDiv.textContent = (isAChampion ? '🏆 ' : '') + arena.teamA;
-        }
-    }
-    const scoreCardB = document.getElementById(`score-b-${arena.id}`);
-    if (scoreCardB) {
-        scoreCardB.className = `score-card red ${isBChampion ? 'gold' : ''}`;
-        const nameDiv = scoreCardB.querySelector('.team-name');
-        if (nameDiv) {
-            nameDiv.textContent = (isBChampion ? '🏆 ' : '') + arena.teamB;
-        }
-    }
-    
-    const infoBoxes = element.querySelectorAll('.info-box');
-    if (infoBoxes.length >= 4) {
-        infoBoxes[0].textContent = `🎯${arena.bahn}`;
-        infoBoxes[0].className = `info-box ${hasPending ? 'active-setting' : ''}`;
-        infoBoxes[1].textContent = `🏆${arena.winsA}:${arena.winsB}`;
-        infoBoxes[2].textContent = `🎯${currentWins}`;
-        infoBoxes[2].className = `info-box ${hasPending ? 'active-setting' : ''}`;
-        infoBoxes[3].textContent = `⭐${currentMaxPoints}`;
-        infoBoxes[3].className = `info-box ${hasPending ? 'active-setting' : ''}`;
-        const meisterBox = infoBoxes[4];
-        if (isWinner) {
-            if (!meisterBox || meisterBox.textContent !== '🏆MEISTER') {
-                if (meisterBox) {
-                    meisterBox.textContent = '🏆MEISTER';
-                    meisterBox.style.background = 'var(--gold)';
-                    meisterBox.style.color = 'black';
+        function fetchWeather() {
+            if (!WEATHER_API_KEY) {
+                const now = new Date();
+                const hour = now.getHours();
+                if (hour >= 6 && hour < 18) {
+                    weatherData = { temperature: '18°C', condition: '☀️', wind: '5 km/h' };
                 } else {
-                    const newBox = document.createElement('div');
-                    newBox.className = 'info-box';
-                    newBox.style.background = 'var(--gold)';
-                    newBox.style.color = 'black';
-                    newBox.textContent = '🏆MEISTER';
-                    element.querySelector('.info-bar').appendChild(newBox);
+                    weatherData = { temperature: '10°C', condition: '🌙', wind: '3 km/h' };
                 }
+                updateDashboardInfo();
+                return;
             }
-        } else {
-            if (meisterBox && meisterBox.textContent === '🏆MEISTER') {
-                meisterBox.remove();
-            }
-        }
-    }
-    
-    // KOMPLETTES NEU-RENDERN DER KEHREN BEI ÄNDERUNG
-    const kehrenWrapper = document.getElementById(`kehren-wrapper-${arena.id}`);
-    if (kehrenWrapper) {
-        // Prüfen ob sich die Kehren-Anzahl geändert hat
-        const kehren = kehrenWrapper.querySelector('.kehren');
-        if (kehren) {
-            const children = kehren.children;
-            if (children.length >= 2) {
-                children[0].querySelector('.kehren-title').textContent = arena.teamA;
-                children[1].querySelector('.kehren-title').textContent = arena.teamB;
-                
-                // Prüfen ob die Anzahl der Kehren-Reihen mit der aktuellen Kehren-Anzahl übereinstimmt
-                const teamAKehren = children[0].querySelectorAll('.kehre-row');
-                const teamBKehren = children[1].querySelectorAll('.kehre-row');
-                
-                if (teamAKehren.length !== arena.kehren) {
-                    // Komplett neu rendern
-                    const teamADiv = children[0];
-                    const teamBDiv = children[1];
-                    teamADiv.innerHTML = `<div class="kehren-title">${escapeHtml(arena.teamA)}</div>` + renderKehrenRows(arena, 'A');
-                    teamBDiv.innerHTML = `<div class="kehren-title">${escapeHtml(arena.teamB)}</div>` + renderKehrenRows(arena, 'B');
-                } else {
-                    // Nur Werte aktualisieren
-                    const maxPoints = currentMaxPoints;
-                    const isWinner = hasWinner(arena);
-                    const activeKehreNum = activeKehre(arena);
-                    
-                    for (let i = 0; i < arena.kehren; i++) {
-                        // Team A
-                        const rowA = teamAKehren[i];
-                        if (rowA) {
-                            const val = arena.pointsA[i];
-                            const valDisplay = val !== null ? val : '-';
-                            const valueEl = rowA.querySelector('.kehre-value');
-                            if (valueEl) valueEl.textContent = valDisplay;
-                            rowA.className = `kehre-row ${activeKehreNum === i+1 ? 'active' : ''} ${val !== null ? 'completed' : ''}`;
-                            
-                            const pointsDiv = document.getElementById(`points-${arena.id}-a-${i}`);
-                            if (pointsDiv) {
-                                // Prüfen ob die Anzahl der Buttons mit maxPoints übereinstimmt
-                                const btns = pointsDiv.querySelectorAll('.point-btn');
-                                if (btns.length !== maxPoints + 1) {
-                                    // Buttons neu erstellen
-                                    let newBtns = '';
-                                    for (let v = 0; v <= maxPoints; v++) {
-                                        newBtns += `
-                                            <button
-                                                class="point-btn ${val === v ? 'active-point' : ''}"
-                                                onclick="setPoints(${arena.id},'A',${i},${v})"
-                                                ${isWinner ? 'disabled' : ''}
-                                                data-arena="${arena.id}"
-                                                data-team="A"
-                                                data-index="${i}"
-                                                data-value="${v}">
-                                                ${v}
-                                            </button>
-                                        `;
-                                    }
-                                    pointsDiv.innerHTML = newBtns;
-                                } else {
-                                    btns.forEach(btn => {
-                                        const valNum = parseInt(btn.dataset.value);
-                                        btn.classList.toggle('active-point', valNum === val);
-                                        btn.disabled = isWinner;
-                                    });
-                                }
-                            }
-                        }
-                        
-                        // Team B
-                        const rowB = teamBKehren[i];
-                        if (rowB) {
-                            const val = arena.pointsB[i];
-                            const valDisplay = val !== null ? val : '-';
-                            const valueEl = rowB.querySelector('.kehre-value');
-                            if (valueEl) valueEl.textContent = valDisplay;
-                            rowB.className = `kehre-row ${activeKehreNum === i+1 ? 'active' : ''} ${val !== null ? 'completed' : ''}`;
-                            
-                            const pointsDiv = document.getElementById(`points-${arena.id}-b-${i}`);
-                            if (pointsDiv) {
-                                const btns = pointsDiv.querySelectorAll('.point-btn');
-                                if (btns.length !== maxPoints + 1) {
-                                    let newBtns = '';
-                                    for (let v = 0; v <= maxPoints; v++) {
-                                        newBtns += `
-                                            <button
-                                                class="point-btn ${val === v ? 'active-point' : ''}"
-                                                onclick="setPoints(${arena.id},'B',${i},${v})"
-                                                ${isWinner ? 'disabled' : ''}
-                                                data-arena="${arena.id}"
-                                                data-team="B"
-                                                data-index="${i}"
-                                                data-value="${v}">
-                                                ${v}
-                                            </button>
-                                        `;
-                                    }
-                                    pointsDiv.innerHTML = newBtns;
-                                } else {
-                                    btns.forEach(btn => {
-                                        const valNum = parseInt(btn.dataset.value);
-                                        btn.classList.toggle('active-point', valNum === val);
-                                        btn.disabled = isWinner;
-                                    });
-                                }
-                            }
-                        }
+
+            fetch(`https://api.openweathermap.org/data/2.5/weather?q=${WEATHER_LOCATION}&units=metric&lang=de&appid=${WEATHER_API_KEY}`)
+                .then(res => res.json())
+                .then(data => {
+                    if (data.main) {
+                        weatherData = {
+                            temperature: `${Math.round(data.main.temp)}°C`,
+                            condition: getWeatherIcon(data.weather[0].icon),
+                            wind: `${Math.round(data.wind.speed)} km/h`
+                        };
+                        updateDashboardInfo();
                     }
-                }
+                })
+                .catch(() => {
+                    weatherData = { temperature: '--°C', condition: '🌤️', wind: '--' };
+                    updateDashboardInfo();
+                });
+        }
+
+        function getWeatherIcon(iconCode) {
+            const icons = {
+                '01d': '☀️', '01n': '🌙',
+                '02d': '⛅', '02n': '☁️',
+                '03d': '☁️', '03n': '☁️',
+                '04d': '☁️', '04n': '☁️',
+                '09d': '🌧️', '09n': '🌧️',
+                '10d': '🌦️', '10n': '🌧️',
+                '11d': '⛈️', '11n': '⛈️',
+                '13d': '❄️', '13n': '❄️',
+                '50d': '🌫️', '50n': '🌫️'
+            };
+            return icons[iconCode] || '🌤️';
+        }
+
+        // ===== DATUM & UHRZEIT =====
+        function updateDateTime() {
+            const now = new Date();
+            const options = {
+                weekday: 'long',
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric'
+            };
+            const dateStr = now.toLocaleDateString('de-DE', options);
+            const timeStr = now.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+
+            const dateEl = document.getElementById('dashboardDate');
+            const timeEl = document.getElementById('dashboardTime');
+            if (dateEl) dateEl.textContent = dateStr;
+            if (timeEl) timeEl.textContent = timeStr;
+
+            const locationEl = document.getElementById('dashboardLocation');
+            if (locationEl) locationEl.textContent = '🏠 Grein, Österreich';
+        }
+
+        function updateDashboardInfo() {
+            const weatherEl = document.getElementById('dashboardWeather');
+            if (weatherEl) {
+                weatherEl.innerHTML = `${weatherData.condition} ${weatherData.temperature} · ${weatherData.wind}`;
+            }
+            updateDateTime();
+        }
+
+        // ===== THEME =====
+        function toggleTheme() {
+            theme = theme === 'light' ? 'dark' : 'light';
+            document.documentElement.setAttribute('data-theme', theme);
+            localStorage.setItem('stockschuetzen_theme', theme);
+            const btn = document.getElementById('btnTheme');
+            btn.textContent = theme === 'dark' ? '☀️' : '🌓';
+            toast(`🌓 ${theme === 'dark' ? 'Dark' : 'Light'} Mode`);
+        }
+
+        // ===== TOAST =====
+        function toast(msg) {
+            const t = document.getElementById('toast');
+            t.textContent = msg;
+            t.classList.add('show');
+            clearTimeout(t._timeout);
+            t._timeout = setTimeout(() => t.classList.remove('show'), 2500);
+        }
+
+        // ===== FULL RESET =====
+        function fullReset() {
+            if (confirm('Kompletter Reset – alle Daten werden gelöscht?')) {
+                localStorage.clear();
+                toast('🔄 Kompletter Reset');
+                showDashboard();
             }
         }
-    }
-    
-    const footerBtn = element.querySelector('.footer .gold');
-    if (footerBtn) {
-        if (isWinner) {
-            footerBtn.disabled = true;
-            footerBtn.style.opacity = '0.5';
-            footerBtn.style.cursor = 'not-allowed';
-            footerBtn.textContent = '🏆 Meister';
-        } else {
-            footerBtn.disabled = false;
-            footerBtn.style.opacity = '';
-            footerBtn.style.cursor = '';
-            footerBtn.textContent = '🏆 Spiel';
+
+        // ===== MODUL ÖFFNEN (NEUER TAB) =====
+        function openModule(modeKey) {
+            const module = MODULES[modeKey];
+            if (!module) {
+                toast('❌ Modul nicht gefunden');
+                return;
+            }
+
+            let url = module.url;
+            if (!url.startsWith('http://') && !url.startsWith('https://')) {
+                const base = window.location.href.substring(0, window.location.href.lastIndexOf('/') + 1);
+                url = base + url;
+            }
+
+            window.open(url, '_blank');
+            toast(`🚀 Öffne ${module.icon} ${module.name} in neuem Tab`);
         }
-    }
-    
-    const wrapper = document.getElementById(`kehren-wrapper-${arena.id}`);
-    if (wrapper) {
-        const rowHeight = 42;
-        const maxHeight = Math.min(arena.kehren * rowHeight + 20, 300);
-        wrapper.style.maxHeight = Math.max(150, maxHeight) + 'px';
-    }
-}
 
-// Hilfsfunktion für Kehren-Rows
-function renderKehrenRows(arena, team) {
-    let html = '';
-    const arr = team === 'A' ? arena.pointsA : arena.pointsB;
-    const hasPending = state.pendingSettings[arena.id] !== undefined;
-    const pending = state.pendingSettings[arena.id] || {};
-    const maxPoints = pending.maxPoints !== undefined ? pending.maxPoints : arena.maxPoints;
-    const isWinner = hasWinner(arena);
-    const teamPrefix = team === 'A' ? 'a' : 'b';
-
-    for (let i = 0; i < arena.kehren; i++) {
-        const active = activeKehre(arena) === i + 1;
-        const isCompleted = arr[i] !== null;
-        const value = arr[i] !== null ? arr[i] : '-';
-
-        html += `
-        <div class="kehre-row ${active ? 'active' : ''} ${isCompleted ? 'completed' : ''}" id="kehre-row-${arena.id}-${teamPrefix}-${i}">
-            <div class="kehre-number">K${i+1}</div>
-            <div class="points" id="points-${arena.id}-${teamPrefix}-${i}">
-                ${Array.from({length: maxPoints + 1}, (_, v) => `
-                    <button
-                        class="point-btn ${arr[i] === v ? 'active-point' : ''}"
-                        onclick="setPoints(${arena.id},'${team}',${i},${v})"
-                        ${isWinner ? 'disabled' : ''}
-                        data-arena="${arena.id}"
-                        data-team="${team}"
-                        data-index="${i}"
-                        data-value="${v}">
-                        ${v}
-                    </button>
-                `).join('')}
-            </div>
-            <div class="kehre-value" id="kehre-value-${arena.id}-${teamPrefix}-${i}">${value}</div>
-        </div>
-        `;
-    }
-    return html;
-}
-
-// ===== SETTINGS MANAGEMENT =====
-function onSettingChange(id, setting, value) {
-    if (!state.pendingSettings[id]) {
-        state.pendingSettings[id] = {};
-    }
-    state.pendingSettings[id][setting] = value;
-    
-    const element = document.getElementById(`arena-${id}`);
-    if (element) {
-        const arena = getArena(id);
-        updateArenaElement(element, arena);
-    }
-}
-
-function applySettings(id) {
-    const arena = getArena(id);
-    if (!arena) return;
-    
-    const pending = state.pendingSettings[id];
-    if (!pending) {
-        toast('Keine Änderungen zum Übernehmen');
-        return;
-    }
-    
-    const oldKehren = arena.kehren;
-    const newKehren = pending.kehren !== undefined ? pending.kehren : arena.kehren;
-    const newMaxPoints = pending.maxPoints !== undefined ? pending.maxPoints : arena.maxPoints;
-    const newWins = pending.winsToChampion !== undefined ? pending.winsToChampion : arena.winsToChampion;
-    
-    // Werte übernehmen
-    arena.maxPoints = newMaxPoints;
-    arena.kehren = newKehren;
-    arena.winsToChampion = newWins;
-    
-    // Bei Kehren-Änderung Arrays komplett neu erstellen
-    if (newKehren !== oldKehren) {
-        const newPointsA = Array(newKehren).fill(null);
-        const newPointsB = Array(newKehren).fill(null);
-        for (let i = 0; i < Math.min(oldKehren, newKehren); i++) {
-            newPointsA[i] = arena.pointsA[i] !== undefined ? arena.pointsA[i] : null;
-            newPointsB[i] = arena.pointsB[i] !== undefined ? arena.pointsB[i] : null;
+        // ===== QR-CODE ÖFFNEN =====
+        function openQR() {
+            const url = 'https://rolandkoll99-droid.github.io/Trainings-Analyse/';
+            window.open(url, '_blank');
+            toast('📱 Öffne Trainingsanalyse in neuem Tab');
         }
-        arena.pointsA = newPointsA;
-        arena.pointsB = newPointsB;
-    }
-    
-    // In localStorage speichern
-    saveArenaSettings(id, {
-        maxPoints: arena.maxPoints,
-        kehren: arena.kehren,
-        winsToChampion: arena.winsToChampion
-    });
-    
-    // Pending zurücksetzen
-    delete state.pendingSettings[id];
-    
-    // Komplett neu rendern
-    const element = document.getElementById(`arena-${id}`);
-    if (element) {
-        // Komplett neuen HTML-Inhalt für die Arena erstellen
-        const newArenaHTML = renderArena(arena);
-        const wrapper = element.parentNode;
-        const newElement = document.createElement('div');
-        newElement.innerHTML = newArenaHTML;
-        const newArena = newElement.firstElementChild;
-        wrapper.replaceChild(newArena, element);
-        
-        // Kehren-Höhen aktualisieren
-        updateKehrenHeights();
-    } else {
-        render();
-    }
-    updateSpectatorWindow();
-    
-    toast(`✅ Einstellungen für Bahn ${arena.bahn} übernommen (⭐${newMaxPoints} 🎯${newKehren} 🏆${newWins})`);
-}
 
-// ===== CORE FUNCTIONS =====
-function setPoints(id, team, index, value) {
-    const arena = getArena(id);
-
-    if (hasWinner(arena)) {
-        toast('Meisterschaft beendet!');
-        return;
-    }
-
-    if (team === 'A') {
-        arena.pointsA[index] = value;
-        if (arena.pointsB[index] === null) arena.pointsB[index] = 0;
-    } else {
-        arena.pointsB[index] = value;
-        if (arena.pointsA[index] === null) arena.pointsA[index] = 0;
-    }
-
-    const element = document.getElementById(`arena-${id}`);
-    if (element) {
-        updateArenaElement(element, arena);
-    } else {
-        render();
-    }
-    
-    updateSpectatorWindow();
-
-    if (allKehrenFilled(arena)) {
-        setTimeout(() => {
-            autoEvaluateGame(id);
-        }, 300);
-    }
-}
-
-function allKehrenFilled(arena) {
-    for (let i = 0; i < arena.kehren; i++) {
-        if (arena.pointsA[i] === null || arena.pointsB[i] === null) {
-            return false;
+        // ===== URL KOPIEREN =====
+        function copyQrUrl() {
+            const url = 'https://rolandkoll99-droid.github.io/Trainings-Analyse/';
+            navigator.clipboard.writeText(url).then(() => {
+                toast('✅ URL kopiert!');
+            }).catch(() => {
+                const input = document.createElement('input');
+                input.value = url;
+                document.body.appendChild(input);
+                input.select();
+                document.execCommand('copy');
+                document.body.removeChild(input);
+                toast('✅ URL kopiert!');
+            });
         }
-    }
-    return true;
-}
 
-function autoEvaluateGame(id) {
-    const arena = getArena(id);
-
-    if (hasWinner(arena)) {
-        return;
-    }
-
-    const a = sum(arena.pointsA);
-    const b = sum(arena.pointsB);
-
-    if (a > b) {
-        arena.winsA++;
-        toast(`⚪ ${arena.teamA} gewinnt (${a}:${b})`);
-    } else if (b > a) {
-        arena.winsB++;
-        toast(`🔴 ${arena.teamB} gewinnt (${a}:${b})`);
-    } else {
-        toast(`Unentschieden (${a}:${b})`);
-    }
-
-    arena.pointsA = Array(arena.kehren).fill(null);
-    arena.pointsB = Array(arena.kehren).fill(null);
-
-    if (hasWinner(arena)) {
-        toast(`🏆 ${winnerName(arena)} MEISTER! 🎉`);
-    }
-
-    render();
-}
-
-function evaluateGame(id) {
-    const arena = getArena(id);
-
-    if (hasWinner(arena)) {
-        toast('Meisterschaft beendet!');
-        return;
-    }
-
-    for (let i = 0; i < arena.kehren; i++) {
-        if (arena.pointsA[i] === null || arena.pointsB[i] === null) {
-            toast('Alle Kehren ausfüllen!');
-            return;
+        // ===== QR-CODE GENERIEREN =====
+        function generateQR() {
+            const qrContainer = document.getElementById('qrContainer');
+            const qrUrl = 'https://rolandkoll99-droid.github.io/Trainings-Analyse/';
+            
+            if (qrContainer && typeof QRCode !== 'undefined') {
+                // Container leeren, um doppelte QR-Codes zu vermeiden
+                qrContainer.innerHTML = '';
+                new QRCode(qrContainer, {
+                    text: qrUrl,
+                    width: 120,
+                    height: 120,
+                    colorDark: "#1a1a2e",
+                    colorLight: "#ffffff",
+                    correctLevel: QRCode.CorrectLevel.H
+                });
+            }
         }
-    }
 
-    const a = sum(arena.pointsA);
-    const b = sum(arena.pointsB);
-
-    if (a > b) {
-        arena.winsA++;
-        toast(`⚪ ${arena.teamA} gewinnt (${a}:${b})`);
-    } else if (b > a) {
-        arena.winsB++;
-        toast(`🔴 ${arena.teamB} gewinnt (${a}:${b})`);
-    } else {
-        toast(`Unentschieden (${a}:${b})`);
-    }
-
-    arena.pointsA = Array(arena.kehren).fill(null);
-    arena.pointsB = Array(arena.kehren).fill(null);
-
-    if (hasWinner(arena)) {
-        toast(`🏆 ${winnerName(arena)} MEISTER! 🎉`);
-    }
-
-    render();
-}
-
-function activeKehre(arena) {
-    for (let i = 0; i < arena.kehren; i++) {
-        if (arena.pointsA[i] === null || arena.pointsB[i] === null) {
-            return i + 1;
+        // ===== DASHBOARD ANZEIGEN =====
+        function showDashboard() {
+            currentMode = 'dashboard';
+            document.getElementById('btnMenu').classList.add('active');
+            document.getElementById('arenaContent').innerHTML = renderDashboard();
+            
+            setTimeout(() => {
+                updateDashboardInfo();
+                fetchWeather();
+                if (window.timeInterval) clearInterval(window.timeInterval);
+                window.timeInterval = setInterval(updateDateTime, 1000);
+                
+                // QR-Code NUR HIER generieren (einmalig)
+                generateQR();
+            }, 200);
+            
+            toast('🏠 Dashboard');
         }
-    }
-    return arena.kehren;
-}
 
-function hasWinner(arena) {
-    return arena.winsA >= arena.winsToChampion || arena.winsB >= arena.winsToChampion;
-}
+        function renderDashboard() {
+            return `
+                <div class="dashboard">
+                    <!-- ===== TOP-LEISTE ===== -->
+                    <div class="dashboard-top">
+                        <div class="dashboard-card">
+                            <div class="label">📍 Standort</div>
+                            <div class="value" id="dashboardLocation">🏠 Grein, Österreich</div>
+                        </div>
+                        <div class="dashboard-card">
+                            <div class="label">📅 Datum</div>
+                            <div class="value" id="dashboardDate">--</div>
+                        </div>
+                        <div class="dashboard-card">
+                            <div class="label">🕐 Uhrzeit</div>
+                            <div class="value" id="dashboardTime">--</div>
+                        </div>
+                        <div class="dashboard-card">
+                            <div class="label">🌤️ Wetter</div>
+                            <div class="value" id="dashboardWeather">🌤️ --°C · --</div>
+                        </div>
+                    </div>
 
-function winnerName(arena) {
-    if (arena.winsA >= arena.winsToChampion) return arena.teamA;
-    if (arena.winsB >= arena.winsToChampion) return arena.teamB;
-    return '';
-}
+                    <!-- ===== MENÜ-KARTEN ===== -->
+                    <div class="dashboard-menu">
+                        <div class="menu-card" onclick="openModule('training')">
+                            <div class="icon">🥌</div>
+                            <div class="title">Trainingsmodus</div>
+                            <div class="desc">Klassisches Training<br>mit Kehren &amp; Siegen</div>
+                            <div class="badge">Standard</div>
+                        </div>
 
-function sum(arr) {
-    return arr.reduce((a, b) => a + (b || 0), 0);
-}
+                        <div class="menu-card" onclick="openModule('championship')">
+                            <div class="icon">🏆</div>
+                            <div class="title">Meisterschaftsmodus</div>
+                            <div class="desc">5 Durchgänge<br>2 Punkte pro Sieg</div>
+                            <div class="badge badge-new">Neu</div>
+                        </div>
 
-function getArena(id) {
-    return state.arenas.find(a => a.id === id);
-}
+                        <div class="menu-card" onclick="openModule('simple')">
+                            <div class="icon">📊</div>
+                            <div class="title">Training einfach</div>
+                            <div class="desc">Reduzierte Ansicht<br>nur Punkte &amp; Siege</div>
+                            <div class="badge">Einfach</div>
+                        </div>
 
-// ===== SETTER FUNCTIONS =====
-function setBahn(id, bahn) {
-    getArena(id).bahn = bahn;
-    render();
-}
+                        <!-- ===== QR-CODE KARTE (ersetzt "Training einzeln") ===== -->
+                        <div class="qr-card" onclick="openQR()">
+                            <div class="icon">📱</div>
+                            <div class="title">Trainingsanalyse</div>
+                            <div class="desc">QR-Code scannen<br>für die Analyse</div>
+                            <div class="qr-container" id="qrContainer"></div>
+                            <div style="display: flex; gap: 8px; margin-top: 4px;">
+                                <span class="badge">Scan</span>
+                                <span class="badge" style="background: var(--green); color: white; cursor: pointer;" onclick="event.stopPropagation(); copyQrUrl();">📋 Kopieren</span>
+                            </div>
+                        </div>
+                    </div>
 
-function setArenaName(id, name) {
-    getArena(id).arenaName = name;
-    render();
-}
-
-function setTeam(id, team, name) {
-    const arena = getArena(id);
-    if (team === 'A') {
-        arena.teamA = name || `Team ${id}A`;
-        saveTeamNames(id, arena.teamA, arena.teamB);
-    } else {
-        arena.teamB = name || `Team ${id}B`;
-        saveTeamNames(id, arena.teamA, arena.teamB);
-    }
-    render();
-}
-
-// ===== RESET-FUNKTIONEN =====
-function resetCurrentKehren(id) {
-    const arena = getArena(id);
-    if (hasWinner(arena)) {
-        if (!confirm(`Meisterschaft auf Bahn ${arena.bahn} beendet. Trotzdem Kehren löschen?`)) return;
-    }
-    arena.pointsA = Array(arena.kehren).fill(null);
-    arena.pointsB = Array(arena.kehren).fill(null);
-    render();
-    toast(`🔄 Kehren Bahn ${arena.bahn} gelöscht`);
-}
-
-function resetBahn(id) {
-    const arena = getArena(id);
-    if (!confirm(`Bahn ${arena.bahn} komplett zurücksetzen?`)) return;
-    
-    arena.pointsA = Array(arena.kehren).fill(null);
-    arena.pointsB = Array(arena.kehren).fill(null);
-    arena.winsA = 0;
-    arena.winsB = 0;
-    render();
-    toast(`🔄 Bahn ${arena.bahn} zurückgesetzt`);
-}
-
-function resetAllArenas() {
-    if (!confirm('ALLE Bahnen zurücksetzen?')) return;
-    
-    state.arenas.forEach(arena => {
-        arena.pointsA = Array(arena.kehren).fill(null);
-        arena.pointsB = Array(arena.kehren).fill(null);
-        arena.winsA = 0;
-        arena.winsB = 0;
-    });
-    render();
-    toast('🔄 Alle Bahnen zurückgesetzt');
-}
-
-// ===== SPECTATOR WINDOW =====
-let spectatorWindow = null;
-
-function openSpectatorWindow() {
-    spectatorWindow = window.open('', 'spectator', 'width=1024,height=768');
-
-    spectatorWindow.document.write(`
-    <html>
-    <head>
-    <title>Zuschauer Monitor</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <style>
-    body{
-        margin:0;
-        background:#102417;
-        color:white;
-        font-family:Segoe UI,Arial,sans-serif;
-        padding:20px;
-        overflow-y:auto;
-    }
-    .grid{
-        display:grid;
-        grid-template-columns:1fr 1fr;
-        gap:20px;
-    }
-    .card{
-        background:white;
-        color:black;
-        border-radius:24px;
-        padding:25px;
-        border-left: 8px solid #4A90D9;
-    }
-    .card.bahn-1 { border-left-color: #4A90D9; }
-    .card.bahn-2 { border-left-color: #E67E22; }
-    .card.bahn-3 { border-left-color: #27AE60; }
-    .card.bahn-4 { border-left-color: #8E44AD; }
-    
-    .title{
-        font-size:2rem;
-        font-weight:900;
-        margin-bottom:15px;
-        color:#1f5e3a;
-    }
-    .bahn{
-        display:inline-block;
-        padding:8px 14px;
-        border-radius:10px;
-        font-weight:900;
-        margin-bottom:15px;
-        font-size:0.9rem;
-        color:white;
-    }
-    .bahn.bahn-1 { background: #4A90D9; }
-    .bahn.bahn-2 { background: #E67E22; }
-    .bahn.bahn-3 { background: #27AE60; }
-    .bahn.bahn-4 { background: #8E44AD; }
-    
-    .settings-info {
-        display:flex;
-        gap:15px;
-        justify-content:center;
-        margin-bottom:15px;
-        font-size:0.85rem;
-        color:#555;
-    }
-    .settings-info span {
-        background:#f0f0f0;
-        padding:4px 12px;
-        border-radius:8px;
-    }
-    
-    .teams{
-        display:grid;
-        grid-template-columns:1fr 1fr;
-        gap:15px;
-    }
-    .team{
-        background:#f5f8f3;
-        border-radius:20px;
-        padding:20px;
-        text-align:center;
-        border:3px solid transparent;
-    }
-    .team.champion{
-        border-color:#ffdf8c;
-    }
-    .name{
-        font-size:1.5rem;
-        font-weight:900;
-    }
-    .score{
-        font-size:5rem;
-        font-weight:900;
-        color:#1f5e3a;
-    }
-    .wins{
-        margin-top:8px;
-        font-size:1.5rem;
-        font-weight:700;
-    }
-    .champion-badge{
-        background:#ffdf8c;
-        color:black;
-        padding:4px 12px;
-        border-radius:8px;
-        font-weight:900;
-        display:inline-block;
-        margin-top:8px;
-        font-size:0.9rem;
-    }
-    @media(max-width:768px){
-        .grid{grid-template-columns:1fr;}
-        .score{font-size:3.5rem;}
-        .title{font-size:1.5rem;}
-        .name{font-size:1.2rem;}
-    }
-    </style>
-    </head>
-    <body>
-        <div class="grid" id="specGrid"></div>
-    </body>
-    </html>
-    `);
-
-    spectatorWindow.document.close();
-    updateSpectatorWindow();
-}
-
-function updateSpectatorWindow() {
-    if (!spectatorWindow || spectatorWindow.closed) return;
-
-    const grid = spectatorWindow.document.getElementById('specGrid');
-    if (!grid) return;
-
-    grid.innerHTML = state.arenas.map(arena => {
-        const isWinner = hasWinner(arena);
-        const isAChampion = isWinner && arena.winsA >= arena.winsToChampion;
-        const isBChampion = isWinner && arena.winsB >= arena.winsToChampion;
-        return `
-        <div class="card bahn-${arena.bahn}">
-            <div class="title">${escapeHtml(arena.arenaName)}</div>
-            <div class="bahn bahn-${arena.bahn}">🎯 Bahn ${arena.bahn}</div>
-            <div class="settings-info">
-                <span>⭐ ${arena.maxPoints} Pkt</span>
-                <span>🎯 ${arena.kehren} K</span>
-                <span>🏆 ${arena.winsToChampion} Siege</span>
-            </div>
-            <div class="teams">
-                <div class="team ${isAChampion ? 'champion' : ''}">
-                    <div class="name">${isAChampion ? '🏆 ' : ''}${escapeHtml(arena.teamA)}</div>
-                    <div class="score">${sum(arena.pointsA)}</div>
-                    <div class="wins">🏆 ${arena.winsA}</div>
-                    ${isAChampion ? '<div class="champion-badge">👑 MEISTER</div>' : ''}
+                    <div class="dashboard-footer">
+                        ESV Grein Trainingssystem · Version 2.0 · 🔗 Alle Modi öffnen in neuem Tab
+                    </div>
                 </div>
-                <div class="team ${isBChampion ? 'champion' : ''}">
-                    <div class="name">${isBChampion ? '🏆 ' : ''}${escapeHtml(arena.teamB)}</div>
-                    <div class="score">${sum(arena.pointsB)}</div>
-                    <div class="wins">🏆 ${arena.winsB}</div>
-                    ${isBChampion ? '<div class="champion-badge">👑 MEISTER</div>' : ''}
-                </div>
-            </div>
-        </div>
-    `}).join('');
-}
+            `;
+        }
 
-function toast(msg) {
-    const t = document.getElementById('toast');
-    t.textContent = msg;
-    t.classList.add('show');
-    clearTimeout(t._timeout);
-    t._timeout = setTimeout(() => t.classList.remove('show'), 2500);
-}
+        // ===== THEME INIT =====
+        function initTheme() {
+            document.documentElement.setAttribute('data-theme', theme);
+            const btn = document.getElementById('btnTheme');
+            btn.textContent = theme === 'dark' ? '☀️' : '🌓';
+        }
 
-// ===== APP START =====
-initArenas();
+        // ===== HÖHENKORREKTUR =====
+        function setCorrectHeight() {
+            const vh = window.innerHeight;
+            document.documentElement.style.setProperty('height', vh + 'px');
+            document.body.style.setProperty('height', vh + 'px');
 
-// ===== TOUCH-OPTIMIERUNGEN =====
-document.addEventListener('dblclick', function(e) {
-    e.preventDefault();
-}, { passive: false });
+            if (navigator.userAgent.includes('Safari') && !navigator.userAgent.includes('Chrome')) {
+                document.documentElement.style.setProperty('height', '-webkit-fill-available');
+                document.body.style.setProperty('height', '-webkit-fill-available');
+            }
+        }
 
-document.addEventListener('touchmove', function(e) {
-    // Passives Scrolling ermöglichen
-}, { passive: true });
-</script>
+        window.addEventListener('resize', setCorrectHeight);
+        window.addEventListener('orientationchange', function() {
+            setTimeout(setCorrectHeight, 300);
+        });
+        setCorrectHeight();
+
+        // ===== INIT =====
+        initTheme();
+        showDashboard();
+
+        // Expose für globale Nutzung
+        window.showDashboard = showDashboard;
+        window.openModule = openModule;
+        window.openQR = openQR;
+        window.copyQrUrl = copyQrUrl;
+        window.generateQR = generateQR;
+        window.toggleTheme = toggleTheme;
+        window.fullReset = fullReset;
+        window.toast = toast;
+    </script>
 
 </body>
 </html>
