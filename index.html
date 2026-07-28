@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no">
-    <title>ESV Grein – Dashboard </title>
+    <title>ESV Grein – Trainingssystem</title>
     <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
     <style>
         /* ===== MASTER CSS ===== */
@@ -269,6 +269,17 @@
         .menu-card .badge-new {
             background: var(--red);
             color: white;
+        }
+
+        .menu-card .badge-pro {
+            background: linear-gradient(135deg, #f7971e, #ffd200);
+            color: #222;
+            padding: 2px 12px;
+            border-radius: 20px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            margin-top: 2px;
+            box-shadow: 0 2px 8px rgba(247, 151, 30, 0.3);
         }
 
         /* ===== QR-CODE KARTE ===== */
@@ -567,6 +578,11 @@
                 name: 'Trainingsmodus',
                 icon: '🥌'
             },
+            trainingPro: {
+                url: 'https://rolandkoll99-droid.github.io/Trainingsmodus_PRO/',
+                name: 'Trainingsmodus Pro',
+                icon: '⚡'
+            },
             championship: {
                 url: 'https://rolandkoll99-droid.github.io/Stockschiessen_Meisterschaft/',
                 name: 'Meisterschaftsmodus',
@@ -738,7 +754,6 @@
             const qrUrl = 'https://rolandkoll99-droid.github.io/Trainings-Analyse/';
             
             if (qrContainer && typeof QRCode !== 'undefined') {
-                // Container leeren, um doppelte QR-Codes zu vermeiden
                 qrContainer.innerHTML = '';
                 new QRCode(qrContainer, {
                     text: qrUrl,
@@ -762,8 +777,6 @@
                 fetchWeather();
                 if (window.timeInterval) clearInterval(window.timeInterval);
                 window.timeInterval = setInterval(updateDateTime, 1000);
-                
-                // QR-Code NUR HIER generieren (einmalig)
                 generateQR();
             }, 200);
             
@@ -802,6 +815,13 @@
                             <div class="badge">Standard</div>
                         </div>
 
+                        <div class="menu-card" onclick="openModule('trainingPro')">
+                            <div class="icon">⚡</div>
+                            <div class="title">Trainingsmodus Pro</div>
+                            <div class="desc">Erweiterte Funktionen<br>Zuschauer-Monitor &amp; mehr</div>
+                            <div class="badge-pro">⭐ PRO</div>
+                        </div>
+
                         <div class="menu-card" onclick="openModule('championship')">
                             <div class="icon">🏆</div>
                             <div class="title">Meisterschaftsmodus</div>
@@ -816,7 +836,7 @@
                             <div class="badge">Einfach</div>
                         </div>
 
-                        <!-- ===== QR-CODE KARTE (ersetzt "Training einzeln") ===== -->
+                        <!-- ===== QR-CODE KARTE ===== -->
                         <div class="qr-card" onclick="openQR()">
                             <div class="icon">📱</div>
                             <div class="title">Trainingsanalyse</div>
