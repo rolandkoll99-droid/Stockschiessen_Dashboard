@@ -1,0 +1,104 @@
+Bedienungsanleitung Trainingsportal
+
+Webseite:
+https://rolandkoll99-droid.github.io/Trainingsportal/
+Benutzername: Test2026
+Passwort:2026
+
+
+0.	Dashboard 
+
+1. Trainingsmodus auswählen
+	1.1	Trainingsmodus
+		1.1.1 Auswahl der Mitspieler möglich
+		1.1.2 Auswahl der gewonnen Spiele möglich
+		1.1.3 Auswahl der Kehren Möglich
+	1.1 Eingabe der Kehren 
+		1.2.1 Eingabe erfolgt nach Stockpunkte Mannschaft W od Mannschaft E
+		1.2.2 Nach allen gespielten Kehren => Button Spiel werten drücken
+		1.2.3 Bei fehl Eingabe einer Kehre kann diese mit dem Button => Kehre löschen "Auswahl der Kehre möglich"
+	1.3 Wertung
+		2.3.1 Wenn eine Mannschaft 2 Spiele gewonnen hat steht eine Sieger Mannschaft fest
+	1.4 Neues Spiel Starten
+		2.4.1 Button => Neues Spiel Starten, Kehren werden gelöscht und ein neues Spiel kann beginnen
+
+2. Meisterschaftmodus auswählen (Eher für PC/Laptop vorgesehen)
+	2.1 Mannschaftsnamen eingeben mit ok bestättigen, Namen werden Automatisch übernommen
+	2.2 Spielmodus/Meisterschaft
+		2.2.1 Spieler Anzahl 4
+		2.2.3 Gewonnen Spiel 3
+		2.2.4 Kehren 6
+	2.3 Eingabe der Kehren 
+		2.3.1 Eingabe erfolgt nach Stockpunkte Mannschaft W od Mannschaft E
+		2.3.2 Nach allen gespielten Kehren => Button Spiel werten drücken
+		2.3.3 Bei fehl Eingabe einer Kehre kann diese mit dem Button => Kehre löschen "Auswahl der Kehre möglich"
+	2.4 Punkte 
+		2.4.1 Sieg 2 Punkt
+		2.4.1 Unendschieden 1 Punkt
+		2.4.1 Niederlage 0 Punkt
+	2.5 Zuschauermonitor
+		2.5.1 Button für Zuschauermonitor, Eigener TAB öffnet sich dieser kann auf TV, Monito,... verschoben werden
+				Ergebnis wird Automatisch übernommen. 
+
+3. Training einfach auswählen
+	3.1	Trainingsmodus
+		3.1.1 Auswahl der Mitspieler möglich
+		3.1.2 Auswahl der gewonnen Spiele möglich
+		3.1.3 Auswahl der Kehren Möglich
+	3.2 Eingabe der Kehren 
+		3.2.1 Eingabe erfolgt nach Stockpunkte Mannschaft W od Mannschaft E
+		3.2.2 Nach allen gespielten Kehren => Button Spiel werten drücken
+		3.2.3 Bei fehl Eingabe einer Kehre kann diese mit dem Button => Kehre löschen "Auswahl der Kehre möglich"
+	3.3 Wertung
+		3.3.1 Wenn eine Mannschaft 2 Spiele gewonnen hat steht eine Sieger Mannschaft fest
+	3.4 Neues Spiel Starten
+		2.3.1 Button => Neues Spiel Starten, Kehren werden gelöscht und ein neues Spiel kann beginnen
+
+4. Trainingsanalyse 
+QR Code zum scannen für Mitspieler für Smartphone
+	4.1 Spieler
+		4.1.1 Namen eingeben
+		4.1.2 Datum auswählen
+		4.1.3 Ort eingeben
+		4.1.4 Temperatur eingeben (wenn bekannt)
+		4.1.5 Auswahl mit welchen Stiel gespielt wird
+		4.1.6 Plattenverwaltung, Stockplatten können hinzugefügt werden
+	4.2 Training
+		4.2.1 Spiel auswählen
+		4.2.2 Nach jeden Versuch kann Maß/Stock/Fehl ausgewählt werden sowei mit welcher Platte das geschossen wurde
+			Wenn alle Kehren gespielt dann auf den Button => Fertig 
+			Nächstes Spiel auswählen 
+		4.2.3 Spielübersicht 
+			Wir Automatisch berechnet ergibt die Geschoßen % 
+	4.3 Analyse
+		4.3.1 Trefferquote  in % 
+		4.3.2 Verteilung der Trefferquote
+		4.3.3 Platte Statistik 
+		4.3.4 Form Trend 
+	4.4 Historie
+		4.4.1 wird Automatisch erstellt
+	4.5 Export
+		4.4.1 Datenbank speicher (google sheets erstellen)
+		4.4.2 CSV Export wir lokal gespeichert
+		4.5.3 PDF Export pdf wir mit allen Daten erstellt
+
+5. Trainingsanalyse PRO (Steuerung über Raspbeery/PC/Laptop/Tablet mit USB Adapter)
+	5.1 Steuerung vorgesehen für 
+		5.1.1 2x USB Tastatur 
+		1x Startfeld, 
+		1x Zielfeld
+		Eingabe kann nach jeder gespielten Kehre direkt über den Ziffernblock eingeben werden	
+	5.2 Grundsteuerung
+		+ Mannschaft W GRÜN
+		- Mannschaft E ROT
+		* Korrektur/Löschen einer Kehre
+	5.3 Zuschauermonitor
+		/ kann ein externe Monitor aufgeschalten werden
+		Ergebnis wird aktuell angezeigt
+	5.4 Wertung erfolg voll Automatisch
+	
+
+		
+	
+
+

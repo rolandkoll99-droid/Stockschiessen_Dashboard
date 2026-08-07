@@ -1,0 +1,1774 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Stockschießen Trainingsanalyse</title>
+    <style>
+        /* ============================================================
+               BASIS-STYLES
+               ============================================================ */
+        * {
+            box-sizing: border-box;
+            font-family: -apple-system, 'Segoe UI', Roboto, system-ui, sans-serif;
+            margin: 0;
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        body {
+            background: #f0f4fa;
+            min-height: 100vh;
+            padding: 0.5rem;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+        }
+        
+        .card {
+            max-width: 1024px;
+            width: 100%;
+            background: white;
+            border-radius: 24px;
+            box-shadow: 0 8px 30px rgba(0, 20, 40, 0.12);
+            padding: 1rem 1rem 1.5rem;
+            margin: 0 auto;
+        }
+        
+        /* ============================================================
+               HEADER
+               ============================================================ */
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding-bottom: 0.6rem;
+            border-bottom: 2px solid #e8eff5;
+            flex-wrap: wrap;
+            gap: 0.3rem;
+        }
+        
+        .header h1 {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: #0b2b44;
+        }
+        
+        .header small {
+            font-size: 0.6rem;
+            font-weight: 400;
+            color: #3e6a8c;
+            background: #eef3fa;
+            padding: 0.15rem 0.6rem;
+            border-radius: 30px;
+            white-space: nowrap;
+        }
+        
+        .status-badge {
+            display: inline-block;
+            padding: 0.1rem 0.5rem;
+            border-radius: 30px;
+            font-size: 0.55rem;
+            font-weight: 600;
+            margin-left: 4px;
+        }
+        .status-badge.online { background: #d4edda; color: #155724; }
+        .status-badge.offline { background: #f8d7da; color: #721c24; }
+        .status-badge.waiting { background: #fff3cd; color: #856404; }
+        
+        /* ============================================================
+               TABS
+               ============================================================ */
+        .tabs {
+            display: flex;
+            gap: 0.2rem;
+            margin: 0.8rem 0 0.6rem;
+            background: #f5f9fe;
+            border-radius: 14px;
+            padding: 0.2rem;
+            flex-wrap: wrap;
+        }
+        
+        .tab-btn {
+            flex: 1;
+            min-width: 60px;
+            padding: 0.5rem 0.3rem;
+            border: none;
+            border-radius: 12px;
+            background: transparent;
+            font-weight: 600;
+            font-size: 0.7rem;
+            color: #4a6f8f;
+            cursor: pointer;
+            transition: all 0.2s;
+            touch-action: manipulation;
+            text-align: center;
+        }
+        
+        .tab-btn.active {
+            background: white;
+            color: #1a5f8b;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+        }
+        
+        .tab-btn:active { transform: scale(0.96); }
+        
+        .tab-content {
+            display: none;
+            animation: fadeIn 0.25s ease;
+        }
+        .tab-content.active { display: block; }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        /* ============================================================
+               FORMULAR-FELDER
+               ============================================================ */
+        .field-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.15rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .field-group label {
+            font-weight: 600;
+            font-size: 0.65rem;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+            color: #1f4a6e;
+        }
+        
+        .field-group input,
+        .field-group select,
+        .field-group textarea {
+            background: #f8fafc;
+            border: 1.5px solid #dce5ef;
+            border-radius: 12px;
+            padding: 0.6rem 0.8rem;
+            font-size: 0.9rem;
+            transition: 0.15s;
+            width: 100%;
+            outline: none;
+            color: #0a1e2f;
+            -webkit-appearance: none;
+            appearance: none;
+        }
+        
+        .field-group input:focus,
+        .field-group select:focus,
+        .field-group textarea:focus {
+            border-color: #2a7bb0;
+            background: white;
+            box-shadow: 0 0 0 3px rgba(42,123,176,0.1);
+        }
+        
+        .field-group select {
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%234a6f8f' stroke-width='1.5' fill='none'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 0.8rem center;
+            padding-right: 2.2rem;
+        }
+        
+        .field-group textarea {
+            resize: vertical;
+            min-height: 40px;
+            font-family: inherit;
+        }
+        
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.4rem 0.7rem;
+        }
+        
+        .grid-3 {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 0.3rem;
+        }
+        
+        .section-title {
+            font-weight: 600;
+            color: #1a4b6e;
+            font-size: 0.8rem;
+            margin: 0.8rem 0 0.4rem;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        
+        /* ============================================================
+               BUTTONS
+               ============================================================ */
+        .btn-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.4rem;
+            margin: 0.6rem 0;
+        }
+        
+        .btn {
+            flex: 1;
+            min-width: 60px;
+            padding: 0.5rem 0.6rem;
+            border-radius: 40px;
+            font-weight: 600;
+            font-size: 0.7rem;
+            cursor: pointer;
+            transition: all 0.12s;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            touch-action: manipulation;
+            user-select: none;
+            border: none;
+            background: #f7faff;
+            color: #1f4a6e;
+            border: 1.5px solid #d0dceb;
+        }
+        
+        .btn:active { transform: scale(0.95); }
+        
+        .btn-primary { background: #1a5f8b; border-color: #1a5f8b; color: white; box-shadow: 0 3px 10px -3px rgba(26,95,139,0.3); }
+        .btn-success { background: #2a8b5f; border-color: #2a8b5f; color: white; box-shadow: 0 3px 10px -3px rgba(42,139,95,0.3); }
+        .btn-pdf { background: #d43f34; border-color: #d43f34; color: white; box-shadow: 0 3px 10px -3px rgba(212,63,52,0.3); }
+        .btn-warning { background: #f0ad4e; border-color: #f0ad4e; color: white; }
+        .btn-outline { background: transparent; border-color: #c5d5e6; }
+        .btn-danger { border-color: #dbb5b5; color: #a55353; background: #fff6f6; }
+        
+        .btn-sm { flex: 0 1 auto; padding: 0.3rem 0.6rem; font-size: 0.6rem; }
+        .btn-xs { flex: 0 1 auto; padding: 0.2rem 0.5rem; font-size: 0.55rem; }
+        
+        .btn-file { position: relative; overflow: hidden; }
+        .btn-file input[type="file"] {
+            position: absolute;
+            left: 0;
+            top: 0;
+            opacity: 0;
+            width: 100%;
+            height: 100%;
+            cursor: pointer;
+        }
+        
+        /* ============================================================
+               KEHREN-KARTEN
+               ============================================================ */
+        .kehre-card {
+            background: #f8fafc;
+            border-radius: 16px;
+            padding: 0.8rem 1rem;
+            margin-bottom: 0.5rem;
+            border: 1.5px solid #e8eff5;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            transition: border-color 0.2s;
+        }
+        
+        .kehre-card.active {
+            border-color: #28a745;
+            background: #f0fff4;
+        }
+        
+        .kehre-card .kehre-label {
+            font-weight: 700;
+            font-size: 0.9rem;
+            color: #1f4a6e;
+            min-width: 40px;
+        }
+        
+        .kehre-card .kehre-buttons {
+            display: flex;
+            gap: 0.4rem;
+            flex-wrap: wrap;
+            align-items: center;
+            flex: 1;
+            justify-content: center;
+        }
+        
+        /* Segment-Button (Radio-Gruppe) */
+        .segment-group {
+            display: flex;
+            gap: 0.2rem;
+            background: #e8eff5;
+            border-radius: 40px;
+            padding: 0.15rem;
+        }
+        
+        .segment-btn {
+            padding: 0.4rem 0.9rem;
+            border: none;
+            border-radius: 40px;
+            font-weight: 600;
+            font-size: 0.75rem;
+            cursor: pointer;
+            transition: all 0.15s;
+            background: transparent;
+            color: #4a6f8f;
+            touch-action: manipulation;
+            min-height: 40px;
+            min-width: 50px;
+        }
+        
+        .segment-btn:active { transform: scale(0.95); }
+        .segment-btn.active-mass { background: #28a745; color: white; box-shadow: 0 2px 10px rgba(40,167,69,0.3); }
+        .segment-btn.active-stock { background: #007bff; color: white; box-shadow: 0 2px 10px rgba(0,123,255,0.3); }
+        .segment-btn.active-fehl { background: #dc3545; color: white; box-shadow: 0 2px 10px rgba(220,53,69,0.3); }
+        
+        .kehre-card .plate-select {
+            font-size: 0.65rem;
+            padding: 0.3rem 0.6rem;
+            border: 1.5px solid #dce5ef;
+            border-radius: 10px;
+            background: white;
+            min-width: 70px;
+            -webkit-appearance: none;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='6' viewBox='0 0 8 6'%3E%3Cpath d='M1 1l3 3 3-3' stroke='%234a6f8f' stroke-width='1.5' fill='none'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 0.4rem center;
+            padding-right: 1.8rem;
+        }
+        
+        .kehre-card .kehre-status {
+            font-size: 0.55rem;
+            color: #6c8ba8;
+            min-width: 50px;
+            text-align: right;
+        }
+        
+        /* ============================================================
+               SPIEL-ÜBERSICHT (Karten)
+               ============================================================ */
+        .game-cards {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 0.4rem;
+            margin: 0.4rem 0;
+        }
+        
+        .game-card {
+            background: white;
+            border-radius: 12px;
+            padding: 0.4rem 0.3rem;
+            text-align: center;
+            border: 2px solid #e8eff5;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+        
+        .game-card:active { transform: scale(0.95); }
+        .game-card .g-label { font-weight: 700; font-size: 0.6rem; color: #1f4a6e; }
+        .game-card .g-rate { font-weight: 700; font-size: 0.85rem; }
+        .game-card .g-stats { font-size: 0.45rem; color: #4a6f8f; }
+        .game-card .g-plate { font-size: 0.4rem; color: #6c8ba8; }
+        
+        .game-card.status-green { border-color: #28a745; background: #f0fff4; }
+        .game-card.status-yellow { border-color: #ffc107; background: #fff8e1; }
+        .game-card.status-red { border-color: #dc3545; background: #fff5f5; }
+        .game-card.status-active { border-color: #1a5f8b; border-width: 3px; background: #f0f6fe; }
+        .game-card.status-completed { border-color: #17a2b8; background: #f0f9ff; }
+        
+        .game-card .g-rate.green { color: #28a745; }
+        .game-card .g-rate.yellow { color: #d4a017; }
+        .game-card .g-rate.red { color: #dc3545; }
+        
+        /* ============================================================
+               ANALYSE DASHBOARD
+               ============================================================ */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.5rem;
+        }
+        
+        .dash-card {
+            background: white;
+            border-radius: 12px;
+            padding: 0.6rem 0.8rem;
+            border: 1px solid #e1ecf7;
+        }
+        
+        .dash-card .dash-label {
+            font-size: 0.55rem;
+            text-transform: uppercase;
+            color: #3f6b8e;
+            letter-spacing: 0.3px;
+        }
+        
+        .dash-card .dash-value {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: #0a2b44;
+        }
+        
+        .dash-card .dash-sub {
+            font-size: 0.5rem;
+            color: #6c8ba8;
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #e8eff5;
+            border-radius: 20px;
+            overflow: hidden;
+            margin: 0.2rem 0;
+        }
+        
+        .progress-bar .fill {
+            height: 100%;
+            border-radius: 20px;
+            transition: width 0.6s ease;
+        }
+        .progress-bar .fill.green { background: #28a745; }
+        .progress-bar .fill.blue { background: #007bff; }
+        .progress-bar .fill.red { background: #dc3545; }
+        .progress-bar .fill.gold { background: #d4a017; }
+        
+        .form-trend {
+            display: flex;
+            gap: 0.3rem;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        
+        .form-dot {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.5rem;
+            font-weight: 700;
+            color: white;
+        }
+        .form-dot.green { background: #28a745; }
+        .form-dot.yellow { background: #d4a017; }
+        .form-dot.red { background: #dc3545; }
+        .form-dot.empty { background: #e8eff5; color: #6c8ba8; }
+        
+        .best-plate {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.15rem 0;
+            border-bottom: 1px solid #f0f0f0;
+            font-size: 0.65rem;
+        }
+        .best-plate:last-child { border-bottom: none; }
+        .best-plate .plate-name { color: #1f4a6e; }
+        .best-plate .plate-rate { font-weight: 700; }
+        
+        /* ============================================================
+               HISTORIE
+               ============================================================ */
+        .history-list {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        
+        .history-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.4rem 0.6rem;
+            border-bottom: 1px solid #e8eff5;
+            font-size: 0.7rem;
+            align-items: center;
+        }
+        
+        .history-item .h-date { color: #1f4a6e; font-weight: 600; }
+        .history-item .h-rate { font-weight: 700; }
+        .history-item .h-rate.green { color: #28a745; }
+        .history-item .h-rate.yellow { color: #d4a017; }
+        .history-item .h-rate.red { color: #dc3545; }
+        
+        /* ============================================================
+               TOAST
+               ============================================================ */
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background: #1f4a6e;
+            color: white;
+            padding: 0.5rem 1.2rem;
+            border-radius: 40px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.2);
+            opacity: 0;
+            transition: all 0.35s ease;
+            z-index: 999;
+            max-width: 90%;
+            text-align: center;
+            pointer-events: none;
+        }
+        .toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+        .toast.success { background: #2a8b5f; }
+        .toast.error { background: #b34444; }
+        .toast.info { background: #2a7bb0; }
+        
+        /* ============================================================
+               RESPONSIVE
+               ============================================================ */
+        @media (max-width: 768px) {
+            .grid-2 { grid-template-columns: 1fr; gap: 0.3rem; }
+            .dashboard-grid { grid-template-columns: 1fr; }
+            .game-cards { grid-template-columns: repeat(4, 1fr); }
+            .kehre-card { flex-direction: column; align-items: stretch; gap: 0.3rem; }
+            .kehre-card .kehre-buttons { justify-content: center; }
+            .segment-btn { padding: 0.3rem 0.6rem; font-size: 0.65rem; min-height: 36px; min-width: 40px; }
+            .tabs { gap: 0.1rem; }
+            .tab-btn { font-size: 0.6rem; padding: 0.4rem 0.2rem; min-width: 40px; }
+        }
+        
+        @media (max-width: 500px) {
+            .game-cards { grid-template-columns: repeat(3, 1fr); }
+            .kehre-card { padding: 0.5rem; }
+            .btn { font-size: 0.6rem; padding: 0.4rem 0.4rem; min-width: 45px; }
+            .segment-btn { padding: 0.2rem 0.4rem; font-size: 0.6rem; min-height: 32px; min-width: 36px; }
+        }
+        
+        @media (max-width: 400px) {
+            .game-cards { grid-template-columns: repeat(3, 1fr); }
+            .tab-btn { font-size: 0.5rem; padding: 0.3rem 0.1rem; min-width: 32px; }
+        }
+        
+        @media print {
+            body { background: white; padding: 0.2rem; }
+            .card { box-shadow: none; padding: 0.5rem; max-width: 100%; }
+            .btn, .btn-group, .tabs, .tab-btn { display: none !important; }
+            .tab-content { display: block !important; }
+            .toast { display: none !important; }
+            .kehre-card { border: 1px solid #ccc; }
+            .game-card { border: 1px solid #ccc; }
+            .game-card.status-green { background: #f0f0f0; border-color: #999; }
+            .game-card.status-yellow { background: #f0f0f0; border-color: #999; }
+            .game-card.status-red { background: #f0f0f0; border-color: #999; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="card" id="app">
+    <!-- ============================================ -->
+    <!-- HEADER -->
+    <!-- ============================================ -->
+    <div class="header">
+        <h1>Training Auswertung/Analyse</h1>
+        <small>
+            <span id="connectionStatus" class="status-badge offline">● Offline</span>
+        </small>
+    </div>
+
+    <!-- ============================================ -->
+    <!-- TABS -->
+    <!-- ============================================ -->
+    <div class="tabs" id="tabContainer">
+        <button class="tab-btn active" data-tab="tab-player">👤 Spieler</button>
+        <button class="tab-btn" data-tab="tab-training">🎯 Training</button>
+        <button class="tab-btn" data-tab="tab-analysis">📊 Analyse</button>
+        <button class="tab-btn" data-tab="tab-history">📅 Historie</button>
+        <button class="tab-btn" data-tab="tab-export">💾 Export</button>
+    </div>
+
+    <!-- ============================================ -->
+    <!-- TAB: SPIELER -->
+    <!-- ============================================ -->
+    <div class="tab-content active" id="tab-player">
+        <div class="section-title">👥 Spielerverwaltung</div>
+        <div class="grid-2">
+            <div class="field-group">
+                <label>Spieler</label>
+                <input type="text" id="playerName" placeholder="Name" list="playerDatalist" value="Roland Koll">
+                <datalist id="playerDatalist"></datalist>
+            </div>
+            <div style="display:flex; gap:0.3rem; align-items:flex-end; margin-bottom:0.5rem;">
+                <button class="btn btn-success" id="savePlayerBtn" style="flex:1;">💾 Profil</button>
+                <button class="btn btn-primary" id="loadPlayerBtn" style="flex:1;">📂 Laden</button>
+                <button class="btn btn-danger" id="deletePlayerBtn" style="flex:0 0 50px;">🗑️</button>
+            </div>
+        </div>
+        <div id="playerList" style="display:flex; flex-wrap:wrap; gap:0.2rem;"></div>
+
+        <div class="section-title">📋 Basis-Daten</div>
+        <div class="grid-2">
+            <div class="field-group">
+                <label>📅 Datum</label>
+                <input type="date" id="sessionDate" value="2026-07-23">
+            </div>
+            <div class="field-group">
+                <label>📍 Ort</label>
+                <input type="text" id="location" placeholder="Trainingsstätte" value="ESV Grein">
+            </div>
+            <div class="field-group">
+                <label>🌡️ Temperatur</label>
+                <input type="text" id="temperature" placeholder="z.B. 22°C" value="24°C">
+            </div>
+            <div class="field-group">
+                <label>🎯 Stiel Länge/Grifform</label>
+                <select id="gameType">
+                    <option value="20/A">20/A</option>
+                    <option value="21/A">21/A</option>
+                    <option value="22/A" selected>22/A</option>
+                    <option value="23/A">23/A</option>
+                    <option value="22/B">22/B</option>
+                    <option value="21/B">21/B</option>
+                    <option value="23/B">23/B</option>
+                </select>
+            </div>
+        </div>
+        
+        <div class="section-title">🏒 Platten-Verwaltung</div>
+        <div style="display:flex; gap:0.3rem; flex-wrap:wrap; align-items:center;">
+            <input type="text" id="newPlateInput" placeholder="Neue Platte" style="flex:1; min-width:80px; padding:0.4rem 0.7rem; border-radius:12px; border:1.5px solid #dce5ef; background:#f8fafc; font-size:0.8rem;">
+            <button class="btn btn-success btn-sm" id="addPlateBtn">➕ Hinzufügen</button>
+            <button class="btn btn-primary btn-sm" id="savePlatesBtn">💾 Speichern</button>
+        </div>
+    </div>
+
+    <!-- ============================================ -->
+    <!-- TAB: TRAINING -->
+    <!-- ============================================ -->
+    <div class="tab-content" id="tab-training">
+        <div class="section-title">🎯 Spielauswahl (1-12)</div>
+        <div style="display:flex; gap:0.4rem; flex-wrap:wrap; align-items:center; margin-bottom:0.5rem;">
+            <label style="font-weight:600; font-size:0.7rem; color:#1f4a6e;">Spiel:</label>
+            <select id="gameSelect" style="flex:1; min-width:80px; padding:0.4rem 0.7rem; border-radius:12px; border:1.5px solid #dce5ef; background:#f8fafc; font-size:0.85rem;">
+                <option value="1">Spiel 01</option>
+                <option value="2" selected>Spiel 02</option>
+                <option value="3">Spiel 03</option>
+                <option value="4">Spiel 04</option>
+                <option value="5">Spiel 05</option>
+                <option value="6">Spiel 06</option>
+                <option value="7">Spiel 07</option>
+                <option value="8">Spiel 08</option>
+                <option value="9">Spiel 09</option>
+                <option value="10">Spiel 10</option>
+                <option value="11">Spiel 11</option>
+                <option value="12">Spiel 12</option>
+            </select>
+            <button class="btn btn-primary btn-sm" id="newGameBtn">🔄 Neu</button>
+            <button class="btn btn-success btn-sm" id="completeGameBtn">✅ Fertig</button>
+        </div>
+
+        <div class="section-title">🔄 Kehren 1-6</div>
+        <div id="kehrenContainer"></div>
+
+        <div class="section-title">📊 Spielübersicht (1-12)</div>
+        <div class="game-cards" id="gameOverview"></div>
+
+        <div class="field-group" style="margin-top:0.5rem;">
+            <label>📝 Anmerkungen</label>
+            <textarea id="notes" placeholder="Besonderheiten, Gefühle, Schwerpunkte …">Guter Rhythmus, Vorhand stark.</textarea>
+        </div>
+    </div>
+
+    <!-- ============================================ -->
+    <!-- TAB: ANALYSE -->
+    <!-- ============================================ -->
+    <div class="tab-content" id="tab-analysis">
+        <div class="section-title">📊 Trainingsanalyse</div>
+        <div id="analysisContent"></div>
+    </div>
+
+    <!-- ============================================ -->
+    <!-- TAB: HISTORIE -->
+    <!-- ============================================ -->
+    <div class="tab-content" id="tab-history">
+        <div class="section-title">📅 Trainingsverlauf</div>
+        <div id="historyContent">
+            <p style="color:#6c8ba8; font-size:0.8rem;">Noch keine Historie vorhanden. Nach dem Training speichern.</p>
+        </div>
+    </div>
+
+    <!-- ============================================ -->
+    <!-- TAB: EXPORT -->
+    <!-- ============================================ -->
+    <div class="tab-content" id="tab-export">
+        <div class="section-title">💾 Export & Speichern</div>
+        <div class="btn-group">
+            <button class="btn btn-success" id="saveToDatabaseBtn">💾 In Datenbank speichern</button>
+            <button class="btn btn-pdf" id="saveCsvBtn">📄 CSV Export</button>
+            <button class="btn btn-pdf" id="pdfExportBtn">📄 PDF Export</button>
+        </div>
+        <div class="btn-group" style="margin-top:0;">
+            <button class="btn btn-outline btn-sm" id="saveLocalBtn">💾 Lokal speichern</button>
+            <button class="btn btn-outline btn-sm" id="resetBtn">↺ Reset</button>
+            <button class="btn btn-danger btn-sm" id="clearBtn">🧹 Leeren</button>
+            <button class="btn btn-outline btn-sm btn-file">
+                📂 Import
+                <input type="file" id="importBtn" accept=".csv,.json">
+            </button>
+        </div>
+        <div style="margin-top:0.5rem; font-size:0.7rem; color:#6c8ba8;">
+            <strong>Hinweis:</strong> Daten werden automatisch lokal gespeichert. Bei Internetverbindung auch in der Cloud.
+        </div>
+    </div>
+</div>
+
+<!-- Toast -->
+<div id="toast" class="toast"></div>
+
+<script>
+    (function() {
+        // ============================================================
+        // KONFIGURATION
+        // ============================================================
+        const GOOGLE_SHEETS_URL = 'https://script.google.com/macros/s/IhreWebAppURL/exec';
+        const MAX_GAMES = 12;
+        const MAX_KEHREN = 6;
+        let gameData = {};
+        let currentGame = 2;
+        let plateOptions = [];
+        
+        // ============================================================
+        // DOM-ELEMENTE
+        // ============================================================
+        const playerName = document.getElementById('playerName');
+        const sessionDate = document.getElementById('sessionDate');
+        const location = document.getElementById('location');
+        const temperature = document.getElementById('temperature');
+        const gameType = document.getElementById('gameType');
+        const gameSelect = document.getElementById('gameSelect');
+        const notes = document.getElementById('notes');
+        const analysisContent = document.getElementById('analysisContent');
+        const historyContent = document.getElementById('historyContent');
+        const toast = document.getElementById('toast');
+        const gameOverview = document.getElementById('gameOverview');
+        const playerList = document.getElementById('playerList');
+        const connectionStatus = document.getElementById('connectionStatus');
+        const kehrenContainer = document.getElementById('kehrenContainer');
+        
+        // Buttons
+        const resetBtn = document.getElementById('resetBtn');
+        const clearBtn = document.getElementById('clearBtn');
+        const saveLocalBtn = document.getElementById('saveLocalBtn');
+        const saveCsvBtn = document.getElementById('saveCsvBtn');
+        const pdfExportBtn = document.getElementById('pdfExportBtn');
+        const importBtn = document.getElementById('importBtn');
+        const newGameBtn = document.getElementById('newGameBtn');
+        const completeGameBtn = document.getElementById('completeGameBtn');
+        const saveToDatabaseBtn = document.getElementById('saveToDatabaseBtn');
+        
+        // Spieler-Verwaltung
+        const savePlayerBtn = document.getElementById('savePlayerBtn');
+        const loadPlayerBtn = document.getElementById('loadPlayerBtn');
+        const deletePlayerBtn = document.getElementById('deletePlayerBtn');
+        const playerDatalist = document.getElementById('playerDatalist');
+        
+        // Platten-Verwaltung
+        const newPlateInput = document.getElementById('newPlateInput');
+        const addPlateBtn = document.getElementById('addPlateBtn');
+        const savePlatesBtn = document.getElementById('savePlatesBtn');
+
+        // ============================================================
+        // TABS
+        // ============================================================
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+                document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+                document.getElementById(this.dataset.tab).classList.add('active');
+            });
+        });
+
+        // ============================================================
+        // INIT
+        // ============================================================
+        function initGameData() {
+            for (let g = 1; g <= MAX_GAMES; g++) {
+                if (!gameData[g]) gameData[g] = {};
+                for (let k = 1; k <= MAX_KEHREN; k++) {
+                    if (!gameData[g][k]) {
+                        gameData[g][k] = { type: '', plate: '' };
+                    }
+                }
+            }
+        }
+        initGameData();
+
+        const defaultPlates = [
+            'Type 16/39/41/Glatt',
+            'Type 16/39/41/Profil',
+            'Type 15L/43-46/Profil',
+            'Type 15M/47',
+            'Type 14L/53/glatt',
+            'Type 14M/54'
+        ];
+        plateOptions = [...defaultPlates];
+
+        // ============================================================
+        // TOAST
+        // ============================================================
+        let toastTimeout;
+        function showToast(message, type = 'info') {
+            clearTimeout(toastTimeout);
+            toast.textContent = message;
+            toast.className = `toast ${type}`;
+            setTimeout(() => toast.classList.add('show'), 10);
+            toastTimeout = setTimeout(() => toast.classList.remove('show'), 2500);
+        }
+
+        // ============================================================
+        // PLATTEN-FUNKTIONEN
+        // ============================================================
+        function getPlateOptionsHTML(selected) {
+            let html = '<option value="">–</option>';
+            plateOptions.forEach(p => {
+                html += `<option value="${p}" ${p === selected ? 'selected' : ''}>${p}</option>`;
+            });
+            return html;
+        }
+
+        function updatePlateSelects() {
+            document.querySelectorAll('.plate-select-kehre').forEach(sel => {
+                const current = sel.value;
+                sel.innerHTML = getPlateOptionsHTML(current);
+                if (current && plateOptions.includes(current)) sel.value = current;
+            });
+        }
+
+        function addPlate() {
+            const value = newPlateInput.value.trim();
+            if (!value) { showToast('⚠️ Bitte Plattennamen eingeben!', 'error'); return; }
+            if (plateOptions.includes(value)) {
+                showToast('⚠️ Platte existiert bereits!', 'error');
+                return;
+            }
+            plateOptions.push(value);
+            updatePlateSelects();
+            savePlatesToLocal();
+            newPlateInput.value = '';
+            showToast('✅ Platte hinzugefügt: ' + value, 'success');
+        }
+
+        function savePlatesToLocal() {
+            localStorage.setItem('customPlates', JSON.stringify(plateOptions));
+        }
+
+        function loadPlatesFromLocal() {
+            const saved = localStorage.getItem('customPlates');
+            if (saved) {
+                try {
+                    const plates = JSON.parse(saved);
+                    if (plates.length > 0) {
+                        plateOptions = plates;
+                        updatePlateSelects();
+                        return true;
+                    }
+                } catch (e) {}
+            }
+            return false;
+        }
+
+        // ============================================================
+        // DATEN FUNKTIONEN
+        // ============================================================
+        function getCurrentGameData() { return gameData[currentGame] || {}; }
+
+        function getKehreData(kehre) {
+            const gData = getCurrentGameData();
+            if (!gData[kehre]) {
+                gData[kehre] = { type: '', plate: '' };
+            }
+            return gData[kehre];
+        }
+
+        function getGameStats(gameId) {
+            const gData = gameData[gameId] || {};
+            let mass = 0, stock = 0, fehl = 0;
+            let plates = [];
+            for (let k = 1; k <= MAX_KEHREN; k++) {
+                const kData = gData[k] || { type: '', plate: '' };
+                if (kData.type === 'mass') mass++;
+                else if (kData.type === 'stock') stock++;
+                else if (kData.type === 'fehl') fehl++;
+                if (kData.plate) plates.push(kData.plate);
+            }
+            const total = mass + stock + fehl;
+            const rate = total > 0 ? Math.round(((mass + stock) / total) * 100) : 0;
+            const plateCount = {};
+            plates.forEach(p => { plateCount[p] = (plateCount[p] || 0) + 1; });
+            let mostUsedPlate = '';
+            let maxCount = 0;
+            for (const [p, count] of Object.entries(plateCount)) {
+                if (count > maxCount) { maxCount = count; mostUsedPlate = p; }
+            }
+            return { mass, stock, fehl, total, rate, mostUsedPlate };
+        }
+
+        function isGameCompleted(gameId) {
+            const stats = getGameStats(gameId);
+            return stats.total >= MAX_KEHREN;
+        }
+
+        function getTotalStats() {
+            let totalMass = 0, totalStock = 0, totalFehl = 0;
+            let totalShots = 0;
+            let allPlates = [];
+            for (let g = 1; g <= MAX_GAMES; g++) {
+                const stats = getGameStats(g);
+                totalMass += stats.mass;
+                totalStock += stats.stock;
+                totalFehl += stats.fehl;
+                totalShots += stats.total;
+                const gData = gameData[g] || {};
+                for (let k = 1; k <= MAX_KEHREN; k++) {
+                    const kData = gData[k] || { plate: '' };
+                    if (kData.plate) allPlates.push(kData.plate);
+                }
+            }
+            const maxShots = MAX_GAMES * MAX_KEHREN;
+            const plateCount = {};
+            allPlates.forEach(p => { plateCount[p] = (plateCount[p] || 0) + 1; });
+            let mostUsedPlate = '';
+            let maxCount = 0;
+            for (const [p, count] of Object.entries(plateCount)) {
+                if (count > maxCount) { maxCount = count; mostUsedPlate = p; }
+            }
+            // Beste und schlechteste Platte
+            let plateStats = {};
+            for (let g = 1; g <= MAX_GAMES; g++) {
+                const gData = gameData[g] || {};
+                for (let k = 1; k <= MAX_KEHREN; k++) {
+                    const kData = gData[k] || { type: '', plate: '' };
+                    if (kData.plate) {
+                        if (!plateStats[kData.plate]) plateStats[kData.plate] = { hits: 0, total: 0 };
+                        plateStats[kData.plate].total++;
+                        if (kData.type === 'mass' || kData.type === 'stock') {
+                            plateStats[kData.plate].hits++;
+                        }
+                    }
+                }
+            }
+            let bestPlate = '', worstPlate = '';
+            let bestRate = 0, worstRate = 100;
+            for (const [p, stats] of Object.entries(plateStats)) {
+                const rate = stats.total > 0 ? Math.round((stats.hits / stats.total) * 100) : 0;
+                if (rate > bestRate) { bestRate = rate; bestPlate = p; }
+                if (rate < worstRate) { worstRate = rate; worstPlate = p; }
+            }
+            
+            return {
+                mass: totalMass,
+                stock: totalStock,
+                fehl: totalFehl,
+                total: totalShots,
+                maxShots: maxShots,
+                massPercent: maxShots > 0 ? Math.round((totalMass / maxShots) * 100) : 0,
+                stockPercent: maxShots > 0 ? Math.round((totalStock / maxShots) * 100) : 0,
+                fehlPercent: maxShots > 0 ? Math.round((totalFehl / maxShots) * 100) : 0,
+                rate: totalShots > 0 ? Math.round(((totalMass + totalStock) / totalShots) * 100) : 0,
+                completedGames: Object.keys(gameData).filter(g => isGameCompleted(g)).length,
+                mostUsedPlate: mostUsedPlate,
+                bestPlate: bestPlate,
+                bestRate: bestRate,
+                worstPlate: worstPlate,
+                worstRate: worstRate
+            };
+        }
+
+        function toggleShot(kehre, type) {
+            const kData = getKehreData(kehre);
+            if (kData.type === type) {
+                kData.type = '';
+            } else {
+                kData.type = type;
+            }
+            // Platte speichern
+            const plateSelect = document.querySelector(`.plate-select-kehre[data-kehre="${kehre}"]`);
+            if (plateSelect) {
+                kData.plate = plateSelect.value;
+            }
+            renderKehren();
+            updateGameOverview();
+            saveToLocalStorageAuto();
+            if (isGameCompleted(currentGame)) {
+                showToast('✅ Spiel ' + currentGame + ' abgeschlossen!', 'success');
+                updateAnalysis();
+            }
+        }
+
+        // ============================================================
+        // KEHREN RENDER
+        // ============================================================
+        function renderKehren() {
+            const gData = getCurrentGameData();
+            let html = '';
+            for (let k = 1; k <= MAX_KEHREN; k++) {
+                const kData = gData[k] || { type: '', plate: '' };
+                const type = kData.type || '';
+                const isActive = type !== '';
+                
+                html += `
+                    <div class="kehre-card ${isActive ? 'active' : ''}">
+                        <div class="kehre-label">K${k}</div>
+                        <div class="kehre-buttons">
+                            <div class="segment-group">
+                                <button class="segment-btn ${type === 'mass' ? 'active-mass' : ''}" 
+                                        onclick="window.toggleShot(${k}, 'mass')">🎯 Maß</button>
+                                <button class="segment-btn ${type === 'stock' ? 'active-stock' : ''}" 
+                                        onclick="window.toggleShot(${k}, 'stock')">🏒 Stock</button>
+                                <button class="segment-btn ${type === 'fehl' ? 'active-fehl' : ''}" 
+                                        onclick="window.toggleShot(${k}, 'fehl')">❌ Fehler</button>
+                            </div>
+                            <select class="plate-select-kehre" data-kehre="${k}" onchange="window.onPlateChange(${k}, this.value)">
+                                ${getPlateOptionsHTML(kData.plate || '')}
+                            </select>
+                        </div>
+                        <div class="kehre-status">${type ? (type === 'mass' ? '🎯' : type === 'stock' ? '🏒' : '❌') : '◻️'}</div>
+                    </div>
+                `;
+            }
+            kehrenContainer.innerHTML = html;
+        }
+
+        // Globale Funktionen für onclick
+        window.toggleShot = toggleShot;
+        window.onPlateChange = function(kehre, value) {
+            const kData = getKehreData(kehre);
+            kData.plate = value;
+            saveToLocalStorageAuto();
+        };
+
+        // ============================================================
+        // GAME OVERVIEW
+        // ============================================================
+        function updateGameOverview() {
+            let html = '';
+            for (let g = 1; g <= MAX_GAMES; g++) {
+                const stats = getGameStats(g);
+                const completed = isGameCompleted(g);
+                const active = g === currentGame;
+                let statusClass = '';
+                if (active) statusClass = 'status-active';
+                else if (completed) statusClass = 'status-completed';
+                else {
+                    if (stats.rate >= 80) statusClass = 'status-green';
+                    else if (stats.rate >= 60) statusClass = 'status-yellow';
+                    else if (stats.total > 0) statusClass = 'status-red';
+                }
+                let rateClass = 'green';
+                if (stats.rate < 60) rateClass = 'red';
+                else if (stats.rate < 80) rateClass = 'yellow';
+                
+                html += `
+                    <div class="game-card ${statusClass}" onclick="document.getElementById('gameSelect').value=${g}; document.getElementById('gameSelect').dispatchEvent(new Event('change'));">
+                        <div class="g-label">S${g}</div>
+                        <div class="g-rate ${rateClass}">${stats.rate}%</div>
+                        <div class="g-stats">M:${stats.mass} S:${stats.stock} F:${stats.fehl}</div>
+                        <div class="g-plate">${stats.mostUsedPlate || '–'}</div>
+                    </div>
+                `;
+            }
+            gameOverview.innerHTML = html;
+        }
+
+        // ============================================================
+        // ANALYSE DASHBOARD
+        // ============================================================
+        function renderAnalysis() {
+            const data = collectAllData();
+            const name = data.playerName || 'unbekannt';
+            const total = getTotalStats();
+            const dateFormatted = formatDate(data.sessionDate);
+            
+            // Form-Trend der letzten 5 Spiele
+            let formHtml = '';
+            const games = [];
+            for (let g = 1; g <= MAX_GAMES; g++) {
+                const stats = getGameStats(g);
+                if (stats.total > 0) games.push({ game: g, rate: stats.rate });
+            }
+            const lastGames = games.slice(-6);
+            lastGames.forEach((g, idx) => {
+                let cls = 'green';
+                if (g.rate < 60) cls = 'red';
+                else if (g.rate < 80) cls = 'yellow';
+                formHtml += `<div class="form-dot ${cls}">${g.rate}%</div>`;
+            });
+            if (lastGames.length === 0) {
+                formHtml = '<span style="color:#6c8ba8;font-size:0.7rem;">Keine Daten</span>';
+            }
+            
+            // Trend (steigend/fallend)
+            let trend = '↔';
+            let trendText = 'keine Tendenz';
+            if (lastGames.length >= 3) {
+                const first = lastGames[0].rate;
+                const last = lastGames[lastGames.length - 1].rate;
+                if (last > first + 5) { trend = '↗'; trendText = 'steigende Form 📈'; }
+                else if (last < first - 5) { trend = '↘'; trendText = 'fallende Form 📉'; }
+                else { trend = '→'; trendText = 'stabile Form ➡️'; }
+            }
+            
+            // Beste Serie (max. aufeinanderfolgende Treffer)
+            let bestSerie = 0, currentSerie = 0;
+            for (let g = 1; g <= MAX_GAMES; g++) {
+                const stats = getGameStats(g);
+                if (stats.rate >= 60) {
+                    currentSerie++;
+                    if (currentSerie > bestSerie) bestSerie = currentSerie;
+                } else {
+                    currentSerie = 0;
+                }
+            }
+            
+            return `
+                <div class="dashboard-grid">
+                    <!-- Trefferquote -->
+                    <div class="dash-card">
+                        <div class="dash-label">🎯 Trefferquote</div>
+                        <div class="dash-value">${total.rate}%</div>
+                        <div class="progress-bar">
+                            <div class="fill gold" style="width:${total.rate}%;"></div>
+                        </div>
+                        <div class="dash-sub">${total.mass + total.stock} Treffer von ${total.total} Schüssen</div>
+                    </div>
+                    
+                    <!-- Verteilung -->
+                    <div class="dash-card">
+                        <div class="dash-label">📊 Verteilung</div>
+                        <div style="display:flex; gap:0.3rem; margin:0.2rem 0;">
+                            <div style="flex:1; text-align:center; background:#f0f6fe; border-radius:8px; padding:0.2rem;">
+                                <div style="font-size:0.9rem; font-weight:700; color:#28a745;">${total.mass}</div>
+                                <div style="font-size:0.45rem; color:#3f6b8e;">Maß</div>
+                                <div style="font-size:0.5rem; color:#6c8ba8;">${total.massPercent}%</div>
+                            </div>
+                            <div style="flex:1; text-align:center; background:#f0f6fe; border-radius:8px; padding:0.2rem;">
+                                <div style="font-size:0.9rem; font-weight:700; color:#007bff;">${total.stock}</div>
+                                <div style="font-size:0.45rem; color:#3f6b8e;">Stock</div>
+                                <div style="font-size:0.5rem; color:#6c8ba8;">${total.stockPercent}%</div>
+                            </div>
+                            <div style="flex:1; text-align:center; background:#f0f6fe; border-radius:8px; padding:0.2rem;">
+                                <div style="font-size:0.9rem; font-weight:700; color:#dc3545;">${total.fehl}</div>
+                                <div style="font-size:0.45rem; color:#3f6b8e;">Fehler</div>
+                                <div style="font-size:0.5rem; color:#6c8ba8;">${total.fehlPercent}%</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Beste/Schlechteste Platte -->
+                    <div class="dash-card">
+                        <div class="dash-label">🏒 Platten-Statistik</div>
+                        <div class="best-plate">
+                            <span class="plate-name">🏆 Beste Platte</span>
+                            <span class="plate-rate" style="color:#28a745;">${total.bestPlate || '–'} (${total.bestRate}%)</span>
+                        </div>
+                        <div class="best-plate">
+                            <span class="plate-name">📉 Schlechteste</span>
+                            <span class="plate-rate" style="color:#dc3545;">${total.worstPlate || '–'} (${total.worstRate}%)</span>
+                        </div>
+                        <div class="best-plate">
+                            <span class="plate-name">🔁 Häufigste</span>
+                            <span class="plate-rate">${total.mostUsedPlate || '–'}</span>
+                        </div>
+                    </div>
+                    
+                    <!-- Form-Trend -->
+                    <div class="dash-card">
+                        <div class="dash-label">📈 Form-Trend</div>
+                        <div class="form-trend">${formHtml}</div>
+                        <div style="margin-top:0.3rem; font-size:0.7rem; font-weight:600; color:#1f4a6e;">
+                            ${trend} ${trendText}
+                        </div>
+                        <div class="dash-sub">Beste Serie: ${bestSerie} Spiele über 60%</div>
+                    </div>
+                </div>
+                
+                <div style="margin-top:0.5rem; font-size:0.55rem; color:#6c8ba8; text-align:center;">
+                    📅 ${new Date().toLocaleString('de-DE')} | ${name} | ${dateFormatted}
+                </div>
+            `;
+        }
+
+        function updateAnalysis() {
+            document.getElementById('analysisContent').innerHTML = renderAnalysis();
+        }
+
+        function formatDate(dateStr) {
+            if (!dateStr) return '–';
+            try {
+                const d = new Date(dateStr + 'T00:00:00');
+                return d.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' });
+            } catch { return dateStr; }
+        }
+
+        // ============================================================
+        // DATEN SAMMELN
+        // ============================================================
+        function collectAllData() {
+            // Platten von Dropdowns sammeln
+            document.querySelectorAll('.plate-select-kehre').forEach(sel => {
+                const k = parseInt(sel.dataset.kehre);
+                const kData = getKehreData(k);
+                kData.plate = sel.value;
+            });
+            
+            const allGames = {};
+            for (let g = 1; g <= MAX_GAMES; g++) {
+                allGames[g] = {};
+                for (let k = 1; k <= MAX_KEHREN; k++) {
+                    const kData = gameData[g]?.[k] || { type: '', plate: '' };
+                    allGames[g][k] = { ...kData };
+                }
+            }
+            return {
+                playerName: playerName.value.trim(),
+                sessionDate: sessionDate.value,
+                location: location.value.trim(),
+                temperature: temperature.value.trim(),
+                gameType: gameType.value,
+                currentGame: currentGame,
+                games: allGames,
+                notes: notes.value.trim(),
+                timestamp: new Date().toISOString()
+            };
+        }
+
+        function applyAllData(data) {
+            if (!data) return;
+            playerName.value = data.playerName || '';
+            sessionDate.value = data.sessionDate || '';
+            location.value = data.location || '';
+            temperature.value = data.temperature || '';
+            gameType.value = data.gameType || '22/A';
+            notes.value = data.notes || '';
+            if (data.games) {
+                for (let g = 1; g <= MAX_GAMES; g++) {
+                    if (data.games[g]) {
+                        for (let k = 1; k <= MAX_KEHREN; k++) {
+                            if (data.games[g][k]) {
+                                gameData[g][k] = { ...data.games[g][k] };
+                            }
+                        }
+                    }
+                }
+            }
+            currentGame = data.currentGame || 2;
+            gameSelect.value = currentGame;
+            renderKehren();
+            updatePlateSelects();
+            updateGameOverview();
+            updateAnalysis();
+            updateHistory();
+        }
+
+        // ============================================================
+        // HISTORIE
+        // ============================================================
+        function updateHistory() {
+            const history = [];
+            for (let g = 1; g <= MAX_GAMES; g++) {
+                const stats = getGameStats(g);
+                if (stats.total > 0) {
+                    history.push({ game: g, rate: stats.rate, mass: stats.mass, stock: stats.stock, fehl: stats.fehl });
+                }
+            }
+            if (history.length === 0) {
+                historyContent.innerHTML = '<p style="color:#6c8ba8; font-size:0.8rem;">Noch keine Trainingsdaten vorhanden.</p>';
+                return;
+            }
+            let html = '<div class="history-list">';
+            history.forEach(h => {
+                let cls = 'green';
+                if (h.rate < 60) cls = 'red';
+                else if (h.rate < 80) cls = 'yellow';
+                html += `
+                    <div class="history-item">
+                        <span class="h-date">Spiel ${h.game}</span>
+                        <span>M:${h.mass} S:${h.stock} F:${h.fehl}</span>
+                        <span class="h-rate ${cls}">${h.rate}%</span>
+                    </div>
+                `;
+            });
+            html += '</div>';
+            historyContent.innerHTML = html;
+        }
+
+        // ============================================================
+        // LOCAL STORAGE
+        // ============================================================
+        function getPlayerStorageKey() {
+            const name = playerName.value.trim() || 'unbekannt';
+            return `trainingData_${name.replace(/\s/g, '_')}`;
+        }
+
+        function saveToLocalStorageAuto() {
+            try {
+                const data = collectAllData();
+                localStorage.setItem(getPlayerStorageKey(), JSON.stringify(data));
+            } catch (e) { console.error('LocalStorage Fehler:', e); }
+        }
+
+        function saveToLocalStorage() {
+            saveToLocalStorageAuto();
+            showToast('✅ Lokal gespeichert', 'success');
+        }
+
+        function loadFromLocalStorage() {
+            const saved = localStorage.getItem(getPlayerStorageKey());
+            if (saved) {
+                try {
+                    const data = JSON.parse(saved);
+                    applyAllData(data);
+                    return true;
+                } catch (e) { console.error('Ladefehler:', e); }
+            }
+            return false;
+        }
+
+        function getAllPlayers() {
+            const players = [];
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                if (key.startsWith('trainingData_')) {
+                    const name = key.replace('trainingData_', '').replace(/_/g, ' ');
+                    players.push(name);
+                }
+            }
+            return players;
+        }
+
+        function updatePlayerListUI() {
+            const players = getAllPlayers();
+            if (players.length === 0) {
+                playerList.innerHTML = '<span style="color:#6c8ba8;font-size:0.65rem;">Keine Spieler-Daten gefunden</span>';
+                return;
+            }
+            playerList.innerHTML = players.map(name => `
+                <button class="btn btn-outline btn-xs" onclick="document.getElementById('playerName').value='${name}'; document.getElementById('playerName').dispatchEvent(new Event('change')); loadPlayerData('${name}');">
+                    👤 ${name}
+                </button>
+            `).join('');
+        }
+
+        // ============================================================
+        // SPIELER-FUNKTIONEN
+        // ============================================================
+        function savePlayerData() {
+            const name = playerName.value.trim();
+            if (!name) { showToast('⚠️ Bitte Namen eingeben!', 'error'); return; }
+            saveToLocalStorageAuto();
+            updatePlayerListUI();
+            showToast('✅ Profil für ' + name + ' gespeichert!', 'success');
+        }
+
+        function loadPlayerData(name) {
+            const key = `trainingData_${name.replace(/\s/g, '_')}`;
+            const saved = localStorage.getItem(key);
+            if (saved) {
+                try {
+                    const data = JSON.parse(saved);
+                    applyAllData(data);
+                    showToast('✅ Daten für ' + name + ' geladen!', 'success');
+                } catch (e) { showToast('❌ Fehler beim Laden', 'error'); }
+            } else {
+                showToast('❌ Keine Daten für ' + name + ' gefunden', 'error');
+            }
+        }
+
+        function deletePlayerData() {
+            const name = playerName.value.trim();
+            if (!name) return;
+            if (confirm('Daten für ' + name + ' wirklich löschen?')) {
+                localStorage.removeItem(`trainingData_${name.replace(/\s/g, '_')}`);
+                updatePlayerListUI();
+                clearAllFields();
+                showToast('🗑️ Daten für ' + name + ' gelöscht', 'info');
+            }
+        }
+
+        // ============================================================
+        // CSV EXPORT / IMPORT
+        // ============================================================
+        function exportCSV() {
+            const data = collectAllData();
+            const name = data.playerName || 'unbekannt';
+            const date = data.sessionDate || new Date().toISOString().split('T')[0];
+            
+            let csv = 'Spiel,Kehre,Schuss,Platte\n';
+            for (let g = 1; g <= MAX_GAMES; g++) {
+                for (let k = 1; k <= MAX_KEHREN; k++) {
+                    const kData = data.games[g]?.[k] || { type: '', plate: '' };
+                    const shot = kData.type || '–';
+                    csv += `${g},${k},${shot},"${kData.plate || ''}"\n`;
+                }
+            }
+            
+            const total = getTotalStats();
+            csv += '\n--- GESAMTSTATISTIK ---\n';
+            csv += `Gesamtschüsse,${total.maxShots}\n`;
+            csv += `Maßschüsse,${total.mass},${total.massPercent}%\n`;
+            csv += `Stockschüsse,${total.stock},${total.stockPercent}%\n`;
+            csv += `Fehlschüsse,${total.fehl},${total.fehlPercent}%\n`;
+            csv += `Trefferquote,${total.rate}%\n`;
+            csv += `Abgeschlossene Spiele,${total.completedGames}/${MAX_GAMES}\n`;
+            csv += `Beste Platte,${total.bestPlate},${total.bestRate}%\n`;
+            csv += `Schlechteste Platte,${total.worstPlate},${total.worstRate}%\n`;
+            
+            csv += '\n--- METADATEN ---\n';
+            csv += `Name,${data.playerName}\n`;
+            csv += `Datum,${data.sessionDate}\n`;
+            csv += `Ort,${data.location}\n`;
+            csv += `Temperatur,${data.temperature}\n`;
+            csv += `Stiel,${data.gameType}\n`;
+            csv += `Anmerkungen,${data.notes}\n`;
+            csv += `Exportiert,${new Date().toLocaleString('de-DE')}\n`;
+            
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = `Training_${name}_${date}.csv`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(link.href);
+            showToast('✅ CSV exportiert!', 'success');
+        }
+
+        function importCSV(file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const text = e.target.result;
+                    const lines = text.split('\n').filter(line => line.trim());
+                    let isCSV = false;
+                    let newGameData = {};
+                    for (let g = 1; g <= MAX_GAMES; g++) {
+                        newGameData[g] = {};
+                        for (let k = 1; k <= MAX_KEHREN; k++) {
+                            newGameData[g][k] = { type: '', plate: '' };
+                        }
+                    }
+                    let dataMode = 'data';
+                    for (const line of lines) {
+                        if (line.includes('--- GESAMTSTATISTIK ---') || line.includes('--- METADATEN ---')) {
+                            dataMode = 'meta';
+                            continue;
+                        }
+                        const parts = line.match(/(".*?"|[^",]+)(?=\s*,|\s*$)/g);
+                        if (parts && parts.length >= 4 && !isNaN(parts[0]) && !isNaN(parts[1])) {
+                            const g = parseInt(parts[0]);
+                            const k = parseInt(parts[1]);
+                            if (g >= 1 && g <= MAX_GAMES && k >= 1 && k <= MAX_KEHREN) {
+                                const shot = (parts[2] || '').replace(/^"|"$/g, '').trim();
+                                let type = '';
+                                if (shot === 'mass' || shot === '🎯') type = 'mass';
+                                else if (shot === 'stock' || shot === '🏒') type = 'stock';
+                                else if (shot === 'fehl' || shot === '❌') type = 'fehl';
+                                newGameData[g][k] = {
+                                    type: type,
+                                    plate: (parts[3] || '').replace(/^"|"$/g, '').trim()
+                                };
+                                isCSV = true;
+                            }
+                        } else if (dataMode === 'meta' && parts && parts.length >= 2) {
+                            const key = (parts[0] || '').trim().replace(/^"|"$/g, '');
+                            const value = (parts.slice(1).join(',').replace(/^"|"$/g, '')).trim();
+                            if (key === 'Name') playerName.value = value;
+                            else if (key === 'Datum') sessionDate.value = value;
+                            else if (key === 'Ort') location.value = value;
+                            else if (key === 'Temperatur') temperature.value = value;
+                            else if (key === 'Stiel') gameType.value = value;
+                            else if (key === 'Anmerkungen') notes.value = value;
+                        }
+                    }
+                    if (isCSV) {
+                        gameData = newGameData;
+                        initGameData();
+                        renderKehren();
+                        updatePlateSelects();
+                        updateGameOverview();
+                        saveToLocalStorageAuto();
+                        updateAnalysis();
+                        updateHistory();
+                        showToast('✅ CSV importiert!', 'success');
+                    } else {
+                        showToast('❌ Kein gültiges CSV-Format', 'error');
+                    }
+                } catch (error) {
+                    showToast('❌ Fehler beim Import', 'error');
+                    console.error(error);
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        function exportPDF() {
+            updateAnalysis();
+            showToast('📄 PDF wird erstellt...', 'info');
+            setTimeout(() => {
+                window.print();
+                setTimeout(() => showToast('📄 PDF-Export gestartet', 'success'), 500);
+            }, 400);
+        }
+
+        // ============================================================
+        // RESET / CLEAR
+        // ============================================================
+        const defaultData = {
+            playerName: 'Roland Koll',
+            sessionDate: '2026-07-23',
+            location: 'ESV Grein',
+            temperature: '24°C',
+            gameType: '22/A',
+            notes: '.'
+        };
+
+        function setDefaultValues() {
+            playerName.value = defaultData.playerName;
+            sessionDate.value = defaultData.sessionDate;
+            location.value = defaultData.location;
+            temperature.value = defaultData.temperature;
+            gameType.value = defaultData.gameType;
+            notes.value = defaultData.notes;
+            for (let g = 1; g <= MAX_GAMES; g++) {
+                for (let k = 1; k <= MAX_KEHREN; k++) {
+                    gameData[g][k] = { type: '', plate: '' };
+                }
+            }
+            currentGame = 2;
+            gameSelect.value = currentGame;
+            renderKehren();
+            updatePlateSelects();
+            updateGameOverview();
+            updateAnalysis();
+            updateHistory();
+        }
+
+        function clearAllFields() {
+            playerName.value = '';
+            sessionDate.value = '';
+            location.value = '';
+            temperature.value = '';
+            gameType.value = '20/A';
+            notes.value = '';
+            for (let g = 1; g <= MAX_GAMES; g++) {
+                for (let k = 1; k <= MAX_KEHREN; k++) {
+                    gameData[g][k] = { type: '', plate: '' };
+                }
+            }
+            currentGame = 1;
+            gameSelect.value = currentGame;
+            renderKehren();
+            updatePlateSelects();
+            updateGameOverview();
+            updateAnalysis();
+            updateHistory();
+            showToast('🧹 Felder geleert', 'info');
+        }
+
+        // ============================================================
+        // GOOGLE SHEETS DATENBANK
+        // ============================================================
+        async function saveToDatabase() {
+            const name = playerName.value.trim();
+            if (!name) { showToast('⚠️ Bitte Spieler auswählen!', 'error'); return; }
+            
+            const data = collectAllData();
+            const total = getTotalStats();
+            
+            connectionStatus.className = 'status-badge waiting';
+            connectionStatus.textContent = '● Sende...';
+            
+            const sheetData = {
+                playerName: data.playerName,
+                sessionDate: data.sessionDate,
+                location: data.location,
+                temperature: data.temperature,
+                gameType: data.gameType,
+                notes: data.notes,
+                totalPoints: total.rate,
+                mass: total.mass,
+                stock: total.stock,
+                fehl: total.fehl,
+                efficiency: total.rate,
+                games: data.games,
+                timestamp: data.timestamp
+            };
+            
+            try {
+                await fetch(GOOGLE_SHEETS_URL, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(sheetData)
+                });
+                showToast('✅ Daten in Datenbank gespeichert!', 'success');
+                connectionStatus.className = 'status-badge online';
+                connectionStatus.textContent = '● Online';
+                saveToLocalStorageAuto();
+            } catch (error) {
+                console.error('Fehler:', error);
+                showToast('⚠️ Offline – Daten lokal gesichert', 'error');
+                connectionStatus.className = 'status-badge offline';
+                connectionStatus.textContent = '● Offline';
+                saveToLocalStorageAuto();
+            }
+        }
+
+        async function loadPlayersFromDatabase() {
+            try {
+                const response = await fetch(GOOGLE_SHEETS_URL + '?action=getPlayers');
+                const data = await response.json();
+                if (data.success && data.players) {
+                    playerDatalist.innerHTML = data.players.map(p => `<option value="${p}">`).join('');
+                    return data.players;
+                }
+                return [];
+            } catch (error) {
+                console.error('Fehler beim Laden der Spielerliste:', error);
+                return [];
+            }
+        }
+
+        // ============================================================
+        // EVENT-LISTENER
+        // ============================================================
+        // Spiel-Auswahl
+        gameSelect.addEventListener('change', function() {
+            currentGame = parseInt(this.value);
+            renderKehren();
+            updateGameOverview();
+            updateAnalysis();
+        });
+
+        // Spiel beenden
+        completeGameBtn.addEventListener('click', function() {
+            if (isGameCompleted(currentGame)) {
+                showToast('✅ Spiel ' + currentGame + ' ist bereits abgeschlossen!', 'info');
+                updateAnalysis();
+                return;
+            }
+            const gData = getCurrentGameData();
+            for (let k = 1; k <= MAX_KEHREN; k++) {
+                if (!gData[k]) gData[k] = { type: '', plate: '' };
+                if (!gData[k].type) {
+                    gData[k].type = 'fehl';
+                    const plateSelect = document.querySelector(`.plate-select-kehre[data-kehre="${k}"]`);
+                    if (plateSelect) gData[k].plate = plateSelect.value;
+                }
+            }
+            renderKehren();
+            saveToLocalStorageAuto();
+            updateAnalysis();
+            updateHistory();
+            showToast('✅ Spiel ' + currentGame + ' abgeschlossen!', 'success');
+        });
+
+        // Neues Spiel
+        newGameBtn.addEventListener('click', function() {
+            const gData = getCurrentGameData();
+            for (let k = 1; k <= MAX_KEHREN; k++) {
+                gData[k] = { type: '', plate: '' };
+            }
+            renderKehren();
+            saveToLocalStorageAuto();
+            updateAnalysis();
+            updateHistory();
+            showToast('✅ Neues Spiel gestartet (Spiel ' + currentGame + ')', 'success');
+        });
+
+        // Spieler-Verwaltung
+        savePlayerBtn.addEventListener('click', savePlayerData);
+        loadPlayerBtn.addEventListener('click', function() {
+            const name = playerName.value.trim();
+            if (name) loadPlayerData(name);
+        });
+        deletePlayerBtn.addEventListener('click', deletePlayerData);
+
+        playerName.addEventListener('change', function() {
+            const name = this.value.trim();
+            if (name) {
+                const key = `trainingData_${name.replace(/\s/g, '_')}`;
+                if (localStorage.getItem(key)) loadPlayerData(name);
+            }
+        });
+
+        // Platten-Verwaltung
+        addPlateBtn.addEventListener('click', addPlate);
+        savePlatesBtn.addEventListener('click', function() {
+            savePlatesToLocal();
+            showToast('✅ Platten gespeichert!', 'success');
+        });
+        newPlateInput.addEventListener('keypress', function(e) { if (e.key === 'Enter') addPlate(); });
+
+        // Export/Import
+        saveLocalBtn.addEventListener('click', saveToLocalStorage);
+        saveCsvBtn.addEventListener('click', exportCSV);
+        pdfExportBtn.addEventListener('click', exportPDF);
+        saveToDatabaseBtn.addEventListener('click', saveToDatabase);
+
+        importBtn.addEventListener('change', function(e) {
+            if (this.files && this.files[0]) {
+                importCSV(this.files[0]);
+                this.value = '';
+            }
+        });
+
+        resetBtn.addEventListener('click', function() {
+            if (confirm('Gespeicherte Daten löschen?')) {
+                localStorage.removeItem(getPlayerStorageKey());
+                setDefaultValues();
+                showToast('↺ Zurückgesetzt', 'info');
+            } else {
+                setDefaultValues();
+                showToast('↺ Standardwerte geladen', 'info');
+            }
+        });
+
+        clearBtn.addEventListener('click', clearAllFields);
+
+        // ============================================================
+        // INITIALISIERUNG
+        // ============================================================
+        window.addEventListener('load', function() {
+            loadPlatesFromLocal();
+            const hasSaved = loadFromLocalStorage();
+            if (!hasSaved) setDefaultValues();
+            renderKehren();
+            updatePlateSelects();
+            updateGameOverview();
+            updateAnalysis();
+            updateHistory();
+            updatePlayerListUI();
+
+            if (GOOGLE_SHEETS_URL.includes('IhreWebAppURL')) {
+                connectionStatus.className = 'status-badge offline';
+                connectionStatus.textContent = '⚠️ Config';
+                showToast('⚠️ Google Sheets URL konfigurieren!', 'error');
+            } else if (navigator.onLine) {
+                loadPlayersFromDatabase();
+                connectionStatus.className = 'status-badge online';
+                connectionStatus.textContent = '● Online';
+            } else {
+                connectionStatus.className = 'status-badge offline';
+                connectionStatus.textContent = '● Offline';
+            }
+        });
+
+        // Automatisches Speichern bei Änderungen
+        document.querySelectorAll('input, select, textarea').forEach(el => {
+            el.addEventListener('change', function() {
+                if (this.id !== 'gameSelect' && this.id !== 'playerName' &&
+                    !this.classList.contains('plate-select-kehre')) {
+                    saveToLocalStorageAuto();
+                }
+            });
+        });
+
+    })();
+</script>
+</body>
+</html>

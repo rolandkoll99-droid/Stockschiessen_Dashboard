@@ -1,0 +1,1083 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.5, user-scalable=yes">
+    <title>Stocksport Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+    <style>
+        /* ============================================
+           MASTER CSS – VOLL DYNAMISCH
+           ============================================ */
+        :root {
+            --green: #1f5e3a;
+            --green-dark: #0d3d22;
+            --red: #b93a32;
+            --gold: #ffdf8c;
+            --dark: #102417;
+            --light: #eef5e9;
+            --border: #d7e4cf;
+            
+            /* Dynamische Basisgrößen – werden per JS gesetzt */
+            --base-size: 16px;
+            --card-min-height: 140px;
+            --icon-size: 2.8rem;
+            --font-title: 1.1rem;
+            --font-desc: 0.8rem;
+            --font-badge: 0.7rem;
+            --padding-card: 25px 20px;
+            --gap-menu: 14px;
+            --grid-cols: 6;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        html,
+        body {
+            height: 100%;
+            height: 100dvh;
+            overflow: hidden;
+            font-family: 'Segoe UI', Arial, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #17351f, #0d1f13);
+            color: #222;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* ===== LOGO ALS HINTERGRUND (skaliert) ===== */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 70vmin;
+            height: 70vmin;
+            background: radial-gradient(circle, rgba(31, 94, 58, 0.08) 0%, transparent 70%);
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 400'%3E%3Ccircle cx='200' cy='200' r='180' fill='none' stroke='%231f5e3a' stroke-width='2' opacity='0.08'/%3E%3Ctext x='200' y='175' text-anchor='middle' font-family='Arial,sans-serif' font-weight='900' font-size='52' fill='%231f5e3a' opacity='0.07' letter-spacing='3'%3ESTOCKSCHIESSEN%3C/text%3E%3Ctext x='200' y='235' text-anchor='middle' font-family='Arial,sans-serif' font-weight='700' font-size='38' fill='%231f5e3a' opacity='0.06' letter-spacing='5'%3ETRAININGSAPP%3C/text%3E%3Cline x1='60' y1='195' x2='140' y2='195' stroke='%231f5e3a' stroke-width='2' opacity='0.06'/%3E%3Cline x1='260' y1='195' x2='340' y2='195' stroke='%231f5e3a' stroke-width='2' opacity='0.06'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: center;
+            background-size: contain;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        /* ===== HEADER ===== */
+        .header {
+            position: sticky;
+            top: 0;
+            z-index: 500;
+            background: var(--green);
+            color: white;
+            padding: clamp(6px, 1.2vh, 14px) clamp(10px, 2vw, 24px);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: clamp(4px, 0.8vw, 12px);
+            flex-shrink: 0;
+            min-height: clamp(44px, 7vh, 70px);
+        }
+
+        .header h1 {
+            font-size: clamp(0.9rem, 2vw, 1.6rem);
+            display: flex;
+            align-items: center;
+            gap: clamp(4px, 0.8vw, 12px);
+        }
+
+        .header .header-logo {
+            width: clamp(24px, 4vh, 44px);
+            height: clamp(24px, 4vh, 44px);
+            flex-shrink: 0;
+        }
+
+        .header-controls {
+            display: flex;
+            gap: clamp(4px, 0.6vw, 10px);
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .header-controls button {
+            padding: clamp(4px, 0.6vh, 10px) clamp(8px, 1.2vw, 18px);
+            font-size: clamp(0.65rem, 1.2vw, 0.95rem);
+            border-radius: clamp(6px, 0.8vw, 12px);
+            min-height: clamp(28px, 4vh, 44px);
+            background: rgba(255, 255, 255, 0.15);
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+            transition: background 0.2s;
+            touch-action: manipulation;
+            white-space: nowrap;
+        }
+
+        .header-controls button:hover {
+            background: rgba(255, 255, 255, 0.25);
+        }
+
+        .header-controls button.active {
+            background: var(--gold);
+            color: #222;
+        }
+
+        .header-controls button:active {
+            transform: scale(0.95);
+        }
+
+        .btn-back {
+            display: none !important;
+        }
+        .btn-back.visible {
+            display: inline-block !important;
+        }
+
+        /* ===== MAIN CONTENT ===== */
+        .layout {
+            flex: 1;
+            padding: clamp(6px, 1.2vh, 16px);
+            overflow: hidden;
+            min-height: 0;
+            position: relative;
+            z-index: 1;
+        }
+
+        .arena {
+            width: 100%;
+            max-width: 1400px;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.92);
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
+            border-radius: clamp(12px, 2vw, 24px);
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            display: flex;
+            flex-direction: column;
+            margin: 0 auto;
+        }
+
+        .arena-content {
+            flex: 1;
+            overflow: hidden;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* ===== DASHBOARD ===== */
+        .dashboard {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            gap: clamp(8px, 1.5vh, 20px);
+            padding: clamp(10px, 1.8vh, 24px);
+            overflow-y: auto;
+        }
+
+        /* ===== TOP-LEISTE ===== */
+        .dashboard-top {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: clamp(6px, 1vw, 14px);
+            flex-shrink: 0;
+        }
+
+        .dashboard-card {
+            background: white;
+            border-radius: clamp(10px, 1.2vw, 16px);
+            padding: clamp(8px, 1.2vh, 18px) clamp(10px, 1.2vw, 20px);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+            border: 1px solid var(--border);
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            min-height: clamp(50px, 8vh, 90px);
+        }
+
+        .dashboard-card .label {
+            font-size: clamp(0.5rem, 0.8vw, 0.8rem);
+            font-weight: 600;
+            color: #888;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .dashboard-card .value {
+            font-size: clamp(0.75rem, 1.2vw, 1.3rem);
+            font-weight: 700;
+            color: var(--green);
+            margin-top: 2px;
+            line-height: 1.2;
+        }
+
+        /* ===== MENÜ-KARTEN – DYNAMISCHE SPALTEN ===== */
+        .dashboard-menu {
+            flex: 1;
+            display: grid;
+            grid-template-columns: repeat(var(--grid-cols, 6), 1fr);
+            gap: clamp(6px, 1vw, 16px);
+            align-content: center;
+            padding: clamp(4px, 0.6vh, 12px) 0;
+            min-height: 0;
+        }
+
+        .menu-card {
+            background: white;
+            border-radius: clamp(12px, 1.4vw, 20px);
+            padding: clamp(10px, 1.8vh, 28px) clamp(8px, 1.2vw, 20px);
+            text-align: center;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            border: 2px solid var(--border);
+            transition: all 0.2s;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: clamp(3px, 0.5vh, 10px);
+            justify-content: center;
+            min-height: clamp(80px, 14vh, 200px);
+        }
+
+        .menu-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+            border-color: var(--green);
+        }
+
+        .menu-card:active {
+            transform: scale(0.96);
+        }
+
+        .menu-card .icon {
+            font-size: clamp(1.4rem, 3.5vw, 3.5rem);
+            line-height: 1;
+        }
+
+        .menu-card .title {
+            font-size: clamp(0.6rem, 1.1vw, 1.2rem);
+            font-weight: 800;
+            color: var(--green);
+            line-height: 1.2;
+        }
+
+        .menu-card .desc {
+            font-size: clamp(0.45rem, 0.8vw, 0.9rem);
+            color: #666;
+            line-height: 1.3;
+        }
+
+        .menu-card .badge {
+            background: var(--gold);
+            color: #222;
+            padding: 1px clamp(6px, 0.8vw, 14px);
+            border-radius: 20px;
+            font-size: clamp(0.4rem, 0.7vw, 0.75rem);
+            font-weight: 700;
+            margin-top: 2px;
+            white-space: nowrap;
+        }
+
+        .menu-card .badge-new {
+            background: var(--red);
+            color: white;
+        }
+
+        .menu-card .badge-pro {
+            background: linear-gradient(135deg, #f7971e, #ffd200);
+            color: #222;
+            padding: 1px clamp(6px, 0.8vw, 14px);
+            border-radius: 20px;
+            font-size: clamp(0.4rem, 0.7vw, 0.75rem);
+            font-weight: 700;
+            margin-top: 2px;
+            white-space: nowrap;
+        }
+
+        .menu-card .badge-einzeltraining {
+            background: linear-gradient(135deg, #1a3d6d, #33c5ff);
+            color: white;
+            padding: 1px clamp(6px, 0.8vw, 14px);
+            border-radius: 20px;
+            font-size: clamp(0.4rem, 0.7vw, 0.75rem);
+            font-weight: 700;
+            margin-top: 2px;
+            white-space: nowrap;
+        }
+
+        /* ===== QR-CODE KARTE ===== */
+        .qr-card {
+            background: white;
+            border-radius: clamp(12px, 1.4vw, 20px);
+            padding: clamp(10px, 1.8vh, 28px) clamp(8px, 1.2vw, 20px);
+            text-align: center;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            border: 2px solid var(--gold);
+            transition: all 0.2s;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: clamp(3px, 0.5vh, 10px);
+            justify-content: center;
+            min-height: clamp(80px, 14vh, 200px);
+        }
+
+        .qr-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+            border-color: var(--green);
+        }
+
+        .qr-card:active {
+            transform: scale(0.96);
+        }
+
+        .qr-card .icon {
+            font-size: clamp(1.4rem, 3.5vw, 3.5rem);
+            line-height: 1;
+        }
+
+        .qr-card .title {
+            font-size: clamp(0.6rem, 1.1vw, 1.2rem);
+            font-weight: 800;
+            color: var(--green);
+            line-height: 1.2;
+        }
+
+        .qr-card .desc {
+            font-size: clamp(0.45rem, 0.8vw, 0.9rem);
+            color: #666;
+            line-height: 1.3;
+        }
+
+        .qr-card .badge {
+            background: var(--gold);
+            color: #222;
+            padding: 1px clamp(6px, 0.8vw, 14px);
+            border-radius: 20px;
+            font-size: clamp(0.4rem, 0.7vw, 0.75rem);
+            font-weight: 700;
+        }
+
+        .qr-container {
+            background: white;
+            padding: clamp(2px, 0.3vh, 6px);
+            border-radius: 8px;
+            display: inline-block;
+            margin: 2px 0;
+        }
+
+        .qr-container canvas,
+        .qr-container img {
+            display: block !important;
+            width: clamp(50px, 8vw, 100px) !important;
+            height: clamp(50px, 8vw, 100px) !important;
+        }
+
+        .qr-actions {
+            display: flex;
+            gap: clamp(4px, 0.5vw, 8px);
+            margin-top: 2px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .qr-actions .badge {
+            cursor: pointer;
+        }
+
+        .qr-actions .badge:hover {
+            opacity: 0.8;
+        }
+
+        .qr-actions .badge-copy {
+            background: var(--green);
+            color: white;
+        }
+
+        .dashboard-footer {
+            flex-shrink: 0;
+            text-align: center;
+            font-size: clamp(0.5rem, 0.7vw, 0.8rem);
+            color: #999;
+            padding-top: clamp(4px, 0.6vh, 10px);
+            border-top: 1px solid var(--border);
+        }
+
+        /* ===== SUB-PAGE (iframe) ===== */
+        .sub-page {
+            height: 100%;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .sub-page iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+            border-radius: 12px;
+            background: white;
+            flex: 1;
+        }
+
+        /* ===== TOAST ===== */
+        .toast {
+            position: fixed;
+            bottom: clamp(20px, 4vh, 50px);
+            left: 50%;
+            transform: translateX(-50%);
+            background: #111;
+            color: white;
+            padding: clamp(8px, 1.2vh, 16px) clamp(14px, 2vw, 28px);
+            border-radius: clamp(10px, 1.2vw, 16px);
+            opacity: 0;
+            transition: opacity 0.3s;
+            z-index: 9999;
+            pointer-events: none;
+            font-size: clamp(0.75rem, 1.2vw, 1.1rem);
+            max-width: 90%;
+            text-align: center;
+        }
+
+        .toast.show {
+            opacity: 1;
+        }
+
+        /* ============================================
+           RESPONSIVE – AUTOMATISCHE ANPASSUNG
+           ============================================ */
+
+        /* Wenn die Bildschirmbreite kleiner wird, reduziere die Spalten */
+        @media (max-width: 1200px) {
+            .dashboard-menu { --grid-cols: 6; }
+        }
+
+        @media (max-width: 1024px) {
+            .dashboard-menu { --grid-cols: 3; }
+            .dashboard-top { grid-template-columns: repeat(2, 1fr); }
+        }
+
+        @media (max-width: 768px) {
+            .dashboard-menu { --grid-cols: 2; gap: 8px; }
+            .dashboard-top { grid-template-columns: repeat(2, 1fr); gap: 6px; }
+        }
+
+        @media (max-width: 480px) {
+            .dashboard-menu { --grid-cols: 2; gap: 6px; }
+            .dashboard-top { grid-template-columns: repeat(2, 1fr); gap: 4px; }
+        }
+
+        @media (max-width: 360px) {
+            .dashboard-menu { --grid-cols: 2; gap: 4px; }
+            .dashboard-top { grid-template-columns: 1fr 1fr; gap: 4px; }
+        }
+
+        /* ===== DARK MODE ===== */
+        @media (prefers-color-scheme: dark) {
+            .arena {
+                background: rgba(26, 31, 28, 0.92);
+            }
+            .dashboard-card {
+                background: #1a1f1c;
+                border-color: #2a3a2e;
+                color: #e8f0e5;
+            }
+            .dashboard-card .value {
+                color: #6abf8a;
+            }
+            .dashboard-card .label {
+                color: #889988;
+            }
+            .menu-card {
+                background: #1a1f1c;
+                border-color: #2a3a2e;
+                color: #e8f0e5;
+            }
+            .menu-card .title {
+                color: #6abf8a;
+            }
+            .menu-card .desc {
+                color: #a0b0a0;
+            }
+            .menu-card:hover {
+                border-color: #6abf8a;
+            }
+            .qr-card {
+                background: #1a1f1c;
+                border-color: #6abf8a;
+                color: #e8f0e5;
+            }
+            .qr-card .title {
+                color: #6abf8a;
+            }
+            .qr-card .desc {
+                color: #a0b0a0;
+            }
+            .qr-card:hover {
+                border-color: #ffdf8c;
+            }
+            .header-controls button {
+                background: rgba(255, 255, 255, 0.08);
+            }
+            .header-controls button.active {
+                background: var(--gold);
+                color: #222;
+            }
+            .dashboard-footer {
+                border-color: #2a3a2e;
+                color: #667766;
+            }
+            body::before {
+                background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 400'%3E%3Ccircle cx='200' cy='200' r='180' fill='none' stroke='%236abf8a' stroke-width='2' opacity='0.06'/%3E%3Ctext x='200' y='175' text-anchor='middle' font-family='Arial,sans-serif' font-weight='900' font-size='52' fill='%236abf8a' opacity='0.05' letter-spacing='3'%3ESTOCKSCHIESSEN%3C/text%3E%3Ctext x='200' y='235' text-anchor='middle' font-family='Arial,sans-serif' font-weight='700' font-size='38' fill='%236abf8a' opacity='0.04' letter-spacing='5'%3ETRAININGSAPP%3C/text%3E%3Cline x1='60' y1='195' x2='140' y2='195' stroke='%236abf8a' stroke-width='2' opacity='0.04'/%3E%3Cline x1='260' y1='195' x2='340' y2='195' stroke='%236abf8a' stroke-width='2' opacity='0.04'/%3E%3C/svg%3E");
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ===== HEADER ===== -->
+    <div class="header">
+        <h1>
+            <svg class="header-logo" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="100" cy="100" r="95" fill="#1f5e3a" stroke="#ffdf8c" stroke-width="2"/>
+                <text x="100" y="78" text-anchor="middle" font-family="Arial,sans-serif" font-weight="900" font-size="30" fill="#ffdf8c" letter-spacing="1.5">STOCKSCHIESSEN</text>
+                <text x="100" y="112" text-anchor="middle" font-family="Arial,sans-serif" font-weight="700" font-size="20" fill="#c8e6c9" letter-spacing="2.5">TRAININGSAPP</text>
+                <line x1="30" y1="85" x2="70" y2="85" stroke="#ffdf8c" stroke-width="1.5" opacity="0.3"/>
+                <line x1="130" y1="85" x2="170" y2="85" stroke="#ffdf8c" stroke-width="1.5" opacity="0.3"/>
+            </svg>
+            Stocksport Dashboard
+        </h1>
+
+        <div class="header-controls">
+            <button class="btn-back" id="btnBack" onclick="showDashboard()">⬅ Zurück</button>
+            <button onclick="toggleTheme()" id="btnTheme">🌓</button>
+            <button onclick="fullReset()" style="background:rgba(185,58,50,0.8);">↺</button>
+        </div>
+    </div>
+
+    <!-- ===== MAIN CONTENT ===== -->
+    <div class="layout" id="layout">
+        <div class="arena">
+            <div class="arena-content" id="arenaContent">
+                <!-- Wird dynamisch befüllt -->
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== TOAST ===== -->
+    <div class="toast" id="toast"></div>
+
+    <script>
+        // ============================================
+        // KONFIGURATION
+        // ============================================
+        const MODULES = {
+            training: {
+                file: '01_Trainingsmodus.html',
+                name: 'Trainingsmodus',
+                icon: '🥌'
+            },
+            trainingPro: {
+                file: '05_Trainingsmodus_Pro.html',
+                name: 'Trainingsmodus Pro',
+                icon: '⚡'
+            },
+            championship: {
+                file: '02_Meisterschaftsmodus.html',
+                name: 'Meisterschaftsmodus',
+                icon: '🏆'
+            },
+            simple: {
+                file: '03_Training_einfach.html',
+                name: 'Training einfach',
+                icon: '📊'
+            },
+            einzeltraining: {
+                file: '06_Einzeltraining.html',
+                name: 'Einzeltraining',
+                icon: '🎯'
+            }
+        };
+
+        // ============================================
+        // STATE
+        // ============================================
+        let currentMode = 'dashboard';
+        let theme = localStorage.getItem('stockschuetzen_theme') || 'light';
+        let weatherData = { temperature: '--', condition: '☀️', wind: '--' };
+
+        // ============================================
+        // DYNAMISCHE GRÖSSENANPASSUNG
+        // ============================================
+        function adjustLayout() {
+            const width = window.innerWidth;
+            const height = window.innerHeight;
+            const isLandscape = width > height;
+
+            // Basisgröße für Schrift und Abstände
+            let baseSize = Math.min(
+                Math.max(width / 80, 12),
+                Math.max(height / 60, 12),
+                18
+            );
+
+            // Bei sehr kleinen Bildschirmen noch kleiner
+            if (width < 600) {
+                baseSize = Math.max(baseSize * 0.85, 10);
+            }
+
+            // Bei sehr großen Bildschirmen begrenzen
+            if (width > 1920) {
+                baseSize = Math.min(baseSize, 18);
+            }
+
+            document.documentElement.style.fontSize = baseSize + 'px';
+
+            // Dynamische CSS-Variablen setzen
+            const root = document.documentElement;
+            root.style.setProperty('--base-size', baseSize + 'px');
+            
+            // Min-Höhe der Karten anpassen
+            const cardHeight = Math.min(
+                Math.max(height * 0.14, 80),
+                Math.max(width * 0.14, 80),
+                200
+            );
+            root.style.setProperty('--card-min-height', cardHeight + 'px');
+
+            // Icon-Größe
+            const iconSize = Math.min(
+                Math.max(width * 0.035, 24),
+                Math.max(height * 0.045, 24),
+                56
+            );
+            root.style.setProperty('--icon-size', iconSize + 'px');
+
+            // Spaltenanzahl dynamisch setzen
+            let cols = 6;
+            if (width < 480) cols = 2;
+            else if (width < 768) cols = 2;
+            else if (width < 1024) cols = 3;
+            else if (width < 1200) cols = 6;
+            else cols = 6;
+            
+            root.style.setProperty('--grid-cols', cols);
+
+            // QR-Code Größe
+            const qrSize = Math.min(
+                Math.max(width * 0.08, 50),
+                Math.max(height * 0.1, 50),
+                100
+            );
+            document.querySelectorAll('.qr-container canvas, .qr-container img').forEach(el => {
+                if (el.style) {
+                    el.style.width = qrSize + 'px';
+                    el.style.height = qrSize + 'px';
+                }
+            });
+        }
+
+        // ============================================
+        // WETTER API
+        // ============================================
+        const WEATHER_API_KEY = 'edf5872a3f0fb45f5dba2e3ee558d817';
+        const WEATHER_LOCATION = 'Grein,AT';
+
+        function fetchWeather() {
+            if (!WEATHER_API_KEY) {
+                const now = new Date();
+                const hour = now.getHours();
+                if (hour >= 6 && hour < 18) {
+                    weatherData = { temperature: '18°C', condition: '☀️', wind: '5 km/h' };
+                } else {
+                    weatherData = { temperature: '10°C', condition: '🌙', wind: '3 km/h' };
+                }
+                updateDashboardInfo();
+                return;
+            }
+
+            fetch(`https://api.openweathermap.org/data/2.5/weather?q=${WEATHER_LOCATION}&units=metric&lang=de&appid=${WEATHER_API_KEY}`)
+                .then(res => res.json())
+                .then(data => {
+                    if (data.main) {
+                        weatherData = {
+                            temperature: `${Math.round(data.main.temp)}°C`,
+                            condition: getWeatherIcon(data.weather[0].icon),
+                            wind: `${Math.round(data.wind.speed)} km/h`
+                        };
+                        updateDashboardInfo();
+                    }
+                })
+                .catch(() => {
+                    weatherData = { temperature: '--°C', condition: '🌤️', wind: '--' };
+                    updateDashboardInfo();
+                });
+        }
+
+        function getWeatherIcon(iconCode) {
+            const icons = {
+                '01d': '☀️', '01n': '🌙',
+                '02d': '⛅', '02n': '☁️',
+                '03d': '☁️', '03n': '☁️',
+                '04d': '☁️', '04n': '☁️',
+                '09d': '🌧️', '09n': '🌧️',
+                '10d': '🌦️', '10n': '🌧️',
+                '11d': '⛈️', '11n': '⛈️',
+                '13d': '❄️', '13n': '❄️',
+                '50d': '🌫️', '50n': '🌫️'
+            };
+            return icons[iconCode] || '🌤️';
+        }
+
+        // ============================================
+        // DATUM & UHRZEIT
+        // ============================================
+        function updateDateTime() {
+            const now = new Date();
+            const options = {
+                weekday: 'long',
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric'
+            };
+            const dateStr = now.toLocaleDateString('de-DE', options);
+            const timeStr = now.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+
+            const dateEl = document.getElementById('dashboardDate');
+            const timeEl = document.getElementById('dashboardTime');
+            if (dateEl) dateEl.textContent = dateStr;
+            if (timeEl) timeEl.textContent = timeStr;
+
+            const locationEl = document.getElementById('dashboardLocation');
+            if (locationEl) locationEl.textContent = '🏠 Grein, Österreich';
+        }
+
+        function updateDashboardInfo() {
+            const weatherEl = document.getElementById('dashboardWeather');
+            if (weatherEl) {
+                weatherEl.innerHTML = `${weatherData.condition} ${weatherData.temperature} · ${weatherData.wind}`;
+            }
+            updateDateTime();
+        }
+
+        // ============================================
+        // THEME
+        // ============================================
+        function toggleTheme() {
+            theme = theme === 'light' ? 'dark' : 'light';
+            document.documentElement.setAttribute('data-theme', theme);
+            localStorage.setItem('stockschuetzen_theme', theme);
+            const btn = document.getElementById('btnTheme');
+            btn.textContent = theme === 'dark' ? '☀️' : '🌓';
+            toast(`🌓 ${theme === 'dark' ? 'Dark' : 'Light'} Mode`);
+        }
+
+        // ============================================
+        // TOAST
+        // ============================================
+        function toast(msg) {
+            const t = document.getElementById('toast');
+            t.textContent = msg;
+            t.classList.add('show');
+            clearTimeout(t._timeout);
+            t._timeout = setTimeout(() => t.classList.remove('show'), 2500);
+        }
+
+        // ============================================
+        // FULL RESET
+        // ============================================
+        function fullReset() {
+            if (confirm('Kompletter Reset – alle Daten werden gelöscht?')) {
+                localStorage.clear();
+                toast('🔄 Kompletter Reset');
+                showDashboard();
+            }
+        }
+
+        // ============================================
+        // MODUL LADEN (per IFRAME)
+        // ============================================
+        function openModule(modeKey) {
+            const module = MODULES[modeKey];
+            if (!module) {
+                toast('❌ Modul nicht gefunden');
+                return;
+            }
+
+            document.getElementById('btnBack').classList.add('visible');
+
+            const container = document.getElementById('arenaContent');
+            
+            let filePath = module.file;
+            
+            if (filePath.startsWith('/')) {
+                filePath = filePath.substring(1);
+            }
+            
+            const currentUrl = window.location.href;
+            const basePath = currentUrl.substring(0, currentUrl.lastIndexOf('/') + 1);
+            const fullUrl = basePath + filePath;
+            
+            console.log('Lade Modul:', fullUrl);
+
+            container.innerHTML = `
+                <div class="sub-page">
+                    <iframe src="${fullUrl}" 
+                            allow="geolocation; microphone; camera; midi; encrypted-media" 
+                            sandbox="allow-same-origin allow-scripts allow-popups allow-forms allow-modals"
+                            style="width:100%;height:100%;border:none;border-radius:12px;background:white;flex:1;">
+                    </iframe>
+                </div>
+            `;
+            
+            toast(`✅ ${module.icon} ${module.name} geladen`);
+            
+            const iframe = container.querySelector('iframe');
+            if (iframe) {
+                iframe.onload = function() {
+                    console.log('iframe geladen:', module.name);
+                };
+                iframe.onerror = function() {
+                    toast(`⚠️ ${module.name} konnte nicht geladen werden`);
+                };
+            }
+        }
+
+        // ============================================
+        // QR-CODE ÖFFNEN
+        // ============================================
+        function openQR() {
+            const url = 'https://rolandkoll99-droid.github.io/Trainings-Analyse/';
+            
+            document.getElementById('btnBack').classList.add('visible');
+
+            const container = document.getElementById('arenaContent');
+            
+            container.innerHTML = `
+                <div class="sub-page">
+                    <iframe src="${url}" 
+                            allow="geolocation; microphone; camera; midi; encrypted-media" 
+                            sandbox="allow-same-origin allow-scripts allow-popups allow-forms allow-modals"
+                            style="width:100%;height:100%;border:none;border-radius:12px;background:white;flex:1;">
+                    </iframe>
+                </div>
+            `;
+            
+            toast('📱 Trainingsanalyse geladen');
+        }
+
+        // ============================================
+        // URL KOPIEREN
+        // ============================================
+        function copyQrUrl() {
+            const url = 'https://rolandkoll99-droid.github.io/Trainings-Analyse/';
+            navigator.clipboard.writeText(url).then(() => {
+                toast('✅ URL kopiert!');
+            }).catch(() => {
+                const input = document.createElement('input');
+                input.value = url;
+                document.body.appendChild(input);
+                input.select();
+                document.execCommand('copy');
+                document.body.removeChild(input);
+                toast('✅ URL kopiert!');
+            });
+        }
+
+        // ============================================
+        // QR-CODE GENERIEREN
+        // ============================================
+        function generateQR() {
+            const qrContainer = document.getElementById('qrContainer');
+            const qrUrl = 'https://rolandkoll99-droid.github.io/Trainings-Analyse/';
+            
+            if (qrContainer && typeof QRCode !== 'undefined') {
+                qrContainer.innerHTML = '';
+                try {
+                    const qrSize = Math.min(
+                        Math.max(window.innerWidth * 0.08, 50),
+                        Math.max(window.innerHeight * 0.1, 50),
+                        100
+                    );
+                    new QRCode(qrContainer, {
+                        text: qrUrl,
+                        width: qrSize,
+                        height: qrSize,
+                        colorDark: "#1a1a2e",
+                        colorLight: "#ffffff",
+                        correctLevel: QRCode.CorrectLevel.H
+                    });
+                } catch(e) {
+                    console.warn('QR-Code konnte nicht generiert werden:', e);
+                }
+            }
+        }
+
+        // ============================================
+        // DASHBOARD ANZEIGEN
+        // ============================================
+        function showDashboard() {
+            currentMode = 'dashboard';
+            document.getElementById('btnBack').classList.remove('visible');
+            document.getElementById('arenaContent').innerHTML = renderDashboard();
+            
+            setTimeout(() => {
+                updateDashboardInfo();
+                fetchWeather();
+                if (window.timeInterval) clearInterval(window.timeInterval);
+                window.timeInterval = setInterval(updateDateTime, 1000);
+                generateQR();
+                adjustLayout();
+            }, 200);
+            
+            toast('🏠 Dashboard');
+        }
+
+        function renderDashboard() {
+            return `
+                <div class="dashboard">
+                    <!-- ===== TOP-LEISTE ===== -->
+                    <div class="dashboard-top">
+                        <div class="dashboard-card">
+                            <div class="label">📍 Standort</div>
+                            <div class="value" id="dashboardLocation">🏠 Grein, Österreich</div>
+                        </div>
+                        <div class="dashboard-card">
+                            <div class="label">📅 Datum</div>
+                            <div class="value" id="dashboardDate">--</div>
+                        </div>
+                        <div class="dashboard-card">
+                            <div class="label">🕐 Uhrzeit</div>
+                            <div class="value" id="dashboardTime">--</div>
+                        </div>
+                        <div class="dashboard-card">
+                            <div class="label">🌤️ Wetter</div>
+                            <div class="value" id="dashboardWeather">🌤️ --°C · --</div>
+                        </div>
+                    </div>
+
+                    <!-- ===== MENÜ-KARTEN (DYNAMISCHE SPALTEN) ===== -->
+                    <div class="dashboard-menu">
+                        <div class="menu-card" onclick="openModule('training')">
+                            <div class="icon">🥌</div>
+                            <div class="title">Trainingsmodus</div>
+                            <div class="desc">Klassisches Training<br>mit Kehren &amp; Siegen</div>
+                            <div class="badge">Standard</div>
+                        </div>
+
+                        <div class="menu-card" onclick="openModule('trainingPro')">
+                            <div class="icon">⚡</div>
+                            <div class="title">Trainingsmodus Pro</div>
+                            <div class="desc">Erweiterte Funktionen<br>Zuschauer-Monitor &amp; mehr</div>
+                            <div class="badge-pro">⭐ PRO</div>
+                        </div>
+
+                        <div class="menu-card" onclick="openModule('championship')">
+                            <div class="icon">🏆</div>
+                            <div class="title">Meisterschaftsmodus</div>
+                            <div class="desc">5 Durchgänge<br>2 Punkte pro Sieg</div>
+                            <div class="badge badge-new">Neu</div>
+                        </div>
+
+                        <div class="menu-card" onclick="openModule('simple')">
+                            <div class="icon">📊</div>
+                            <div class="title">Training einfach</div>
+                            <div class="desc">Reduzierte Ansicht<br>nur Punkte &amp; Siege</div>
+                            <div class="badge">Einfach</div>
+                        </div>
+
+                        <div class="menu-card" onclick="openModule('einzeltraining')">
+                            <div class="icon">🎯</div>
+                            <div class="title">Einzeltraining</div>
+                            <div class="desc">Interaktives Training<br>mit Situationsbild</div>
+                            <div class="badge-einzeltraining">🌟 NEU</div>
+                        </div>
+
+                        <!-- ===== QR-CODE KARTE (NUR HIER) ===== -->
+                        <div class="qr-card" onclick="openQR()">
+                            <div class="icon">📱</div>
+                            <div class="title">Trainingsanalyse</div>
+                            <div class="desc">QR-Code scannen<br>für die Analyse</div>
+                            <div class="qr-container" id="qrContainer"></div>
+                            <div class="qr-actions">
+                                <span class="badge">Scan</span>
+                                <span class="badge badge-copy" onclick="event.stopPropagation(); copyQrUrl();">📋 Kopieren</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="dashboard-footer">
+                        ESV Grein Trainingssystem · Version 2.0 · 🔗 Alle Modi laden im gleichen Fenster
+                    </div>
+                </div>
+            `;
+        }
+
+        // ============================================
+        // THEME INIT
+        // ============================================
+        function initTheme() {
+            document.documentElement.setAttribute('data-theme', theme);
+            const btn = document.getElementById('btnTheme');
+            btn.textContent = theme === 'dark' ? '☀️' : '🌓';
+        }
+
+        // ============================================
+        // HÖHENKORREKTUR & RESIZE
+        // ============================================
+        function setCorrectHeight() {
+            const vh = window.innerHeight;
+            document.documentElement.style.setProperty('height', vh + 'px');
+            document.body.style.setProperty('height', vh + 'px');
+
+            if (navigator.userAgent.includes('Safari') && !navigator.userAgent.includes('Chrome')) {
+                document.documentElement.style.setProperty('height', '-webkit-fill-available');
+                document.body.style.setProperty('height', '-webkit-fill-available');
+            }
+            
+            adjustLayout();
+        }
+
+        window.addEventListener('resize', setCorrectHeight);
+        window.addEventListener('orientationchange', function() {
+            setTimeout(setCorrectHeight, 300);
+        });
+        window.addEventListener('load', function() {
+            setTimeout(setCorrectHeight, 100);
+        });
+        setCorrectHeight();
+
+        // ============================================
+        // INIT
+        // ============================================
+        initTheme();
+        showDashboard();
+
+        // Expose für globale Nutzung
+        window.showDashboard = showDashboard;
+        window.openModule = openModule;
+        window.openQR = openQR;
+        window.copyQrUrl = copyQrUrl;
+        window.generateQR = generateQR;
+        window.toggleTheme = toggleTheme;
+        window.fullReset = fullReset;
+        window.toast = toast;
+        window.adjustLayout = adjustLayout;
+    </script>
+
+</body>
+</html>
