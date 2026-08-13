@@ -3,7 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no">
-<title>ESV Grein – Trainingssystem</title>
+<title>Trainingsmodus – Trainingsportal ESV Grein</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
 
 <style>
 :root{
@@ -13,6 +15,16 @@
     --dark:#102417;
     --light:#eef5e9;
     --border:#d7e4cf;
+
+    --bg-main:#0a0e14;
+    --bg-panel:#131b24;
+    --line:rgba(255,255,255,0.08);
+    --text-main:#eef2f6;
+    --text-dim:#8a97a6;
+    --accent:#33c5ff;
+    --accent-hover:#5fd4ff;
+    --font-display:"Space Grotesk","Inter",sans-serif;
+    --font-body:"Inter",Segoe UI,Arial,sans-serif;
 }
 
 *{
@@ -29,20 +41,41 @@ html, body {
 }
 
 body{
-    font-family:Segoe UI,Arial,sans-serif;
-    background:linear-gradient(135deg,#17351f,#0d1f13);
+    font-family:var(--font-body);
+    background:
+        radial-gradient(900px 400px at 10% -10%, rgba(51,197,255,0.10), transparent 60%),
+        linear-gradient(160deg,var(--bg-main),#050709);
     color:#222;
     display: flex;
     flex-direction: column;
     overflow: hidden;
 }
 
+.topbar{
+    position: sticky;
+    top: 0;
+    z-index: 501;
+    background:var(--bg-panel);
+    border-bottom:1px solid var(--line);
+    padding:8px 14px;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    flex-shrink:0;
+    font-size:13px;
+}
+.topbar a{ color:var(--text-dim); text-decoration:none; }
+.topbar a:hover{ color:var(--text-main); }
+.topbar .logout{ border:1px solid var(--line); padding:5px 12px; border-radius:8px; }
+.topbar .logout:hover{ border-color:var(--text-dim); }
+
 .header{
     position: sticky;
     top: 0;
     z-index: 500;
-    background:var(--green);
-    color:white;
+    background:var(--bg-panel);
+    border-bottom:1px solid var(--line);
+    color:var(--text-main);
     padding:14px;
     display:flex;
     justify-content:space-between;
@@ -53,7 +86,48 @@ body{
 }
 
 .header h1{
+    font-family:var(--font-display);
+    font-weight:700;
+    letter-spacing:-0.01em;
     font-size:1.6rem;
+    color:var(--text-main);
+}
+.header h1::before{
+    content:"Modul 01";
+    display:block;
+    font-family:var(--font-body);
+    text-transform:uppercase;
+    letter-spacing:0.14em;
+    font-size:11px;
+    color:var(--accent);
+    font-weight:700;
+}
+
+/* ===== UHRZEIT ANZEIGE ===== */
+.header-clock {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.85rem;
+    color: var(--text-dim);
+    background: rgba(255,255,255,0.06);
+    padding: 4px 14px 4px 12px;
+    border-radius: 30px;
+    border: 1px solid var(--line);
+    white-space: nowrap;
+}
+
+.header-clock .clock-icon {
+    font-size: 0.9rem;
+}
+.header-clock .clock-time {
+    font-weight: 600;
+    color: var(--text-main);
+    font-variant-numeric: tabular-nums;
+}
+.header-clock .clock-date {
+    font-size: 0.7rem;
+    color: var(--text-dim);
 }
 
 .header-controls{
@@ -75,12 +149,13 @@ input{
 
 button{
     cursor:pointer;
-    background:var(--green);
-    color:white;
+    background:var(--accent);
+    color:#05161e;
     font-weight:700;
     touch-action: manipulation;
-    transition: transform 0.1s;
+    transition: transform 0.1s, background 0.15s;
 }
+button:hover{ background:var(--accent-hover); }
 
 button:active {
     transform: scale(0.95);
@@ -501,6 +576,14 @@ button:active {
     .footer .footer-right {
         margin-left: 0;
     }
+    
+    .header-clock {
+        font-size: 0.7rem;
+        padding: 3px 10px 3px 8px;
+    }
+    .header-clock .clock-date {
+        display: none;
+    }
 }
 
 @media (max-width: 600px) {
@@ -529,13 +612,43 @@ button:active {
         padding: 6px 10px;
         font-size: 0.85rem;
     }
+    
+    .header-clock {
+        font-size: 0.6rem;
+        padding: 2px 8px 2px 6px;
+        gap: 4px;
+    }
+    .header-clock .clock-time {
+        font-size: 0.65rem;
+    }
+    .header-clock .clock-date {
+        display: none;
+    }
+    .header-left {
+        gap: 8px;
+        flex-wrap: wrap;
+    }
 }
 </style>
 </head>
 <body>
 
+<div class="topbar">
+    <a href="dashboard.html">&larr; Zurück zum Dashboard</a>
+    <a class="logout" href="#" onclick="logout(); return false;">Abmelden</a>
+</div>
+
 <div class="header">
-    <h1>🥌 ESV Grein Training</h1>
+    <div class="header-left">
+        <h1>Trainingsmodus</h1>
+
+        <!-- ===== UHRZEIT DIREKT NEBEN TRAININGSMODUS ===== -->
+        <div class="header-clock" id="moduleClockContainer">
+            <span class="clock-icon">🕐</span>
+            <span class="clock-time" id="moduleClock">--:--:--</span>
+            <span class="clock-date" id="moduleDate">📅 --</span>
+        </div>
+    </div>
 
     <div class="header-controls">
         <div class="player-selector">
@@ -583,7 +696,32 @@ button:active {
 
 <div class="toast" id="toast"></div>
 
+<script src="auth.js"></script>
 <script>
+requireGate();
+requireLogin();
+
+// ============================================================
+// UHRZEIT & DATUM FÜR MODUL
+// ============================================================
+function updateModuleClock() {
+    const now = new Date();
+    const timeStr = now.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    const dateStr = now.toLocaleDateString('de-DE', { weekday: 'short', day: '2-digit', month: '2-digit', year: 'numeric' });
+    
+    const clockEl = document.getElementById('moduleClock');
+    const dateEl = document.getElementById('moduleDate');
+    if (clockEl) clockEl.textContent = timeStr;
+    if (dateEl) dateEl.textContent = '📅 ' + dateStr;
+}
+
+// Initial aktualisieren und dann jede Sekunde
+updateModuleClock();
+setInterval(updateModuleClock, 1000);
+
+// ============================================================
+// TRAININGSMODUS LOGIK
+// ============================================================
 const state = {
     kehren: 6,
     winsToChampion: 2,
@@ -707,11 +845,19 @@ function setPoints(team, index, value) {
         return;
     }
 
-    // Direkt setzen ohne automatische Nullen
+    // Punkte setzen. Wenn eine Mannschaft in dieser Kehre Punkte (1-N) erhält,
+    // wird die Gegner-Mannschaft automatisch mit 0 gewertet, sofern dort noch
+    // kein Wert eingetragen wurde (nur eine Mannschaft kann pro Kehre punkten).
     if (team === 'A') {
         arena.pointsA[index] = value;
+        if (arena.pointsB[index] === null) {
+            arena.pointsB[index] = 0;
+        }
     } else {
         arena.pointsB[index] = value;
+        if (arena.pointsA[index] === null) {
+            arena.pointsA[index] = 0;
+        }
     }
 
     // Nur neu rendern
