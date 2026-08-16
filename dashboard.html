@@ -36,19 +36,19 @@
 
     <!-- ===== MODUL-GRID ===== -->
   <div class="grid">
-    <a class="tile" href="01_Trainingsmodus.html">
-      <span class="num">01</span>
-      <span>
-        <div class="title">Trainingsmodus</div>
-        <div class="sub">Freies Training ohne Zeitdruck</div>
-      </span>
-      <span class="arrow">&rarr;</span>
-    </a>
     <a class="tile" href="05_Trainingsmodus_Pro.html">
-      <span class="num">02</span>
+      <span class="num">01</span>
       <span>
         <div class="title">Trainingsmodus Pro</div>
         <div class="sub">Freies Training mit Zusatztastatur</div>
+      </span>
+      <span class="arrow">&rarr;</span>
+    </a>
+    <a class="tile" href="05_Trainingsmodus_Pro_Tablet.html">
+      <span class="num">02</span>
+      <span>
+        <div class="title">Trainingsmodus für Tablet</div>
+        <div class="sub">Für Tablets optimiert und Touchscreen</div>
       </span>
       <span class="arrow">&rarr;</span>
     </a>
@@ -73,6 +73,14 @@
       <span>
         <div class="title">Spielerverwaltung</div>
         <div class="sub">Verwaltung der Spielerprofile</div>
+      </span>
+      <span class="arrow">&rarr;</span>
+    </a>
+    <a class="tile" href="07_Spielermaterial.html">
+      <span class="num">06</span>
+      <span>
+        <div class="title">Spielermaterial</div>
+        <div class="sub">Plattenmaterial &amp; Stingel verwalten</div>
       </span>
       <span class="arrow">&rarr;</span>
     </a>
@@ -177,7 +185,7 @@ function showToast(message, type = 'info') {
     if (type === 'success') toast.classList.add('success');
     else if (type === 'error') toast.classList.add('error');
     else toast.classList.add('info');
-    
+
     setTimeout(() => toast.classList.add('show'), 10);
     clearTimeout(toast._timeout);
     toast._timeout = setTimeout(() => toast.classList.remove('show'), 3000);
@@ -195,7 +203,7 @@ document.addEventListener('DOMContentLoaded', function() {
     setInterval(updateDateTime, 1000);
     // Wetter alle 5 Minuten aktualisieren
     setInterval(fetchWeather, 300000);
-    
+
     // Optional: Willkommens-Toast
     setTimeout(() => showToast('🏠 Willkommen beim Trainingsportal!', 'info'), 500);
 });
