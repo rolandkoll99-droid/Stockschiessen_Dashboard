@@ -357,7 +357,7 @@ button:active {
 }
 .team-block.e .team-score-big { color: var(--e-color); text-shadow: 0 4px 20px rgba(255,107,107,0.3); }
 
-/* Wer-spielt Schnellauswahl */
+/* Wer-spielt Schnellauswahl + Aufstellung (kompakt: Chips + ein Auswahlfeld) */
 .roster-chips{
     display:flex;
     flex-wrap:wrap;
@@ -366,20 +366,35 @@ button:active {
     min-height:30px;
 }
 .roster-chip{
+    display:inline-flex;
+    align-items:center;
+    gap:6px;
     background:#14261c;
     color:#dfe9e2;
     border:1px solid rgba(255,255,255,0.08);
-    padding:6px 12px;
+    padding:6px 8px 6px 12px;
     border-radius:16px;
     font-size:0.78rem;
     font-weight:700;
-    cursor:pointer;
 }
+.roster-chip-name{ cursor:pointer; }
 .roster-chip.active{
     background:var(--gold);
     color:#332400;
     border-color:var(--gold);
 }
+.roster-chip-remove{
+    cursor:pointer;
+    color:inherit;
+    opacity:0.55;
+    font-weight:900;
+    font-size:0.95rem;
+    line-height:1;
+    padding:2px 4px;
+    border-radius:50%;
+}
+.roster-chip-remove:hover, .roster-chip-remove:active{ opacity:1; background:rgba(255,255,255,0.15); }
+.roster-chip.active .roster-chip-remove:hover{ background:rgba(0,0,0,0.15); }
 .roster-chip.empty-hint{
     color:#65796d;
     font-weight:500;
@@ -387,36 +402,18 @@ button:active {
     background:none;
     border:none;
     cursor:default;
+    padding:6px 4px;
 }
 
-/* Aufstellung-Editor (details/summary) */
-.roster-editor{
-    background:#0a1810;
-    border-radius:12px;
-    border:1px solid rgba(255,255,255,0.06);
-    padding:2px 10px;
-}
-.roster-editor summary{
-    cursor:pointer;
-    padding:8px 2px;
-    font-size:0.78rem;
-    font-weight:700;
-    color:#8aa89a;
-    list-style:none;
-}
-.roster-editor summary::-webkit-details-marker{ display:none; }
-.roster-editor summary::before{ content:"▸ "; }
-.roster-editor[open] summary::before{ content:"▾ "; }
-
-.roster-slot-grid{
+/* Ein einzelnes, kompaktes Auswahlfeld statt vieler Dropdowns - Höhe bleibt bei
+   1 wie bei 10 Spielern praktisch gleich, das restliche Layout verschiebt sich nicht. */
+.roster-add-row{
     display:flex;
-    flex-direction:column;
     gap:6px;
-    padding:4px 2px 10px;
 }
-.roster-slot{ display:flex; flex-direction:column; gap:3px; }
-
-.roster-slot select{
+.roster-add-row select,
+.roster-add-row input.roster-custom{
+    flex:1;
     width:100%;
     padding:7px 8px;
     font-size:0.78rem;
@@ -425,23 +422,28 @@ button:active {
     background:white;
     color:#222;
 }
-
-.roster-slot input.roster-custom{
-    width:100%;
-    padding:7px 8px;
-    font-size:0.78rem;
-    border-radius:9px;
-    border:1px solid var(--accent);
+.roster-add-row input.roster-custom{
+    border-color:var(--accent);
     background:#eef9ff;
-    color:#222;
 }
-.roster-slot input.roster-custom::placeholder{ color:#9ab; }
+.roster-add-row input.roster-custom::placeholder{ color:#9ab; }
+
+.roster-gast-confirm, .roster-gast-cancel{
+    flex:0 0 auto;
+    padding:7px 12px;
+    border-radius:9px;
+    font-weight:800;
+    font-size:0.85rem;
+    touch-action:manipulation;
+}
+.roster-gast-confirm{ background:var(--green); color:white; }
+.roster-gast-cancel{ background:#3a2323; color:#dfe9e2; }
 
 .roster-cap-hint{
     text-align:center;
     font-size:0.7rem;
     color:#65796d;
-    padding-bottom:6px;
+    padding-bottom:2px;
 }
 
 .roster-manage-btn{
@@ -751,7 +753,7 @@ button:active {
 <div class="topbar">
     <div class="topbar-links">
         <a href="dashboard.html">🏠 Dashboard</a>
-        <a href="trainingsmodus.html">🥌 Trainingsmodus</a>
+        <a href="03_Trainingsmodus_Pro_1.html">🥌 Trainingsmodus</a>
         <button class="linkish" onclick="toggleFullscreen()">⛶ Vollbild</button>
     </div>
 </div>
@@ -861,9 +863,13 @@ function loadPlayerList() {
 function loadRoster() {
     try {
         const saved = JSON.parse(localStorage.getItem(ROSTER_STORAGE_KEY));
-        if (saved && Array.isArray(saved.W) && Array.isArray(saved.E)) return saved;
+        // .filter(Boolean) räumt alte, mit "leeren Plätzen" (null) gespeicherte Aufstellungen
+        // aus einer früheren Version automatisch auf - jetzt gibt es nur noch belegte Einträge.
+        if (saved && Array.isArray(saved.W) && Array.isArray(saved.E)) {
+            return { W: saved.W.filter(Boolean), E: saved.E.filter(Boolean) };
+        }
     } catch (e) {}
-    return { W: Array(4).fill(null), E: Array(4).fill(null) };
+    return { W: [], E: [] };
 }
 
 function saveRoster() {
@@ -871,24 +877,10 @@ function saveRoster() {
 }
 
 function resetRoster() {
-    const n = Math.min(Math.max(state.playerCount, 3), MAX_ROSTER_SLOTS);
-    state.roster = { W: Array(n).fill(null), E: Array(n).fill(null) };
+    state.roster = { W: [], E: [] };
     state.selectedPlayerName = { w: null, e: null };
+    state.rosterGastInput = { W: null, E: null };
     saveRoster();
-}
-
-// Erweitert die Aufstellung um einen freien Platz, sobald der letzte Platz belegt wurde
-// (bis maximal 10 Spieler), und entfernt überzählige leere Plätze wieder.
-function ensureRosterCapacity(team) {
-    const arr = state.roster[team];
-    const filled = arr.filter(Boolean).length;
-    if (filled === arr.length && arr.length < MAX_ROSTER_SLOTS) {
-        arr.push(null);
-    }
-    const minLen = Math.max(state.playerCount, filled + 1);
-    while (arr.length > minLen && arr[arr.length - 1] === null && arr[arr.length - 2] === null) {
-        arr.pop();
-    }
 }
 
 function loadHistory() {
@@ -918,7 +910,7 @@ const state = {
     isTrainingEnded: false,
     targetKehre: null,              // manuell angetippte Kehre (Korrektur), sonst null = automatisch
     pendingDigit: null,             // { digit, timeoutId } für 2-stellige Eingabe (z.B. "10")
-    rosterOpen: { W: false, E: false }, // merkt sich, ob die Aufstellung-Editoren offen sind (bleibt über render() hinweg erhalten)
+    rosterGastInput: { W: null, E: null }, // != null während gerade ein Gastname eingetippt wird
     playerNames: loadPlayerList(),
     roster: loadRoster(),
     history: loadHistory()
@@ -1304,6 +1296,14 @@ function render() {
         updateKeyboardStatus();
     }
     scrollToActiveVerlauf();
+    // Direkt nach dem Öffnen des Gastspieler-Eingabefelds den Fokus reinsetzen,
+    // damit man ohne Extra-Klick sofort tippen kann.
+    ['W', 'E'].forEach(k => {
+        if (state.rosterGastInput[k] !== null) {
+            const el = document.getElementById('rosterGastInput-' + k);
+            if (el) el.focus();
+        }
+    });
 }
 
 function renderArena(arena) {
@@ -1378,77 +1378,109 @@ function renderRosterSidePanel(team, teamKey) {
         <div class="roster-chips">
             ${renderRosterChips(team, teamKey)}
         </div>
-        ${renderRosterEditor(teamKey)}
+        ${renderRosterAddRow(teamKey)}
     </div>`;
 }
 
 function renderRosterChips(team, teamKey) {
-    const slots = state.roster[teamKey].filter(Boolean);
+    const slots = state.roster[teamKey];
     if (!slots.length) {
         return `<span class="roster-chip empty-hint">Keine Spieler in der Aufstellung – unten hinzufügen</span>`;
     }
-    return slots.map(p => {
+    return slots.map((p, i) => {
         const active = state.selectedPlayerName[team] === p.name ? 'active' : '';
-        return `<span class="roster-chip ${active}" onclick="togglePlayerForTeam('${team}', '${escapeHtml(p.name).replace(/'/g, "\\'")}')">${escapeHtml(p.name)}</span>`;
+        return `<span class="roster-chip ${active}">
+            <span class="roster-chip-name" onclick="togglePlayerForTeam('${team}', '${escapeHtml(p.name).replace(/'/g, "\\'")}')">${escapeHtml(p.name)}</span>
+            <span class="roster-chip-remove" onclick="event.stopPropagation(); removeRosterPlayer('${teamKey}', ${i})" title="Aus Aufstellung entfernen">×</span>
+        </span>`;
     }).join('');
 }
 
-function renderRosterEditor(teamKey) {
-    const slots = state.roster[teamKey];
-    const filled = slots.filter(Boolean).length;
+// Kompakte Zeile zum Hinzufügen: EIN Auswahlfeld + Button (statt vieler Dropdowns,
+// die je nach Spieleranzahl das Layout nach unten verschoben haben).
+function renderRosterAddRow(teamKey) {
+    const filled = state.roster[teamKey].length;
+    const alreadyIn = new Set(state.roster[teamKey].filter(p => !p.isGast).map(p => p.name));
+    const gastActive = state.rosterGastInput[teamKey] !== null;
 
-    let slotsHtml = '';
-    slots.forEach((current, i) => {
-        const isGast = !!(current && current.isGast);
-        const selectedName = current && !current.isGast ? current.name : '';
+    if (filled >= MAX_ROSTER_SLOTS) {
+        return `<div class="roster-cap-hint">Maximal ${MAX_ROSTER_SLOTS} Spieler erreicht</div>`;
+    }
 
-        let optionsHtml = `<option value="">– Spieler ${i + 1} wählen –</option>`;
-        state.playerNames.forEach(n => {
-            const selected = selectedName === n ? 'selected' : '';
-            optionsHtml += `<option value="${escapeHtml(n)}" ${selected}>${escapeHtml(n)}</option>`;
+    let addRowHtml = '';
+    if (!gastActive) {
+        const available = state.playerNames.filter(n => !alreadyIn.has(n));
+        let optionsHtml = `<option value="">+ Spieler hinzufügen…</option>`;
+        available.forEach(n => {
+            optionsHtml += `<option value="${escapeHtml(n)}">${escapeHtml(n)}</option>`;
         });
-        const gastSelected = isGast ? 'selected' : '';
-        optionsHtml += `<option value="${GAST_OPTION}" ${gastSelected}>✏️ Anderer Name / Gastspieler</option>`;
-
-        slotsHtml += `
-        <div class="roster-slot">
-            <select onchange="onRosterSelect('${teamKey}', ${i}, this.value)">
+        optionsHtml += `<option value="${GAST_OPTION}">✏️ Anderer Name / Gastspieler</option>`;
+        addRowHtml = `
+        <div class="roster-add-row">
+            <select onchange="onRosterAddSelect('${teamKey}', this.value)">
                 ${optionsHtml}
             </select>
-            ${isGast ? `<input type="text" class="roster-custom" placeholder="Name eingeben..." value="${escapeHtml(current.name || '')}" oninput="onRosterCustomInput('${teamKey}', ${i}, this.value)">` : ''}
         </div>`;
-    });
-
-    return `
-    <details class="roster-editor" ${state.rosterOpen[teamKey] ? 'open' : ''} ontoggle="onRosterToggle('${teamKey}', this.open)">
-        <summary>✏️ Aufstellung bearbeiten (${filled}/${MAX_ROSTER_SLOTS})</summary>
-        <div class="roster-slot-grid">${slotsHtml}</div>
-        <div class="roster-cap-hint">${filled >= MAX_ROSTER_SLOTS ? 'Maximal 10 Spieler erreicht' : 'Sobald ein Platz belegt wird, kommt automatisch ein weiterer dazu (bis 10)'}</div>
-    </details>`;
-}
-
-// Merkt sich den offen/geschlossen-Zustand der Aufstellung-Editoren über render() hinweg
-// (verhindert, dass sich das Panel nach jeder Auswahl wieder schließt).
-function onRosterToggle(teamKey, isOpen) {
-    state.rosterOpen[teamKey] = isOpen;
-}
-
-function onRosterSelect(teamKey, index, value) {
-    if (value === GAST_OPTION) {
-        state.roster[teamKey][index] = { name: '', isGast: true };
-    } else if (value === '') {
-        state.roster[teamKey][index] = null;
     } else {
-        state.roster[teamKey][index] = { name: value, isGast: false };
+        addRowHtml = `
+        <div class="roster-add-row roster-gast-row">
+            <input type="text" class="roster-custom" id="rosterGastInput-${teamKey}" placeholder="Name eingeben…"
+                value="${escapeHtml(state.rosterGastInput[teamKey] || '')}"
+                oninput="onRosterGastInput('${teamKey}', this.value)"
+                onkeydown="if(event.key==='Enter'){event.preventDefault(); confirmRosterGast('${teamKey}');} else if(event.key==='Escape'){event.preventDefault(); cancelRosterGast('${teamKey}');}">
+            <button class="roster-gast-confirm" onclick="confirmRosterGast('${teamKey}')" title="Hinzufügen">✓</button>
+            <button class="roster-gast-cancel" onclick="cancelRosterGast('${teamKey}')" title="Abbrechen">✕</button>
+        </div>`;
     }
-    ensureRosterCapacity(teamKey);
+
+    return `${addRowHtml}<div class="roster-cap-hint">${filled}/${MAX_ROSTER_SLOTS} Spieler</div>`;
+}
+
+function onRosterAddSelect(teamKey, value) {
+    if (!value) return;
+    if (value === GAST_OPTION) {
+        state.rosterGastInput[teamKey] = '';
+        render();
+        return;
+    }
+    if (state.roster[teamKey].length >= MAX_ROSTER_SLOTS) return;
+    state.roster[teamKey].push({ name: value, isGast: false });
     saveRoster();
     render();
 }
 
-function onRosterCustomInput(teamKey, index, value) {
-    state.roster[teamKey][index] = { name: value, isGast: true };
+function onRosterGastInput(teamKey, value) {
+    // Nur im Speicher merken - KEIN render() während des Tippens, sonst geht der
+    // Eingabefokus/Cursor bei jedem Tastendruck verloren.
+    state.rosterGastInput[teamKey] = value;
+}
+
+function confirmRosterGast(teamKey) {
+    const name = (state.rosterGastInput[teamKey] || '').trim();
+    state.rosterGastInput[teamKey] = null;
+    if (name && state.roster[teamKey].length < MAX_ROSTER_SLOTS) {
+        state.roster[teamKey].push({ name: name, isGast: true });
+        saveRoster();
+    }
+    render();
+}
+
+function cancelRosterGast(teamKey) {
+    state.rosterGastInput[teamKey] = null;
+    render();
+}
+
+function removeRosterPlayer(teamKey, index) {
+    const removed = state.roster[teamKey][index];
+    if (!removed) return;
+    state.roster[teamKey].splice(index, 1);
+    const team = teamKey === 'W' ? 'w' : 'e';
+    if (state.selectedPlayerName[team] === removed.name) {
+        state.selectedPlayerName[team] = null;
+    }
     saveRoster();
+    render();
+    toast(`🗑️ ${removed.name} aus Aufstellung ${teamKey} entfernt`);
 }
 
 function renderVerlaufGrid(arena, activeIndex, entryIndex) {
@@ -1854,6 +1886,36 @@ window.addEventListener('orientationchange', function() {
     setTimeout(setCorrectHeight, 300);
 });
 setCorrectHeight();
+
+// ===== LIVE-ABGLEICH DER SPIELERLISTE =====
+// Die Spielerliste kann jederzeit in der Spielerverwaltung (02_Spielerverwaltung.html)
+// geändert werden, während Trainingsmodus Pro schon geöffnet ist. Ein normaler render()
+// läuft zwar bei jeder Aktion (Team wählen, Punkte eingeben, ...) und liest die Liste
+// dabei neu ein - steht die Aufstellung-Aufklappliste aber schon offen und es passiert
+// sonst nichts, blieb sie bisher auf dem alten Stand stehen. Zwei zusätzliche Mechanismen
+// sorgen dafür, dass neue/geänderte Spieler auch ohne weiteren Klick sichtbar werden:
+// 1) "storage"-Event: reagiert sofort, wenn die Liste in einem ANDEREN Tab/Fenster
+//    derselben Seite geändert wird.
+// 2) Kurzes Polling (alle 4s): fängt Fälle ab, in denen kein storage-Event ankommt
+//    (z.B. wenn beide Module technisch als getrennte Browser-Tabs/Fenster laufen).
+function refreshPlayerListIfChanged() {
+    const fresh = loadPlayerList();
+    const changed = JSON.stringify(fresh) !== JSON.stringify(state.playerNames);
+    if (!changed) return;
+    state.playerNames = fresh;
+    // Während gerade ein Gastname eingetippt wird, nicht mitten rein rendern -
+    // sonst geht der Eingabefokus/Cursor verloren.
+    const activeIsRosterInput = document.activeElement && document.activeElement.classList &&
+        document.activeElement.classList.contains('roster-custom');
+    if (activeIsRosterInput) return;
+    render();
+    toast('🔄 Spielerliste aktualisiert');
+}
+
+window.addEventListener('storage', function(e) {
+    if (e.key === PLAYER_STORAGE_KEY) refreshPlayerListIfChanged();
+});
+setInterval(refreshPlayerListIfChanged, 4000);
 
 // ===== INIT =====
 setupKeyboard();
