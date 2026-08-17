@@ -1135,8 +1135,10 @@ function loadCentralPlayerList() {
             }
         }
     } catch (e) {}
-    // Fallback: Standard-Liste aus Excel
-    return [
+    // Noch keine zentrale Spielerliste vorhanden: Standard-Datensatz EINMALIG
+    // speichern, damit dieses Modul und 02_Spielerverwaltung.html sofort densel-
+    // ben Spielerstand zeigen (identisch mit DEFAULT_PLAYERS dort).
+    const defaults = [
         { id: 'SP-001', name: 'Andreas Hinterkörner', verein: 'ESV Grein' },
         { id: 'SP-002', name: 'Peter Tischler', verein: 'ESV Grein' },
         { id: 'SP-003', name: 'Ernst Aigen', verein: 'ESV Grein' },
@@ -1160,6 +1162,8 @@ function loadCentralPlayerList() {
         { id: 'SP-021', name: 'Stefan Aichinger', verein: 'ESV Grein' },
         { id: 'SP-022', name: 'Walter Gstöttmaier', verein: 'ESV Grein' }
     ];
+    try { localStorage.setItem(PLAYER_STORAGE_KEY, JSON.stringify(defaults)); } catch (e) {}
+    return defaults;
 }
 
 // ============================================================
@@ -1425,8 +1429,8 @@ function refreshPlayerList() {
 }
 
 function openPlayerManager() {
-    window.open('02_Spielerverwaltung', '_blank');
-    showToast('📋 Spielerverwaltung geöffnet. Nach Änderungen bitte "Aktualisieren" klicken.', 'info');
+    window.open('02_Spielerverwaltung.html', '_blank');
+    showToast('📋 Spielerverwaltung geöffnet. Änderungen werden hier automatisch übernommen.', 'info');
 }
 
 document.getElementById('refreshPlayerBtn').addEventListener('click', refreshPlayerList);
@@ -3216,6 +3220,25 @@ window.addEventListener('pagehide', () => {
     clearTimeout(saveTimer);
     saveToLocalStorageAuto();
 }, { passive: true });
+
+// ===== LIVE-ABGLEICH DER SPIELERLISTE =====
+// Die Spielerliste kann jederzeit in 02_Spielerverwaltung.html geändert werden,
+// während die Trainingsanalyse schon geöffnet ist. Damit die Auswahl nicht auf
+// einem veralteten Spielerstand hängen bleibt, wird bei Änderungen automatisch
+// neu geladen - genau wie in 05_Trainingsmodus_Pro.html.
+function refreshPlayerListIfChanged() {
+    const fresh = loadCentralPlayerList();
+    if (JSON.stringify(fresh) === JSON.stringify(centralPlayers)) return;
+    centralPlayers = fresh;
+    renderCentralPlayerList();
+}
+window.addEventListener('storage', function (e) {
+    if (e.key === PLAYER_STORAGE_KEY) refreshPlayerListIfChanged();
+});
+document.addEventListener('visibilitychange', function () {
+    if (!document.hidden) refreshPlayerListIfChanged();
+});
+setInterval(refreshPlayerListIfChanged, 4000);
 </script>
 
 </body>

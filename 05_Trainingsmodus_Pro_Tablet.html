@@ -52,6 +52,70 @@ body{
     overflow: hidden;
 }
 
+.topbar{
+    position: sticky;
+    top: 0;
+    z-index: 501;
+    background:var(--bg-panel);
+    border-bottom:1px solid var(--line);
+    padding:6px 14px;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    flex-shrink:0;
+    font-size:13px;
+    gap:10px;
+}
+.topbar .topbar-links{
+    display:flex;
+    align-items:center;
+    gap:10px;
+}
+.topbar a, .topbar button.linkish{
+    color:var(--text-dim);
+    text-decoration:none;
+    background:none;
+    border:1px solid var(--line);
+    padding:6px 12px;
+    border-radius:20px;
+    font-size:12.5px;
+    font-weight:600;
+}
+.topbar a:hover, .topbar button.linkish:hover{ color:var(--text-main); border-color:var(--text-dim); background:none; }
+
+/* ===== MANNSCHAFTSNAMEN (frei editierbar) ===== */
+.team-name-row{
+    display:flex;
+    gap:16px;
+    flex-wrap:wrap;
+    align-items:center;
+    padding:6px 14px;
+    background:var(--bg-panel);
+    border-bottom:1px solid var(--line);
+    flex-shrink:0;
+}
+.team-name-row label{
+    display:flex;
+    align-items:center;
+    gap:6px;
+    font-size:0.78rem;
+    font-weight:700;
+    color:var(--text-dim);
+}
+.team-name-row input{
+    background:#1c2734;
+    color:var(--text-main);
+    border:1px solid var(--line);
+    font-weight:700;
+    font-size:0.85rem;
+    padding:6px 10px;
+    width:180px;
+    max-width:40vw;
+}
+.team-name-row input:focus{
+    outline:2px solid var(--accent);
+}
+
 .header{
     position: sticky;
     top: 0;
@@ -525,6 +589,17 @@ button:active {
 </head>
 <body>
 
+<div class="topbar">
+    <div class="topbar-links">
+        <a href="dashboard.html">🏠 Zurück zum Dashboard</a>
+    </div>
+</div>
+
+<div class="team-name-row">
+    <label>⚪ <input type="text" id="teamNameInputW" maxlength="24" placeholder="Mannschaftsname W" oninput="updateTeamName('w', this.value)"></label>
+    <label>🔴 <input type="text" id="teamNameInputE" maxlength="24" placeholder="Mannschaftsname E" oninput="updateTeamName('e', this.value)"></label>
+</div>
+
 <div class="header">
     <h1>Trainingsmodus Pro</h1>
 
@@ -574,11 +649,64 @@ button:active {
 
 <div class="toast" id="toast"></div>
 
-<!-- Eigenständiges Einzelprogramm für Tablets: kein Verweis auf das Dashboard/Portal,
-     keine Zugangssperre (requireGate()/requireLogin() werden bewusst nicht aufgerufen) -
-     sofort einsatzbereit, ohne weitere Module. -->
+<!-- Eigenständiges Einzelprogramm für Tablets: keine Zugangssperre
+     (requireGate()/requireLogin() werden bewusst nicht aufgerufen) - sofort
+     einsatzbereit, ohne Login. Ein einfacher Link zurück zum Dashboard ist
+     trotzdem vorhanden (siehe .topbar oben), damit man von hier aus wieder
+     ins Portal wechseln kann. -->
 <script>
 const PENDING_DIGIT_TIMEOUT = 650;
+
+// Mannschaftsnamen sind frei editierbar (Textfeld oben) statt fest "Mannschaft W/E" -
+// gleicher localStorage-Key wie 05_Trainingsmodus_Pro.html, damit ein einmal
+// vergebener Name auf beiden Varianten übernommen wird.
+const TEAM_NAMES_STORAGE_KEY = 'esv_grein_team_namen';
+const DEFAULT_TEAM_NAMES = { w: 'Mannschaft W', e: 'Mannschaft E' };
+
+function loadTeamNames() {
+    try {
+        const data = localStorage.getItem(TEAM_NAMES_STORAGE_KEY);
+        if (data) {
+            const parsed = JSON.parse(data);
+            if (parsed && typeof parsed.w === 'string' && typeof parsed.e === 'string') {
+                return {
+                    w: parsed.w.trim() || DEFAULT_TEAM_NAMES.w,
+                    e: parsed.e.trim() || DEFAULT_TEAM_NAMES.e
+                };
+            }
+        }
+    } catch (e) {}
+    return { w: DEFAULT_TEAM_NAMES.w, e: DEFAULT_TEAM_NAMES.e };
+}
+
+function saveTeamNames() {
+    try { localStorage.setItem(TEAM_NAMES_STORAGE_KEY, JSON.stringify(state.teamNames)); } catch (e) {}
+}
+
+function updateTeamName(team, value) {
+    state.teamNames[team] = value;
+    saveTeamNames();
+    render();
+}
+
+function syncTeamNameInputs() {
+    const wInput = document.getElementById('teamNameInputW');
+    const eInput = document.getElementById('teamNameInputE');
+    if (wInput && document.activeElement !== wInput) wInput.value = state.teamNames.w;
+    if (eInput && document.activeElement !== eInput) eInput.value = state.teamNames.e;
+}
+
+function refreshTeamNamesIfChanged() {
+    const fresh = loadTeamNames();
+    if (fresh.w === state.teamNames.w && fresh.e === state.teamNames.e) return;
+    state.teamNames = fresh;
+    syncTeamNameInputs();
+    render();
+}
+
+window.addEventListener('storage', function (e) {
+    if (e.key === TEAM_NAMES_STORAGE_KEY) refreshTeamNamesIfChanged();
+});
 
 // ===== STATE =====
 const state = {
@@ -589,7 +717,8 @@ const state = {
     selectedTeam: null,             // 'w' | 'e' | null
     isTrainingEnded: false,
     targetKehre: null,              // manuell angetippte Kehre (Korrektur), sonst null = automatisch
-    pendingDigit: null              // { digit, timeoutId } für 2-stellige Eingabe (z.B. "10")
+    pendingDigit: null,             // { digit, timeoutId } für 2-stellige Eingabe (z.B. "10")
+    teamNames: loadTeamNames()
 };
 // createArena() liest state.kehren, daher erst NACH der obigen Deklaration aufrufen
 // (sonst "Cannot access 'state' before initialization").
@@ -870,10 +999,10 @@ function evaluateGame() {
     let gameResult = '';
     if (a > b) {
         arena.winsA++;
-        gameResult = `⚪ Mannschaft W gewinnt (${a}:${b})`;
+        gameResult = `⚪ ${state.teamNames.w} gewinnt (${a}:${b})`;
     } else if (b > a) {
         arena.winsB++;
-        gameResult = `🔴 Mannschaft E gewinnt (${a}:${b})`;
+        gameResult = `🔴 ${state.teamNames.e} gewinnt (${a}:${b})`;
     } else {
         gameResult = `Unentschieden (${a}:${b})`;
     }
@@ -902,13 +1031,14 @@ function endTraining(arena) {
     state.isTrainingEnded = true;
     updateKeyboardStatus();
 
-    const winner = winnerName(arena);
+    const winnerKey = winnerTeamKey(arena);
+    const winner = winnerKey ? state.teamNames[winnerKey] : '';
     const overlay = document.getElementById('trainingEndedOverlay');
     const winnerEl = document.getElementById('winnerName');
     const summaryEl = document.getElementById('scoreSummary');
 
     winnerEl.textContent = winner;
-    winnerEl.style.color = winner === 'Mannschaft W' ? '#4caf50' : '#ff6b6b';
+    winnerEl.style.color = winnerKey === 'w' ? '#4caf50' : '#ff6b6b';
     summaryEl.textContent = `Siege: ${arena.winsA} : ${arena.winsB}`;
 
     overlay.classList.add('show');
@@ -992,8 +1122,8 @@ function renderArena(arena) {
         </div>
 
         <div class="teams-row">
-            ${renderTeamColumn('w', 'Mannschaft W', '⚪', scoreA, arena.winsA, wSelected)}
-            ${renderTeamColumn('e', 'Mannschaft E', '🔴', scoreB, arena.winsB, eSelected)}
+            ${renderTeamColumn('w', state.teamNames.w, '⚪', scoreA, arena.winsA, wSelected)}
+            ${renderTeamColumn('e', state.teamNames.e, '🔴', scoreB, arena.winsB, eSelected)}
         </div>
 
         <div class="kehren-verlauf-panel" id="kehrenWrapper">
@@ -1086,10 +1216,12 @@ function hasWinner(arena) {
     return arena.winsA >= state.winsToChampion || arena.winsB >= state.winsToChampion;
 }
 
-function winnerName(arena) {
-    if (arena.winsA >= state.winsToChampion) return 'Mannschaft W';
-    if (arena.winsB >= state.winsToChampion) return 'Mannschaft E';
-    return '';
+// Liefert den Team-Schlüssel ('w'/'e') des Siegers, NICHT den (frei editierbaren)
+// Anzeigenamen - so bleibt die Sieger-Erkennung stabil, egal wie die Mannschaft heißt.
+function winnerTeamKey(arena) {
+    if (arena.winsA >= state.winsToChampion) return 'w';
+    if (arena.winsB >= state.winsToChampion) return 'e';
+    return null;
 }
 
 function sum(arr) {
@@ -1228,6 +1360,7 @@ window.addEventListener('orientationchange', function() {
 setCorrectHeight();
 
 // ===== INIT =====
+syncTeamNameInputs();
 setupKeyboard();
 render();
 </script>

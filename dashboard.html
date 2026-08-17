@@ -12,7 +12,7 @@
     <p class="eyebrow" style="margin:0;">Übersicht</p>
     <a class="logout" href="#" onclick="logout(); return false;">Abmelden</a>
   </div>
-  <h1>Dashboard Stocksport</h1>
+  <h1>Stocksport Trainings APP</h1>
   <p class="lead">Wähle ein Modul aus, um zu starten.</p>
   <!-- ===== INFO-BANNER (NEU) ===== -->
     <div class="info-banner" id="infoBanner">
@@ -39,7 +39,7 @@
     <a class="tile" href="05_Trainingsmodus_Pro.html">
       <span class="num">01</span>
       <span>
-        <div class="title">Trainingsmodus Pro</div>
+        <div class="title">Trainingsmodus PRO</div>
         <div class="sub">Freies Training mit Zusatztastatur</div>
       </span>
       <span class="arrow">&rarr;</span>
@@ -47,8 +47,8 @@
     <a class="tile" href="05_Trainingsmodus_Pro_Tablet.html">
       <span class="num">02</span>
       <span>
-        <div class="title">Trainingsmodus für Tablet</div>
-        <div class="sub">Für Tablets optimiert und Touchscreen</div>
+        <div class="title">Trainingsmodus</div>
+        <div class="sub">Freies Training für Tablet und Touchscreen</div>
       </span>
       <span class="arrow">&rarr;</span>
     </a>
@@ -95,9 +95,68 @@
 // WETTER API
 // ============================================================
 const WEATHER_API_KEY = 'edf5872a3f0fb45f5dba2e3ee558d817';
-const WEATHER_LOCATION = 'Grein,AT';
+const WEATHER_LOCATION = 'Grein,AT'; // Fallback, falls Standort nicht ermittelt werden kann
 
 let weatherData = { temperature: '--', condition: '☀️', wind: '--' };
+
+// ============================================================
+// STANDORT (automatisch per Geräte-/Browser-Standort ermittelt)
+// ============================================================
+const DEFAULT_LOCATION_LABEL = '🏠 Grein, Österreich';
+
+// Zuletzt ermittelte Koordinaten - wird auch fürs Wetter verwendet, damit
+// Standort & Wettervorhersage zusammenpassen.
+let currentCoords = null;
+
+function setLocationLabel(text) {
+    const locationEl = document.getElementById('dashboardLocation');
+    if (locationEl) locationEl.textContent = text;
+}
+
+// Wandelt Koordinaten in einen lesbaren Ortsnamen um (kostenloser Dienst,
+// kein API-Key nötig). Schlägt die Anfrage fehl, bleibt der zuletzt gesetzte
+// Standort (bzw. der Grein-Standard) einfach stehen.
+function reverseGeocode(lat, lon) {
+    return fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lon}&zoom=12&addressdetails=1&accept-language=de`)
+        .then(res => res.json())
+        .then(data => {
+            const addr = (data && data.address) || {};
+            const ort = addr.city || addr.town || addr.village || addr.municipality || addr.county || null;
+            const land = addr.country || '';
+            if (ort) {
+                setLocationLabel(`📍 ${ort}${land ? ', ' + land : ''}`);
+            } else {
+                setLocationLabel(DEFAULT_LOCATION_LABEL);
+            }
+        })
+        .catch(() => setLocationLabel(DEFAULT_LOCATION_LABEL));
+}
+
+// Ermittelt den aktuellen Standort automatisch über die Geolocation-API des
+// Geräts. Ohne Freigabe/Unterstützung wird ganz normal auf Grein zurückgefallen -
+// die App bleibt so auf jedem Gerät nutzbar.
+function detectLocation() {
+    if (!('geolocation' in navigator)) {
+        setLocationLabel(DEFAULT_LOCATION_LABEL);
+        fetchWeather();
+        return;
+    }
+    setLocationLabel('📍 Standort wird ermittelt…');
+    navigator.geolocation.getCurrentPosition(
+        function (pos) {
+            currentCoords = { lat: pos.coords.latitude, lon: pos.coords.longitude };
+            reverseGeocode(currentCoords.lat, currentCoords.lon);
+            fetchWeather();
+        },
+        function () {
+            // Standortzugriff abgelehnt oder fehlgeschlagen -> Standard-Standort
+            currentCoords = null;
+            setLocationLabel(DEFAULT_LOCATION_LABEL);
+            fetchWeather();
+        },
+        { enableHighAccuracy: false, timeout: 8000, maximumAge: 600000 }
+    );
+}
 
 function getWeatherIcon(iconCode) {
     const icons = {
@@ -127,7 +186,13 @@ function fetchWeather() {
         return;
     }
 
-    fetch(`https://api.openweathermap.org/data/2.5/weather?q=${WEATHER_LOCATION}&units=metric&lang=de&appid=${WEATHER_API_KEY}`)
+    // Wetter für den automatisch ermittelten Standort abrufen, falls vorhanden -
+    // sonst wie bisher für den festen Fallback-Ort (Grein).
+    const locationQuery = currentCoords
+        ? `lat=${currentCoords.lat}&lon=${currentCoords.lon}`
+        : `q=${WEATHER_LOCATION}`;
+
+    fetch(`https://api.openweathermap.org/data/2.5/weather?${locationQuery}&units=metric&lang=de&appid=${WEATHER_API_KEY}`)
         .then(res => res.json())
         .then(data => {
             if (data.main) {
@@ -170,8 +235,9 @@ function updateDashboardInfo() {
     if (weatherEl) {
         weatherEl.innerHTML = `${weatherData.condition} ${weatherData.temperature} · ${weatherData.wind}`;
     }
-    const locationEl = document.getElementById('dashboardLocation');
-    if (locationEl) locationEl.textContent = '🏠 Grein, Österreich';
+    // Standort wird separat über detectLocation()/setLocationLabel() gepflegt -
+    // hier NICHT mehr fest überschreiben, sonst geht der automatisch ermittelte
+    // Standort bei jeder Wetter-Aktualisierung wieder verloren.
     updateDateTime();
 }
 
@@ -195,13 +261,14 @@ function showToast(message, type = 'info') {
 // INIT
 // ============================================================
 document.addEventListener('DOMContentLoaded', function() {
-    // Wetter abrufen
-    fetchWeather();
+    // Standort automatisch ermitteln (ruft anschließend auch fetchWeather() auf,
+    // damit das Wetter zum ermittelten Standort passt)
+    detectLocation();
     // Datum/Uhrzeit initial setzen
     updateDateTime();
     // Uhrzeit jede Sekunde aktualisieren
     setInterval(updateDateTime, 1000);
-    // Wetter alle 5 Minuten aktualisieren
+    // Wetter alle 5 Minuten aktualisieren (nutzt zuletzt ermittelten Standort)
     setInterval(fetchWeather, 300000);
 
     // Optional: Willkommens-Toast
@@ -212,6 +279,7 @@ document.addEventListener('DOMContentLoaded', function() {
 window.showToast = showToast;
 window.fetchWeather = fetchWeather;
 window.updateDateTime = updateDateTime;
+window.detectLocation = detectLocation;
 
 console.log('✅ Dashboard mit Wetter, Datum & Uhrzeit geladen.');
 </script>
