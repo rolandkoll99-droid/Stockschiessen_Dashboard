@@ -618,6 +618,61 @@ button:active {
     .team-score-big{ font-size:2.6rem; }
     .kehren-verlauf-grid{ grid-template-columns: repeat(auto-fill, minmax(64px, 1fr)); }
 }
+
+/* ===== RASPBERRY-PI-TOUCHDISPLAY 1024×600 (Kiosk, Querformat) =====
+   Eigene Anpassung für das fest verbaute 1024×600-Display: die Breite reicht für die
+   2-spaltige Ansicht locker, aber die Höhe ist sehr knapp. Ohne diese Regeln rutschen
+   der Kehren-Verlauf und die Aktions-Buttons (Werten/Neues Spiel/Löschen) unten aus
+   dem sichtbaren Bereich. Greift bei kurzen, breiten Bildschirmen (min-width sorgt
+   dafür, dass schmale Hochformat-Handys weiter die Regeln oben oberhalb bekommen). */
+@media (max-height: 650px) and (min-width: 700px){
+    .topbar{ padding:3px 12px; font-size:11px; }
+    .topbar a, .topbar button.linkish{ padding:3px 10px; font-size:11px; }
+
+    .team-name-row{ padding:3px 12px; gap:10px; }
+    .team-name-row label{ font-size:0.7rem; gap:4px; }
+    .team-name-row input{ padding:3px 8px; font-size:0.75rem; width:140px; }
+
+    .header{ padding:4px 12px; gap:6px; }
+    .header h1{ font-size:1rem; }
+    .header h1::before{ font-size:8px; }
+    .header-controls{ gap:6px; }
+    .header-controls select{ padding:5px 8px; font-size:0.75rem; }
+    .keyboard-status{ padding:4px 9px; font-size:0.7rem; }
+    .header-controls button{ padding:5px 9px; font-size:0.8rem; }
+
+    .layout{ padding:6px; }
+    .arena{ padding:8px 10px; gap:6px; border-radius:16px; }
+    .arena-top{ gap:6px; }
+    .arena-title{ font-size:1rem; }
+    .arena-hint{ font-size:0.65rem; padding:3px 10px; }
+    .pending-preview{ font-size:0.7rem; padding:3px 10px; }
+
+    .teams-row{ grid-template-columns: 1fr 1fr; gap:8px; }
+    .team-block{ padding:8px; gap:6px; border-radius:14px; border-bottom-width:5px; box-shadow:0 3px 0 rgba(0,0,0,.25); }
+    .team-label{ font-size:1.05rem; }
+    .team-label .key-hint{ font-size:0.65rem; }
+    .team-wins-big{ font-size:0.9rem; padding:4px 12px; }
+    .team-score-big{ font-size:2.1rem; padding:0; text-shadow:none; }
+    .team-column{ gap:6px; }
+    .keypad-panel{ padding:6px; border-radius:14px; }
+    .keypad-grid{ gap:5px; }
+    .keypad-btn{ font-size:1rem; padding:11px 0; border-radius:10px; }
+
+    .kehren-verlauf-panel{ padding:8px 10px; border-radius:14px; gap:4px; }
+    .kehren-verlauf-panel h4{ font-size:0.7rem; }
+    .kehren-verlauf-grid{ grid-template-columns: repeat(auto-fill, minmax(64px, 1fr)); gap:6px; }
+    .verlauf-item{ padding:5px 3px; border-radius:9px; }
+    .verlauf-item .v-number{ font-size:0.65rem; }
+    .verlauf-item .v-points{ font-size:0.9rem; margin-top:1px; }
+
+    .arena-footer{ gap:6px; }
+    .arena-footer button{ padding:7px 14px; font-size:0.75rem; }
+    .arena-footer .footer-right{ font-size:0.6rem; }
+
+    .training-ended-box{ padding:24px; }
+    .tie-break-box{ padding:22px; }
+}
 </style>
 </head>
 <body>
