@@ -172,39 +172,6 @@ button:active {
     padding:8px 10px;
 }
 
-/* ===== MANNSCHAFTSNAMEN (frei editierbar) ===== */
-.team-name-row{
-    display:flex;
-    gap:16px;
-    flex-wrap:wrap;
-    align-items:center;
-    padding:6px 14px;
-    background:var(--bg-panel);
-    border-bottom:1px solid var(--line);
-    flex-shrink:0;
-}
-.team-name-row label{
-    display:flex;
-    align-items:center;
-    gap:6px;
-    font-size:0.78rem;
-    font-weight:700;
-    color:var(--text-dim);
-}
-.team-name-row input{
-    background:#1c2734;
-    color:var(--text-main);
-    border:1px solid var(--line);
-    font-weight:700;
-    font-size:0.85rem;
-    padding:6px 10px;
-    width:180px;
-    max-width:40vw;
-}
-.team-name-row input:focus{
-    outline:2px solid var(--accent);
-}
-
 .keyboard-status {
     font-size: 0.8rem;
     padding: 6px 12px;
@@ -310,6 +277,12 @@ button:active {
     justify-content:center;
 }
 .roster-side-panel.e{ }
+.roster-side-title-row{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:6px;
+}
 .roster-side-title{
     text-align:center;
     font-size:0.75rem;
@@ -318,6 +291,15 @@ button:active {
     letter-spacing:0.05em;
     color:#8aa89a;
 }
+.roster-refresh-btn{
+    cursor:pointer;
+    font-size:0.85rem;
+    opacity:0.6;
+    padding:2px 4px;
+    border-radius:50%;
+    touch-action:manipulation;
+}
+.roster-refresh-btn:hover, .roster-refresh-btn:active{ opacity:1; background:rgba(255,255,255,0.1); }
 
 .team-block{
     background:#0f1f17;
@@ -763,8 +745,49 @@ button:active {
 .player-manager-import input[type="file"]{ font-size:0.82rem; padding:0; background:none; }
 .player-manager-close{ width:100%; padding:11px; border-radius:10px; background:var(--dark); color:white; font-weight:700; }
 
+.material-row{
+    display:grid; grid-template-columns:1fr 1fr 1fr; gap:6px; align-items:center;
+    padding:8px 2px; border-bottom:1px solid var(--border); font-size:0.85rem;
+}
+.material-row .material-name{ font-weight:700; }
+.material-row select{ padding:6px 6px; border:1px solid var(--border); border-radius:8px; font-size:0.8rem; color:#222; }
+.material-empty-hint{ font-size:0.85rem; color:#777; padding:10px 2px; }
+
 .gold{ background:var(--gold); color:black; }
 .gold:active{ background:#f0c860; }
+
+/* ===== UNENTSCHIEDEN – KEHRE ERWEITERN (NEU) ===== */
+.tie-break-overlay {
+    position: fixed; inset:0;
+    background: rgba(0,0,0,0.7);
+    display: none;
+    justify-content: center;
+    align-items: center;
+    z-index: 20001;
+    backdrop-filter: blur(5px);
+}
+.tie-break-overlay.show { display: flex; }
+.tie-break-box {
+    background: white; color:#222;
+    border-radius: 30px;
+    padding: 40px;
+    max-width: 460px;
+    width: 90%;
+    text-align: center;
+}
+.tie-break-icon{ font-size:3rem; margin-bottom:6px; }
+.tie-break-box h2{ font-size:1.6rem; margin-bottom:8px; color:var(--green); }
+.tie-break-score{
+    font-size:2.2rem; font-weight:900; color:var(--gold);
+    background:#102417; display:inline-block; padding:6px 24px;
+    border-radius:16px; margin:10px 0;
+}
+.tie-break-hint{ font-size:0.9rem; color:#666; margin:14px 0 20px; line-height:1.5; }
+.tie-break-buttons{ display:flex; gap:10px; justify-content:center; flex-wrap:wrap; }
+.tie-break-buttons button{
+    padding:12px 22px; font-size:1rem; background:var(--green); color:white;
+    border-radius:14px; border:none; cursor:pointer; font-weight:700;
+}
 
 /* ===== RESPONSIVE ===== */
 @media (max-width: 1300px){
@@ -786,7 +809,8 @@ button:active {
 <div class="topbar">
     <div class="topbar-links">
         <a href="dashboard.html">🏠 Dashboard</a>
-        <a href="03_Trainingsmodus_Pro_1.html">🥌 Trainingsmodus</a>
+        <a href="01_Trainingsmodus.html">🥌 Trainingsmodus</a>
+        <a href="08_Statistik.html">📊 Statistik</a>
         <button class="linkish" onclick="toggleFullscreen()">⛶ Vollbild</button>
     </div>
 </div>
@@ -823,11 +847,6 @@ button:active {
     </div>
 </div>
 
-<div class="team-name-row">
-    <label>⚪ <input type="text" id="teamNameInputW" maxlength="24" placeholder="Mannschaftsname W" oninput="updateTeamName('w', this.value)"></label>
-    <label>🔴 <input type="text" id="teamNameInputE" maxlength="24" placeholder="Mannschaftsname E" oninput="updateTeamName('e', this.value)"></label>
-</div>
-
 <div class="layout" id="layout"></div>
 
 <!-- Training beendet Overlay -->
@@ -839,6 +858,22 @@ button:active {
         <div class="score-summary" id="scoreSummary">Siege: 2 : 0</div>
         <div class="enter-hint">⌨️ Drücken Sie die Eingabetaste (Enter) für neues Training</div>
         <button onclick="startNewTraining()">Neues Training starten</button>
+    </div>
+</div>
+
+<!-- Unentschieden – automatische Kehren-Verlängerung (NEU): es gibt kein Unentschieden zum Werten,
+     es werden automatisch immer 2 weitere Kehren gespielt, bis ein Sieger feststeht
+     (wie im echten Eisstocksport). Kein Klick nötig - die Verlängerung startet sofort,
+     dieses Fenster ist nur eine Info und schließt sich von selbst. -->
+<div class="tie-break-overlay" id="tieBreakOverlay">
+    <div class="tie-break-box">
+        <div class="tie-break-icon">🤝</div>
+        <h2>Unentschieden!</h2>
+        <div class="tie-break-score" id="tieBreakScore">0 : 0</div>
+        <p class="tie-break-hint" id="tieBreakHint">Nach allen Kehren steht es unentschieden. Es werden automatisch 2 weitere Kehren gespielt.</p>
+        <div class="tie-break-buttons">
+            <button onclick="closeTieBreakDialog()">Verstanden</button>
+        </div>
     </div>
 </div>
 
@@ -862,6 +897,17 @@ button:active {
     </div>
 </div>
 
+<!-- Material erfassen (Platte/Stingel je Spieler) – Modal -->
+<div class="player-manager-overlay" id="materialModalOverlay" onclick="if(event.target===this){closeMaterialModal();}">
+    <div class="player-manager-box">
+        <h3>🏒 Material erfassen</h3>
+        <div class="hint">Welche Platte und welchen Stingel verwendet jeder Spieler in dieser Aufstellung? Wird zusammen mit dem Ergebnis in der Historie gespeichert und fließt in die Statistik ein.</div>
+        <div id="materialModalList"></div>
+        <button class="player-manager-close" style="margin-top:14px;background:var(--green);" onclick="saveMaterialModal()">✅ Speichern</button>
+        <button class="player-manager-close" style="margin-top:8px;" onclick="closeMaterialModal()">Ohne Speichern schließen</button>
+    </div>
+</div>
+
 <script src="auth.js"></script>
 <!-- Trainingsmodus Pro ist der Kiosk-Hauptbildschirm am Raspberry: bewusst OHNE Zugangssperre,
      damit jedes Vereinsmitglied sofort loslegen kann. requireGate()/requireLogin() werden hier
@@ -874,38 +920,47 @@ button:active {
 const PLAYER_STORAGE_KEY = 'esv_grein_spielerliste';
 const ROSTER_STORAGE_KEY = 'trainingsmodus_pro_aufstellung';
 const HISTORY_STORAGE_KEY = 'trainingsmodus_pro_historie';
-const TEAM_NAMES_STORAGE_KEY = 'esv_grein_team_namen';
-const DEFAULT_TEAM_NAMES = { w: 'Mannschaft W', e: 'Mannschaft E' };
+const PLATTEN_STORAGE_KEY = 'esv_grein_plattenmaterial';
+const STINGEL_STORAGE_KEY = 'esv_grein_stingel';
 const GAST_OPTION = '__GAST__';
 const MAX_ROSTER_SLOTS = 10;
 const PENDING_DIGIT_TIMEOUT = 650;
 
-// Fallback-Datensatz - identisch mit DEFAULT_PLAYERS in 02_Spielerverwaltung.html,
-// damit auf einem frischen Gerät/Browser überall dieselben Spieler erscheinen.
-const DEFAULT_PLAYERS = [
-    { id: 'SP-001', name: 'Andreas Hinterkörner', verein: 'ESV Grein' },
-    { id: 'SP-002', name: 'Peter Tischler', verein: 'ESV Grein' },
-    { id: 'SP-003', name: 'Ernst Aigen', verein: 'ESV Grein' },
-    { id: 'SP-004', name: 'Mario Leimhofer', verein: 'ESV Grein' },
-    { id: 'SP-005', name: 'Johann Kronsteiner', verein: 'ESV Grein' },
-    { id: 'SP-006', name: 'Roland Koll', verein: 'ESV Grein' },
-    { id: 'SP-007', name: 'Sabine Pils', verein: 'ESV Grein' },
-    { id: 'SP-008', name: 'Irmgard Kronsteiner', verein: 'ESV Grein' },
-    { id: 'SP-009', name: 'Willibald Scheiber', verein: 'ESV Grein' },
-    { id: 'SP-010', name: 'Martin Nothnagl', verein: 'ESV Grein' },
-    { id: 'SP-011', name: 'Rupert Lehbrunner', verein: 'ESV Grein' },
-    { id: 'SP-012', name: 'Sebastian Wimhofer', verein: 'ESV Grein' },
-    { id: 'SP-013', name: 'Sandra Wimhofer', verein: 'ESV Grein' },
-    { id: 'SP-014', name: 'Heidi Tischler', verein: 'ESV Grein' },
-    { id: 'SP-015', name: 'Pierre Sperl', verein: 'ESV Grein' },
-    { id: 'SP-016', name: 'Theresia Rathgeb', verein: 'ESV Grein' },
-    { id: 'SP-017', name: 'Maria Radinger', verein: 'ESV Grein' },
-    { id: 'SP-018', name: 'Franz Pichlmayr', verein: 'ESV Grein' },
-    { id: 'SP-019', name: 'Friedrich Nösterer', verein: 'ESV Grein' },
-    { id: 'SP-020', name: 'Herbert Hinterkörner', verein: 'ESV Grein' },
-    { id: 'SP-021', name: 'Stefan Aichinger', verein: 'ESV Grein' },
-    { id: 'SP-022', name: 'Walter Gstöttmaier', verein: 'ESV Grein' }
-];
+// ============================================================
+// MATERIAL-KATALOGE (aus 07_Spielermaterial – nur lesend)
+// ============================================================
+function loadMaterialCatalog(storageKey) {
+    try {
+        const data = localStorage.getItem(storageKey);
+        if (data) {
+            const parsed = JSON.parse(data);
+            if (Array.isArray(parsed)) {
+                return parsed.filter(item => item && item.bezeichnung);
+            }
+        }
+    } catch (e) {}
+    return [];
+}
+
+function loadPlattenListe() { return loadMaterialCatalog(PLATTEN_STORAGE_KEY); }
+function loadStingelListe() { return loadMaterialCatalog(STINGEL_STORAGE_KEY); }
+
+function genSessionId() {
+    return 'S-' + Date.now() + '-' + Math.random().toString(36).slice(2, 7);
+}
+
+// ============================================================
+// EXPORT-VERLAUF (gemeinsame Anzeige im Dashboard: "Zuletzt exportiert")
+// ============================================================
+const EXPORT_LOG_KEY = 'esv_grein_export_log';
+function logExport(modul, dateiname, typ) {
+    try {
+        const log = JSON.parse(localStorage.getItem(EXPORT_LOG_KEY)) || [];
+        log.push({ ts: Date.now(), modul, dateiname, typ });
+        while (log.length > 50) log.shift();
+        localStorage.setItem(EXPORT_LOG_KEY, JSON.stringify(log));
+    } catch (e) {}
+}
 
 function loadPlayerList() {
     try {
@@ -917,12 +972,14 @@ function loadPlayerList() {
             }
         }
     } catch (e) {}
-    // Noch keine zentrale Spielerliste vorhanden: Standard-Datensatz EINMALIG in
-    // denselben localStorage-Schlüssel schreiben wie 02_Spielerverwaltung, damit
-    // dieses Modul und die Spielerverwaltung sofort denselben Spielerstand zeigen,
-    // statt nur lokal-im-Speicher voneinander abzuweichen.
-    try { localStorage.setItem(PLAYER_STORAGE_KEY, JSON.stringify(DEFAULT_PLAYERS)); } catch (e) {}
-    return DEFAULT_PLAYERS.map(p => p.name);
+    return [
+        'Andreas Hinterkörner', 'Peter Tischler', 'Ernst Aigen', 'Mario Leimhofer',
+        'Johann Kronsteiner', 'Roland Koll', 'Sabine Pils', 'Irmgard Kronsteiner',
+        'Willibald Scheiber', 'Martin Nothnagl', 'Rupert Lehbrunner', 'Sebastian Wimhofer',
+        'Sandra Wimhofer', 'Heidi Tischler', 'Pierre Sperl', 'Theresia Rathgeb',
+        'Maria Radinger', 'Franz Pichlmayr', 'Friedrich Nösterer', 'Herbert Hinterkörner',
+        'Stefan Aichinger', 'Walter Gstöttmaier'
+    ];
 }
 
 function loadRoster() {
@@ -945,6 +1002,9 @@ function resetRoster() {
     state.roster = { W: [], E: [] };
     state.selectedPlayerName = { w: null, e: null };
     state.rosterGastInput = { W: null, E: null };
+    state.materialUsage = {};
+    state.materialCaptured = false;
+    state.sessionId = genSessionId();
     saveRoster();
 }
 
@@ -960,34 +1020,6 @@ function saveHistory() {
     try { localStorage.setItem(HISTORY_STORAGE_KEY, JSON.stringify(state.history)); } catch (e) {}
 }
 
-// Mannschaftsnamen sind frei editierbar (Textfeld oben) statt fest "Mannschaft W/E" -
-// werden gemeinsam mit 05_Trainingsmodus_Pro_Tablet.html gespeichert (gleicher Key).
-function loadTeamNames() {
-    try {
-        const data = localStorage.getItem(TEAM_NAMES_STORAGE_KEY);
-        if (data) {
-            const parsed = JSON.parse(data);
-            if (parsed && typeof parsed.w === 'string' && typeof parsed.e === 'string') {
-                return {
-                    w: parsed.w.trim() || DEFAULT_TEAM_NAMES.w,
-                    e: parsed.e.trim() || DEFAULT_TEAM_NAMES.e
-                };
-            }
-        }
-    } catch (e) {}
-    return { w: DEFAULT_TEAM_NAMES.w, e: DEFAULT_TEAM_NAMES.e };
-}
-
-function saveTeamNames() {
-    try { localStorage.setItem(TEAM_NAMES_STORAGE_KEY, JSON.stringify(state.teamNames)); } catch (e) {}
-}
-
-function updateTeamName(team, value) {
-    state.teamNames[team] = value;
-    saveTeamNames();
-    render();
-}
-
 function escapeHtml(str) {
     return String(str).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 }
@@ -995,6 +1027,9 @@ function escapeHtml(str) {
 // ===== STATE =====
 const state = {
     kehren: 6,
+    baseKehren: 6,                  // konfigurierte Kehren-Anzahl (Dropdown) - bei Unentschieden werden
+                                     // automatisch 2er-Blöcke an "kehren" angehängt, "baseKehren" bleibt die
+                                     // Grundeinstellung, auf die nach dem Spiel zurückgesetzt wird.
     winsToChampion: 2,
     playerCount: 4,
     arena: null,                    // wird gleich nach der Deklaration gesetzt (siehe unten)
@@ -1007,7 +1042,10 @@ const state = {
     playerNames: loadPlayerList(),
     roster: loadRoster(),
     history: loadHistory(),
-    teamNames: loadTeamNames()
+    materialUsage: {},           // { Spielername: { platte, stingel } } – gilt für die laufende Session
+    materialCaptured: false,     // true, sobald die Kurzabfrage für diese Session erledigt/übersprungen wurde
+    materialModalPendingScore: false, // true, während die Kurzabfrage VOR einer Wertung eingeblendet wird
+    sessionId: genSessionId()    // eindeutige ID je Trainings-Session, wandert mit in die Historie
 };
 // createArena() liest state.kehren, daher erst NACH der obigen Deklaration aufrufen
 // (sonst "Cannot access 'state' before initialization").
@@ -1268,6 +1306,13 @@ function evaluateGame() {
         return;
     }
 
+    // Kurzabfrage Material (Platte/Stingel) einmal pro Session, vor der ersten Wertung –
+    // nur wenn tatsächlich Spieler zugeordnet sind (sonst gäbe es nichts abzufragen).
+    if (!state.materialCaptured && (state.roster.W.length || state.roster.E.length)) {
+        openMaterialModal(true);
+        return;
+    }
+
     for (let i = 0; i < state.kehren; i++) {
         if (arena.pointsA[i] === null || arena.pointsB[i] === null) {
             toast('Bitte alle Kehren ausfüllen');
@@ -1278,21 +1323,64 @@ function evaluateGame() {
     const a = sum(arena.pointsA);
     const b = sum(arena.pointsB);
 
-    let gameResult = '';
-    if (a > b) {
-        arena.winsA++;
-        gameResult = `⚪ ${state.teamNames.w} gewinnt (${a}:${b})`;
-    } else if (b > a) {
-        arena.winsB++;
-        gameResult = `🔴 ${state.teamNames.e} gewinnt (${a}:${b})`;
-    } else {
-        gameResult = `Unentschieden (${a}:${b})`;
+    if (state.kehren === state.baseKehren) {
+        // Reguläres Spielende nach den eingestellten Kehren: Gesamtsumme entscheidet.
+        // Bei Gleichstand werden automatisch 2 weitere Kehren gespielt (siehe unten) -
+        // kein Unentschieden wird final gewertet.
+        if (a === b) {
+            extendKehren(a, b);
+            return;
+        }
+        const winnerCode = a > b ? 'W' : 'E';
+        toast(winnerCode === 'W' ? `⚪ Mannschaft W gewinnt (${a}:${b})` : `🔴 Mannschaft E gewinnt (${a}:${b})`);
+        if (winnerCode === 'W') arena.winsA++; else arena.winsB++;
+        finalizeGame(a, b, winnerCode);
+        return;
     }
-    toast(gameResult);
 
-    state.history.push({ w: a, e: b, ts: Date.now() });
+    // Verlängerung aktiv: der zuletzt gespielte 2er-Block aus zusätzlichen Kehren
+    // entscheidet per Punktesumme - genau wie beim Grundspiel, nur eben für je
+    // 2 zusätzliche Kehren. Steht auch dieser Block unentschieden, werden automatisch
+    // wieder 2 weitere Kehren gespielt, bis eine Mannschaft einen Block gewinnt.
+    const blockA = (arena.pointsA[state.kehren - 2] || 0) + (arena.pointsA[state.kehren - 1] || 0);
+    const blockB = (arena.pointsB[state.kehren - 2] || 0) + (arena.pointsB[state.kehren - 1] || 0);
+
+    if (blockA === blockB) {
+        extendKehren(a, b);
+        return;
+    }
+
+    const winnerCode = blockA > blockB ? 'W' : 'E';
+    toast(winnerCode === 'W'
+        ? `⚪ Mannschaft W gewinnt die Verlängerung (${a}:${b})`
+        : `🔴 Mannschaft E gewinnt die Verlängerung (${a}:${b})`);
+    if (winnerCode === 'W') arena.winsA++; else arena.winsB++;
+    finalizeGame(a, b, winnerCode);
+}
+
+// Abschluss eines entschiedenen Spiels - trägt in die Historie ein und bereitet
+// das nächste Spiel vor. Wird nur mit winnerCode 'W' oder 'E' aufgerufen, da ein
+// Unentschieden dank Kehren-Verlängerung nie final gewertet wird.
+function finalizeGame(a, b, winnerCode) {
+    const arena = state.arena;
+    const rosterW = state.roster.W.map(p => p.name);
+    const rosterE = state.roster.E.map(p => p.name);
+    const materialSnapshot = {};
+    [...rosterW, ...rosterE].forEach(name => {
+        if (state.materialUsage[name]) materialSnapshot[name] = state.materialUsage[name];
+    });
+
+    state.history.push({
+        w: a, e: b, ts: Date.now(),
+        date: new Date().toLocaleString('de-AT'),
+        winner: winnerCode,
+        rosterW, rosterE,
+        material: materialSnapshot,
+        sessionId: state.sessionId
+    });
     saveHistory();
 
+    state.kehren = state.baseKehren;
     arena.pointsA = Array(state.kehren).fill(null);
     arena.pointsB = Array(state.kehren).fill(null);
     arena.scorerA = Array(state.kehren).fill(null);
@@ -1311,19 +1399,49 @@ function evaluateGame() {
     }
 }
 
+// ===== UNENTSCHIEDEN: AUTOMATISCHE VERLÄNGERUNG UM JE 2 KEHREN (NEU) =====
+// Fügt automatisch 2 weitere Kehren hinzu (kein Klick nötig) und zeigt kurz eine
+// Info-Meldung, die sich von selbst schließt.
+function extendKehren(a, b) {
+    const arena = state.arena;
+    arena.pointsA.push(null, null);
+    arena.pointsB.push(null, null);
+    arena.scorerA.push(null, null);
+    arena.scorerB.push(null, null);
+    state.kehren += 2;
+    updateKeyboardStatus();
+    showTieBreakDialog(a, b);
+    render();
+}
+
+function showTieBreakDialog(a, b) {
+    document.getElementById('tieBreakScore').textContent = `${a} : ${b}`;
+    const hintEl = document.getElementById('tieBreakHint');
+    if (hintEl) {
+        hintEl.textContent = `Unentschieden (${a}:${b}) – es werden automatisch 2 weitere Kehren (Kehre ${state.kehren - 1} und ${state.kehren}) gespielt.`;
+    }
+    document.getElementById('tieBreakOverlay').classList.add('show');
+    clearTimeout(state._tieBreakTimeout);
+    state._tieBreakTimeout = setTimeout(closeTieBreakDialog, 3000);
+}
+
+function closeTieBreakDialog() {
+    document.getElementById('tieBreakOverlay').classList.remove('show');
+    clearTimeout(state._tieBreakTimeout);
+}
+
 // ===== TRAINING BEENDEN =====
 function endTraining(arena) {
     state.isTrainingEnded = true;
     updateKeyboardStatus();
 
-    const winnerKey = winnerTeamKey(arena);
-    const winner = winnerKey ? state.teamNames[winnerKey] : '';
+    const winner = winnerName(arena);
     const overlay = document.getElementById('trainingEndedOverlay');
     const winnerEl = document.getElementById('winnerName');
     const summaryEl = document.getElementById('scoreSummary');
 
     winnerEl.textContent = winner;
-    winnerEl.style.color = winnerKey === 'w' ? '#4caf50' : '#ff6b6b';
+    winnerEl.style.color = winner === 'Mannschaft W' ? '#4caf50' : '#ff6b6b';
     summaryEl.textContent = `Siege: ${arena.winsA} : ${arena.winsB}`;
 
     overlay.classList.add('show');
@@ -1343,6 +1461,7 @@ function startNewTraining() {
     overlay.classList.remove('show');
 
     state.isTrainingEnded = false;
+    state.kehren = state.baseKehren;
     state.arena = createArena();
     state.selectedTeam = null;
     state.targetKehre = null;
@@ -1420,8 +1539,8 @@ function renderArena(arena) {
 
         <div class="teams-row">
             ${renderRosterSidePanel('w', 'W')}
-            ${renderTeamBlock('w', state.teamNames.w, '⚪', scoreA, arena.winsA, wSelected)}
-            ${renderTeamBlock('e', state.teamNames.e, '🔴', scoreB, arena.winsB, eSelected)}
+            ${renderTeamBlock('w', 'Mannschaft W', '⚪', scoreA, arena.winsA, wSelected)}
+            ${renderTeamBlock('e', 'Mannschaft E', '🔴', scoreB, arena.winsB, eSelected)}
             ${renderRosterSidePanel('e', 'E')}
         </div>
 
@@ -1449,6 +1568,7 @@ function renderArena(arena) {
             <button class="gold" onclick="evaluateGame()">▶ Werten</button>
             <button onclick="resetGame()">🔁 Neues Spiel</button>
             <button onclick="openPlayerManager()" style="background:var(--dark);">⚙️ Spielerliste verwalten</button>
+            <button onclick="openMaterialModal(false)" style="background:var(--dark);">🏒 Material erfassen</button>
             <div class="footer-right">@Roland Koll Version 3.1 · Zuschauermonitor-Hauptlayout</div>
         </div>
     </div>
@@ -1469,7 +1589,10 @@ function renderTeamBlock(team, label, icon, score, wins, selectedClass) {
 function renderRosterSidePanel(team, teamKey) {
     return `
     <div class="roster-side-panel ${team === 'e' ? 'e' : 'w'}">
-        <div class="roster-side-title">${team === 'w' ? '⚪' : '🔴'} Aufstellung ${teamKey}</div>
+        <div class="roster-side-title-row">
+            <div class="roster-side-title">${team === 'w' ? '⚪' : '🔴'} Aufstellung ${teamKey}</div>
+            <span class="roster-refresh-btn" onclick="refreshRosterManual()" title="Spielerliste jetzt neu aus der Spielerverwaltung laden">🔄</span>
+        </div>
         <div class="roster-chips">
             ${renderRosterChips(team, teamKey)}
         </div>
@@ -1495,6 +1618,7 @@ function renderRosterChips(team, teamKey) {
 // die je nach Spieleranzahl das Layout nach unten verschoben haben).
 function renderRosterAddRow(teamKey) {
     const filled = state.roster[teamKey].length;
+    const alreadyIn = new Set(state.roster[teamKey].filter(p => !p.isGast).map(p => p.name));
     const gastActive = state.rosterGastInput[teamKey] !== null;
 
     if (filled >= MAX_ROSTER_SLOTS) {
@@ -1503,11 +1627,9 @@ function renderRosterAddRow(teamKey) {
 
     let addRowHtml = '';
     if (!gastActive) {
-        // Bewusst KEINE Filterung auf bereits aufgestellte Spieler mehr: ein Spieler
-        // darf mehrfach zur selben Aufstellung hinzugefügt werden (z.B. wenn er als
-        // Springer mehrere Positionen/Kehren übernimmt).
+        const available = state.playerNames.filter(n => !alreadyIn.has(n));
         let optionsHtml = `<option value="">+ Spieler hinzufügen…</option>`;
-        state.playerNames.forEach(n => {
+        available.forEach(n => {
             optionsHtml += `<option value="${escapeHtml(n)}">${escapeHtml(n)}</option>`;
         });
         optionsHtml += `<option value="${GAST_OPTION}">✏️ Anderer Name / Gastspieler</option>`;
@@ -1607,13 +1729,18 @@ function renderHistoryList() {
     // Absteigend anzeigen (neuestes Spiel oben), die Spiel-Nummer bleibt aber die
     // ursprüngliche chronologische Nummer (Spiel 1 = allererstes gewertetes Spiel).
     return state.history.map((g, i) => ({ g, num: i + 1 })).reverse().map(({ g, num }) => {
+        const tipParts = [];
+        if (g.date) tipParts.push(g.date);
+        if (g.rosterW && g.rosterW.length) tipParts.push('W: ' + g.rosterW.join(', '));
+        if (g.rosterE && g.rosterE.length) tipParts.push('E: ' + g.rosterE.join(', '));
+        const tip = tipParts.length ? ` title="${escapeHtml(tipParts.join(' · '))}"` : '';
         if (g.w === g.e) {
-            return `<div class="history-chip draw"><span class="g-num">Spiel ${num}</span>🤝 Unentschieden mit <span class="g-w">${g.w}</span>:<span class="g-e">${g.e}</span></div>`;
+            return `<div class="history-chip draw"${tip}><span class="g-num">Spiel ${num}</span>🤝 Unentschieden mit <span class="g-w">${g.w}</span>:<span class="g-e">${g.e}</span></div>`;
         }
         if (g.w > g.e) {
-            return `<div class="history-chip"><span class="g-num">Spiel ${num}</span>🏆 <span class="g-w">${escapeHtml(state.teamNames.w)}</span> gewinnt mit ${g.w}:${g.e}</div>`;
+            return `<div class="history-chip"${tip}><span class="g-num">Spiel ${num}</span>🏆 <span class="g-w">Mannschaft W</span> gewinnt mit ${g.w}:${g.e}</div>`;
         }
-        return `<div class="history-chip e-win"><span class="g-num">Spiel ${num}</span>🏆 <span class="g-e">${escapeHtml(state.teamNames.e)}</span> gewinnt mit ${g.e}:${g.w}</div>`;
+        return `<div class="history-chip e-win"${tip}><span class="g-num">Spiel ${num}</span>🏆 <span class="g-e">Mannschaft E</span> gewinnt mit ${g.e}:${g.w}</div>`;
     }).join('');
 }
 
@@ -1624,11 +1751,25 @@ function exportHistory() {
         return;
     }
 
-    const rows = [['Spiel', state.teamNames.w, state.teamNames.e, 'Sieger', 'Datum/Zeit']];
+    const materialText = (g, names) => {
+        if (!g.material || !names || !names.length) return '';
+        return names.map(n => {
+            const m = g.material[n];
+            if (!m) return '';
+            const parts = [];
+            if (m.platte) parts.push('Platte: ' + m.platte);
+            if (m.stingel) parts.push('Stingel: ' + m.stingel);
+            return parts.length ? `${n} (${parts.join(', ')})` : '';
+        }).filter(Boolean).join(' | ');
+    };
+
+    const rows = [['Spiel', 'Mannschaft W', 'Mannschaft E', 'Sieger', 'Datum/Zeit', 'Aufstellung W', 'Aufstellung E', 'Material W', 'Material E', 'Session']];
     state.history.forEach((g, i) => {
-        const sieger = g.w === g.e ? 'Unentschieden' : (g.w > g.e ? state.teamNames.w : state.teamNames.e);
-        const zeit = g.ts ? new Date(g.ts).toLocaleString('de-AT') : '';
-        rows.push([i + 1, g.w, g.e, sieger, zeit]);
+        const sieger = g.winner === 'W' ? 'Mannschaft W' : g.winner === 'E' ? 'Mannschaft E' : (g.w === g.e ? 'Unentschieden' : (g.w > g.e ? 'Mannschaft W' : 'Mannschaft E'));
+        const zeit = g.date || (g.ts ? new Date(g.ts).toLocaleString('de-AT') : '');
+        const rosterW = (g.rosterW || []).join(', ');
+        const rosterE = (g.rosterE || []).join(', ');
+        rows.push([i + 1, g.w, g.e, sieger, zeit, rosterW, rosterE, materialText(g, g.rosterW), materialText(g, g.rosterE), g.sessionId || '']);
     });
 
     const now = new Date();
@@ -1640,10 +1781,11 @@ function exportHistory() {
     if (typeof XLSX !== 'undefined') {
         try {
             const ws = XLSX.utils.aoa_to_sheet(rows);
-            ws['!cols'] = [{ wch: 8 }, { wch: 15 }, { wch: 15 }, { wch: 16 }, { wch: 20 }];
+            ws['!cols'] = [{ wch: 8 }, { wch: 15 }, { wch: 15 }, { wch: 16 }, { wch: 20 }, { wch: 30 }, { wch: 30 }, { wch: 40 }, { wch: 40 }, { wch: 20 }];
             const wb = XLSX.utils.book_new();
             XLSX.utils.book_append_sheet(wb, ws, 'Spiel-Historie');
             XLSX.writeFile(wb, filenameBase + '.xlsx');
+            logExport('Trainingsmodus Pro', filenameBase + '.xlsx', 'Excel');
             toast(`📊 Historie als Excel-Datei exportiert (${state.history.length} Spiele)`);
             return;
         } catch (e) {
@@ -1666,6 +1808,7 @@ function exportHistoryAsCsv(rows, filenameBase) {
     a.click();
     document.body.removeChild(a);
     setTimeout(() => URL.revokeObjectURL(url), 1000);
+    logExport('Trainingsmodus Pro', filenameBase + '.csv', 'CSV');
     toast(`📊 Historie als CSV exportiert (${state.history.length} Spiele) – öffnet direkt in Excel`);
 }
 
@@ -1689,6 +1832,74 @@ function closePlayerManager() {
     document.getElementById('playerManagerOverlay').classList.remove('show');
     state.playerNames = loadPlayerList();
     render();
+}
+
+// ===== MATERIAL ERFASSEN (Platte/Stingel je Spieler der aktuellen Aufstellung) =====
+function openMaterialModal(pendingScore) {
+    state.materialModalPendingScore = !!pendingScore;
+    renderMaterialModalList();
+    document.getElementById('materialModalOverlay').classList.add('show');
+}
+
+function renderMaterialModalList() {
+    const box = document.getElementById('materialModalList');
+    const players = [
+        ...state.roster.W.map(p => ({ name: p.name, team: 'W' })),
+        ...state.roster.E.map(p => ({ name: p.name, team: 'E' }))
+    ];
+    if (!players.length) {
+        box.innerHTML = '<div class="material-empty-hint">Keine Spieler in der Aufstellung – bitte zuerst Spieler den Mannschaften zuordnen.</div>';
+        box.dataset.playerNames = '[]';
+        return;
+    }
+    const platten = loadPlattenListe();
+    const stingel = loadStingelListe();
+
+    const optionsHtml = (liste, selected, autoAssigned) => {
+        const pick = selected || autoAssigned || '';
+        return '<option value="">–</option>' + liste.map(item =>
+            `<option value="${escapeHtml(item.bezeichnung)}" ${item.bezeichnung === pick ? 'selected' : ''}>${escapeHtml(item.bezeichnung)}</option>`
+        ).join('');
+    };
+
+    box.innerHTML =
+        '<div class="material-row" style="font-weight:700;border-bottom:2px solid var(--border);">' +
+            '<div>Spieler</div><div>Platte</div><div>Stingel</div>' +
+        '</div>' +
+        players.map((p, i) => {
+            const saved = state.materialUsage[p.name] || {};
+            const autoPlatte = (platten.find(item => item.spieler === p.name) || {}).bezeichnung;
+            const autoStingel = (stingel.find(item => item.spieler === p.name) || {}).bezeichnung;
+            return `<div class="material-row">
+                <div class="material-name">${escapeHtml(p.name)} <span style="color:${p.team === 'W' ? 'var(--green)' : 'var(--red)'};font-weight:400;font-size:0.75rem;">(${p.team === 'W' ? 'Mannschaft W' : 'Mannschaft E'})</span></div>
+                <select id="matPlatte-${i}">${optionsHtml(platten, saved.platte, autoPlatte)}</select>
+                <select id="matStingel-${i}">${optionsHtml(stingel, saved.stingel, autoStingel)}</select>
+            </div>`;
+        }).join('');
+    box.dataset.playerNames = JSON.stringify(players.map(p => p.name));
+}
+
+function saveMaterialModal() {
+    let names = [];
+    try { names = JSON.parse(document.getElementById('materialModalList').dataset.playerNames || '[]'); } catch (e) {}
+    names.forEach((name, i) => {
+        const platteSel = document.getElementById('matPlatte-' + i);
+        const stingelSel = document.getElementById('matStingel-' + i);
+        const entry = {};
+        if (platteSel && platteSel.value) entry.platte = platteSel.value;
+        if (stingelSel && stingelSel.value) entry.stingel = stingelSel.value;
+        if (entry.platte || entry.stingel) state.materialUsage[name] = entry;
+    });
+    toast('🏒 Material gespeichert');
+    closeMaterialModal();
+}
+
+function closeMaterialModal() {
+    document.getElementById('materialModalOverlay').classList.remove('show');
+    state.materialCaptured = true;
+    const pending = state.materialModalPendingScore;
+    state.materialModalPendingScore = false;
+    if (pending) evaluateGame();
 }
 
 function renderPlayerManagerList() {
@@ -1836,12 +2047,10 @@ function hasWinner(arena) {
     return arena.winsA >= state.winsToChampion || arena.winsB >= state.winsToChampion;
 }
 
-// Liefert den Team-Schlüssel ('w'/'e') des Siegers, NICHT den (frei editierbaren)
-// Anzeigenamen - so bleibt die Sieger-Erkennung stabil, egal wie die Mannschaft heißt.
-function winnerTeamKey(arena) {
-    if (arena.winsA >= state.winsToChampion) return 'w';
-    if (arena.winsB >= state.winsToChampion) return 'e';
-    return null;
+function winnerName(arena) {
+    if (arena.winsA >= state.winsToChampion) return 'Mannschaft W';
+    if (arena.winsB >= state.winsToChampion) return 'Mannschaft E';
+    return '';
 }
 
 function sum(arr) {
@@ -1877,6 +2086,7 @@ function resetGame() {
         return;
     }
     const arena = state.arena;
+    state.kehren = state.baseKehren;
     arena.pointsA = Array(state.kehren).fill(null);
     arena.pointsB = Array(state.kehren).fill(null);
     arena.scorerA = Array(state.kehren).fill(null);
@@ -1894,6 +2104,7 @@ function resetGame() {
 }
 
 function fullReset() {
+    state.kehren = state.baseKehren;
     state.arena = createArena();
     state.selectedTeam = null;
     state.targetKehre = null;
@@ -1947,10 +2158,11 @@ document.getElementById('playerCount').addEventListener('change', function(e) {
 document.getElementById('kehrenSelect').addEventListener('change', function(e) {
     if (state.isTrainingEnded) {
         toast('Training ist beendet! [Enter] für Neustart');
-        e.target.value = state.kehren;
+        e.target.value = state.baseKehren;
         return;
     }
     state.kehren = Number(e.target.value);
+    state.baseKehren = state.kehren;
     state.arena.pointsA = Array(state.kehren).fill(null);
     state.arena.pointsB = Array(state.kehren).fill(null);
     state.arena.scorerA = Array(state.kehren).fill(null);
@@ -2010,30 +2222,28 @@ function refreshPlayerListIfChanged() {
     toast('🔄 Spielerliste aktualisiert');
 }
 
-function refreshTeamNamesIfChanged() {
-    const fresh = loadTeamNames();
-    if (fresh.w === state.teamNames.w && fresh.e === state.teamNames.e) return;
-    state.teamNames = fresh;
-    syncTeamNameInputs();
-    render();
-}
-
-function syncTeamNameInputs() {
-    const wInput = document.getElementById('teamNameInputW');
-    const eInput = document.getElementById('teamNameInputE');
-    // Während der Nutzer gerade selbst tippt, nicht den Wert unter ihm austauschen.
-    if (wInput && document.activeElement !== wInput) wInput.value = state.teamNames.w;
-    if (eInput && document.activeElement !== eInput) eInput.value = state.teamNames.e;
-}
-
 window.addEventListener('storage', function(e) {
     if (e.key === PLAYER_STORAGE_KEY) refreshPlayerListIfChanged();
-    if (e.key === TEAM_NAMES_STORAGE_KEY) refreshTeamNamesIfChanged();
 });
 setInterval(refreshPlayerListIfChanged, 4000);
 
+// 3) Sobald man von einem anderen Tab/Fenster (z.B. Spielerverwaltung) wieder zu
+//    Trainingsmodus Pro zurückwechselt, sofort prüfen statt bis zu 4s zu warten.
+document.addEventListener('visibilitychange', function() {
+    if (!document.hidden) refreshPlayerListIfChanged();
+});
+window.addEventListener('focus', refreshPlayerListIfChanged);
+
+// 4) Manueller Button (🔄 neben "Aufstellung W/E"): garantiert sofortiges Nachladen,
+// unabhängig von Browser-Eigenheiten - falls die automatischen Wege einmal nicht greifen
+// (z.B. wenn der Tab schon vor dem Ersetzen der Datei geöffnet war).
+function refreshRosterManual() {
+    state.playerNames = loadPlayerList();
+    render();
+    toast('🔄 Spielerliste manuell aktualisiert');
+}
+
 // ===== INIT =====
-syncTeamNameInputs();
 setupKeyboard();
 render();
 </script>

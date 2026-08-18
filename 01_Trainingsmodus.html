@@ -694,6 +694,20 @@ button:active {
     </div>
 </div>
 
+<!-- Unentschieden – automatische Kehren-Verlängerung (NEU): es gibt kein Unentschieden zum Werten,
+     es werden automatisch immer 2 weitere Kehren gespielt, bis ein Sieger feststeht
+     (wie im echten Eisstocksport). Kein Klick nötig - die Verlängerung startet sofort,
+     dieses Fenster ist nur eine Info und schließt sich von selbst. -->
+<div class="kehren-dialog-overlay" id="tieBreakDialog">
+    <div class="kehren-dialog">
+        <h3>🤝 Unentschieden! <strong id="tieBreakScore">0 : 0</strong></h3>
+        <p id="tieBreakHint" style="margin-bottom:12px;color:#666;">Nach allen Kehren steht es unentschieden. Es werden automatisch 2 weitere Kehren gespielt.</p>
+        <div class="dialog-buttons">
+            <button class="btn-confirm" style="background:var(--green);width:100%;" onclick="closeTieBreakDialog()">Verstanden</button>
+        </div>
+    </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script src="auth.js"></script>
@@ -724,6 +738,9 @@ setInterval(updateModuleClock, 1000);
 // ============================================================
 const state = {
     kehren: 6,
+    baseKehren: 6,   // konfigurierte Kehren-Anzahl (Dropdown) - bei Unentschieden werden automatisch
+                     // 2er-Blöcke an "kehren" angehängt, "baseKehren" bleibt die Grundeinstellung, auf
+                     // die nach dem Spiel wieder zurückgesetzt wird.
     winsToChampion: 2,
     playerCount: 4,
     arena: createArena(1)
@@ -925,24 +942,89 @@ function evaluateGame() {
     const a = sum(arena.pointsA);
     const b = sum(arena.pointsB);
 
-    if (a > b) {
-        arena.winsA++;
-        toast(`⚪ Mannschaft W gewinnt (${a}:${b})`);
-    } else if (b > a) {
-        arena.winsB++;
-        toast(`🔴 Mannschaft E gewinnt (${a}:${b})`);
-    } else {
-        toast(`Unentschieden (${a}:${b})`);
+    if (state.kehren === state.baseKehren) {
+        // Reguläres Spielende nach den eingestellten Kehren: Gesamtsumme entscheidet.
+        // Bei Gleichstand werden automatisch 2 weitere Kehren gespielt (siehe unten) -
+        // kein Unentschieden wird final gewertet.
+        if (a === b) {
+            extendKehren(a, b);
+            return;
+        }
+
+        if (a > b) {
+            arena.winsA++;
+            toast(`⚪ Mannschaft W gewinnt (${a}:${b})`);
+        } else {
+            arena.winsB++;
+            toast(`🔴 Mannschaft E gewinnt (${a}:${b})`);
+        }
+        finalizeGame(arena);
+        return;
     }
 
+    // Verlängerung aktiv: der zuletzt gespielte 2er-Block aus zusätzlichen Kehren
+    // entscheidet per Punktesumme - genau wie beim Grundspiel, nur eben für je
+    // 2 zusätzliche Kehren. Steht auch dieser Block unentschieden, werden automatisch
+    // wieder 2 weitere Kehren gespielt, bis eine Mannschaft einen Block gewinnt.
+    const blockA = (arena.pointsA[state.kehren - 2] || 0) + (arena.pointsA[state.kehren - 1] || 0);
+    const blockB = (arena.pointsB[state.kehren - 2] || 0) + (arena.pointsB[state.kehren - 1] || 0);
+
+    if (blockA === blockB) {
+        extendKehren(a, b);
+        return;
+    }
+
+    if (blockA > blockB) {
+        arena.winsA++;
+        toast(`⚪ Mannschaft W gewinnt die Verlängerung (${a}:${b})`);
+    } else {
+        arena.winsB++;
+        toast(`🔴 Mannschaft E gewinnt die Verlängerung (${a}:${b})`);
+    }
+    finalizeGame(arena);
+}
+
+// ===== Spiel abschließen (Sieger steht fest) =====
+function finalizeGame(arena) {
+    state.kehren = state.baseKehren;
     arena.pointsA = Array(state.kehren).fill(null);
     arena.pointsB = Array(state.kehren).fill(null);
 
     if (hasWinner(arena)) {
-        toast(`🏆 ${winnerName(arena)} gewinnt das Training!`);
+        setTimeout(() => toast(`🏆 ${winnerName(arena)} gewinnt das Training!`), 800);
     }
 
     render();
+}
+
+// ===== UNENTSCHIEDEN: AUTOMATISCHE VERLÄNGERUNG UM JE 2 KEHREN (NEU) =====
+// Fügt automatisch 2 weitere Kehren hinzu (kein Klick nötig) und zeigt kurz eine
+// Info-Meldung, die sich von selbst schließt.
+function extendKehren(a, b) {
+    const arena = state.arena;
+    arena.pointsA.push(null, null);
+    arena.pointsB.push(null, null);
+    state.kehren += 2;
+    showTieBreakDialog(a, b);
+    render();
+}
+
+function showTieBreakDialog(a, b) {
+    document.getElementById('tieBreakScore').textContent = `${a} : ${b}`;
+    const hintEl = document.getElementById('tieBreakHint');
+    if (hintEl) {
+        hintEl.textContent = `Unentschieden (${a}:${b}) – es werden automatisch 2 weitere Kehren (Kehre ${state.kehren - 1} und ${state.kehren}) gespielt.`;
+    }
+    document.getElementById('tieBreakDialog').classList.add('show');
+    document.body.style.overflow = 'hidden';
+    clearTimeout(state._tieBreakTimeout);
+    state._tieBreakTimeout = setTimeout(closeTieBreakDialog, 3000);
+}
+
+function closeTieBreakDialog() {
+    document.getElementById('tieBreakDialog').classList.remove('show');
+    document.body.style.overflow = '';
+    clearTimeout(state._tieBreakTimeout);
 }
 
 function activeKehre(arena) {
@@ -970,6 +1052,7 @@ function sum(arr) {
 
 function resetGame() {
     const arena = state.arena;
+    state.kehren = state.baseKehren;
     arena.pointsA = Array(state.kehren).fill(null);
     arena.pointsB = Array(state.kehren).fill(null);
     arena.winsA = 0;
@@ -1041,6 +1124,7 @@ function confirmDeleteKehre() {
 }
 
 function fullReset() {
+    state.kehren = state.baseKehren;
     state.arena = createArena(1);
     render();
     toast('Kompletter Reset');
@@ -1063,6 +1147,7 @@ document.getElementById('playerCount').addEventListener('change', function(e) {
 
 document.getElementById('kehrenSelect').addEventListener('change', function(e) {
     state.kehren = Number(e.target.value);
+    state.baseKehren = state.kehren;
     state.arena.pointsA = Array(state.kehren).fill(null);
     state.arena.pointsB = Array(state.kehren).fill(null);
     render();
