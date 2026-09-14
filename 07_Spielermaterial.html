@@ -390,6 +390,39 @@
         .modal .modal-actions .btn-cancel:hover {
             background: rgba(255,255,255,0.15);
         }
+        .modal .modal-actions button:disabled { opacity: 0.4; cursor: not-allowed; }
+
+        /* Import-Vorschau: breiterer Modal-Dialog mit scrollbarer Tabelle,
+           bevor eine importierte Excel/CSV-Datei tatsächlich übernommen wird. */
+        .modal.modal-wide { max-width: 720px; }
+        .import-summary { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 14px; }
+        .import-summary .pill {
+            padding: 6px 14px; border-radius: 20px; font-size: 0.8rem; font-weight: 700;
+            background: rgba(255,255,255,0.06); border: 1px solid var(--line);
+        }
+        .import-summary .pill.new { color: #6fe08a; border-color: rgba(111,224,138,0.35); }
+        .import-summary .pill.update { color: var(--accent); border-color: rgba(51,197,255,0.35); }
+        .import-summary .pill.skip { color: var(--text-dim); }
+        .import-option {
+            display: flex; align-items: center; gap: 8px; font-size: 0.85rem;
+            color: var(--text-main); font-weight: 600; margin-bottom: 14px; cursor: pointer;
+        }
+        .import-option input[type="checkbox"] { width: auto; margin: 0; accent-color: var(--accent); }
+        .import-preview-table-wrap {
+            max-height: 320px; overflow-y: auto; border: 1px solid var(--line);
+            border-radius: 12px; margin-bottom: 16px;
+        }
+        .import-preview-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+        .import-preview-table th {
+            position: sticky; top: 0; background: var(--bg-panel); text-align: left;
+            padding: 8px 12px; border-bottom: 1px solid var(--line); color: var(--text-dim);
+            font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.04em;
+        }
+        .import-preview-table td { padding: 8px 12px; border-bottom: 1px solid rgba(255,255,255,0.05); }
+        .import-row-status { font-size: 0.72rem; font-weight: 700; padding: 2px 10px; border-radius: 12px; white-space: nowrap; }
+        .import-row-status.new { background: rgba(111,224,138,0.15); color: #6fe08a; }
+        .import-row-status.update { background: rgba(51,197,255,0.15); color: var(--accent); }
+        .import-row-status.skip { background: rgba(255,255,255,0.06); color: var(--text-dim); }
 
         /* Toast */
         .toast {
@@ -563,9 +596,38 @@
     </div>
 </div>
 
+<!-- Modal: Vorschau vor dem Excel/CSV-Import -->
+<div class="modal-overlay" id="importPreviewOverlay" onclick="if(event.target===this) closeImportPreview()">
+    <div class="modal modal-wide">
+        <h2>📋 Import-Vorschau</h2>
+        <div class="sub" id="importPreviewSub">Bitte prüfen, bevor die Datei übernommen wird.</div>
+
+        <div class="import-summary" id="importSummary"></div>
+
+        <label class="import-option">
+            <input type="checkbox" id="importUpdateExisting" onchange="renderImportPreviewTable()">
+            Bestehende Einträge bei Übereinstimmung mit den neuen Werten aktualisieren
+            (sonst werden Übereinstimmungen übersprungen)
+        </label>
+
+        <div class="import-preview-table-wrap">
+            <table class="import-preview-table">
+                <thead id="importPreviewHead"></thead>
+                <tbody id="importPreviewBody"></tbody>
+            </table>
+        </div>
+
+        <div class="modal-actions">
+            <button type="button" class="btn-cancel" onclick="closeImportPreview()">Abbrechen</button>
+            <button type="button" class="btn-primary" onclick="confirmImport()" id="importConfirmBtn">Import bestätigen</button>
+        </div>
+    </div>
+</div>
+
 <!-- Toast -->
 <div class="toast" id="toast"></div>
 
+<script src="sync-client.js"></script>
 <script>
 // ============================================================
 // KATALOG-DEFINITIONEN (Plattenmaterial & Stingel)
@@ -604,19 +666,17 @@ const XLSX_CDN_URL = 'https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.mi
 // ============================================================
 function getEntries(catKey) {
     const cat = CATALOGS[catKey];
-    try {
-        const data = localStorage.getItem(cat.key);
-        if (data) {
-            const parsed = JSON.parse(data);
-            if (Array.isArray(parsed)) return parsed;
-        }
-    } catch (e) {}
+    // Store.get() -> siehe sync-client.js: sofortiger lokaler Zugriff wie
+    // bisher, gleicht im Hintergrund aber zusätzlich mit dem lokalen Server
+    // ab, damit alle Geräte denselben Material-Katalog sehen.
+    const parsed = Store.get(cat.key, null);
+    if (Array.isArray(parsed)) return parsed;
     return [];
 }
 
 function saveEntries(catKey, entries) {
     const cat = CATALOGS[catKey];
-    localStorage.setItem(cat.key, JSON.stringify(entries));
+    Store.set(cat.key, entries);
     render(catKey);
 }
 
@@ -856,6 +916,14 @@ function findColumnValue(row, aliases) {
     return '';
 }
 
+// ============================================================
+// IMPORT MIT VORSCHAU: die Datei wird zuerst nur eingelesen und analysiert
+// (neu / bereits vorhanden / ungültig), bevor tatsächlich etwas gespeichert
+// wird. Erst nach Bestätigung im Vorschau-Dialog wird wirklich importiert.
+// ============================================================
+let pendingImportCatKey = null;
+let pendingImportRows = null;
+
 function importExcel(event, catKey) {
     const cat = CATALOGS[catKey];
     const file = event.target.files[0];
@@ -875,41 +943,26 @@ function importExcel(event, catKey) {
                     return;
                 }
 
-                let entries = getEntries(catKey);
-                let added = 0;
-                let skipped = 0;
+                const entries = getEntries(catKey);
                 const requiredField = cat.fields.find(f => f.required) || cat.fields[0];
 
-                jsonData.forEach(row => {
+                pendingImportCatKey = catKey;
+                pendingImportRows = jsonData.map(row => {
                     const values = {};
-                    // Erst das exakte Spalten-Label prüfen (passend zu unserem eigenen Excel-Export),
-                    // danach die kürzeren Aliase (für den Import fremder/handgemachter Excel-Dateien).
                     cat.fields.forEach(f => { values[f.key] = findColumnValue(row, [f.label, ...f.aliases]); });
                     const idFromFile = findColumnValue(row, ['id']);
 
                     if (!values[requiredField.key]) {
-                        skipped++;
-                        return;
+                        return { values, idFromFile, matchIndex: -1, valid: false };
                     }
 
-                    const exists = entries.some(entry =>
+                    const matchIndex = entries.findIndex(entry =>
                         (entry[requiredField.key] || '').toLowerCase() === values[requiredField.key].toLowerCase()
                     );
-
-                    if (!exists) {
-                        entries.push({ id: idFromFile || getNextId(catKey, entries), ...values });
-                        added++;
-                    } else {
-                        skipped++;
-                    }
+                    return { values, idFromFile, matchIndex, valid: true };
                 });
 
-                if (added > 0) {
-                    saveEntries(catKey, entries);
-                    showToast(`📥 ${added} ${cat.label}-Einträge importiert. ${skipped} übersprungen (bereits vorhanden).`, 'success');
-                } else {
-                    showToast(`ℹ️ Keine neuen Einträge gefunden. ${skipped} waren bereits vorhanden.`, 'info');
-                }
+                openImportPreview(file.name, catKey);
             } catch (err) {
                 showToast('Fehler beim Verarbeiten der Datei: ' + err.message, 'error');
             }
@@ -919,6 +972,81 @@ function importExcel(event, catKey) {
     };
     reader.readAsArrayBuffer(file);
     event.target.value = '';
+}
+
+function openImportPreview(fileName, catKey) {
+    const cat = CATALOGS[catKey];
+    document.getElementById('importPreviewSub').textContent =
+        `Datei "${fileName}" – ${pendingImportRows.length} Zeile(n) für "${cat.label}" gefunden.`;
+    document.getElementById('importUpdateExisting').checked = false;
+    document.getElementById('importPreviewHead').innerHTML =
+        '<tr><th>Status</th>' + cat.fields.map(f => `<th>${escapeHtml(f.label)}</th>`).join('') + '</tr>';
+    renderImportPreviewTable();
+    document.getElementById('importPreviewOverlay').classList.add('show');
+}
+
+function closeImportPreview() {
+    document.getElementById('importPreviewOverlay').classList.remove('show');
+    pendingImportCatKey = null;
+    pendingImportRows = null;
+}
+
+function renderImportPreviewTable() {
+    if (!pendingImportRows || !pendingImportCatKey) return;
+    const cat = CATALOGS[pendingImportCatKey];
+    const updateExisting = document.getElementById('importUpdateExisting').checked;
+
+    let countNew = 0, countUpdate = 0, countSkip = 0;
+    const rowsHtml = pendingImportRows.map(row => {
+        let status, label;
+        if (!row.valid) { status = 'skip'; label = 'Unvollständig'; countSkip++; }
+        else if (row.matchIndex === -1) { status = 'new'; label = 'Neu'; countNew++; }
+        else if (updateExisting) { status = 'update'; label = 'Wird aktualisiert'; countUpdate++; }
+        else { status = 'skip'; label = 'Bereits vorhanden'; countSkip++; }
+
+        const cells = cat.fields.map(f => `<td>${escapeHtml(row.values[f.key] || '–')}</td>`).join('');
+        return `<tr><td><span class="import-row-status ${status}">${label}</span></td>${cells}</tr>`;
+    }).join('');
+
+    document.getElementById('importPreviewBody').innerHTML = rowsHtml;
+    document.getElementById('importSummary').innerHTML = `
+        <span class="pill new">➕ ${countNew} neu</span>
+        <span class="pill update">🔁 ${countUpdate} aktualisiert</span>
+        <span class="pill skip">⏭️ ${countSkip} übersprungen</span>
+    `;
+    document.getElementById('importConfirmBtn').disabled = (countNew + countUpdate) === 0;
+}
+
+function confirmImport() {
+    if (!pendingImportRows || !pendingImportCatKey) return;
+    const catKey = pendingImportCatKey;
+    const cat = CATALOGS[catKey];
+    const updateExisting = document.getElementById('importUpdateExisting').checked;
+
+    let entries = getEntries(catKey);
+    let added = 0, updated = 0;
+
+    pendingImportRows.forEach(row => {
+        if (!row.valid) return;
+        if (row.matchIndex === -1) {
+            entries.push({ id: row.idFromFile || getNextId(catKey, entries), ...row.values });
+            added++;
+        } else if (updateExisting) {
+            const existing = entries[row.matchIndex];
+            Object.assign(existing, row.values);
+            if (row.idFromFile) existing.id = row.idFromFile;
+            updated++;
+        }
+    });
+
+    if (added > 0 || updated > 0) {
+        saveEntries(catKey, entries);
+        showToast(`📥 ${added} ${cat.label}-Einträge neu importiert, ${updated} aktualisiert.`, 'success');
+    } else {
+        showToast('ℹ️ Es wurde nichts importiert.', 'info');
+    }
+
+    closeImportPreview();
 }
 
 // ============================================================
@@ -942,6 +1070,9 @@ document.addEventListener('keydown', function (e) {
         if (document.getElementById('modalOverlay').classList.contains('show')) {
             closeModal();
         }
+        if (document.getElementById('importPreviewOverlay').classList.contains('show')) {
+            closeImportPreview();
+        }
     }
 });
 
@@ -949,6 +1080,12 @@ document.addEventListener('keydown', function (e) {
 // INIT
 // ============================================================
 renderAll();
+
+// Ändert ein anderes Gerät (Tablet/PC) über den lokalen Server einen
+// Katalog, aktualisiert sich diese Ansicht automatisch.
+Object.keys(CATALOGS).forEach(function (catKey) {
+    Store.onChange(CATALOGS[catKey].key, function () { render(catKey); });
+});
 
 // ============================================================
 // GLOBALER ZUGRIFF FÜR ANDERE MODULE (z.B. 04_Trainingsanalyse, 05_Trainingsmodus_Pro)

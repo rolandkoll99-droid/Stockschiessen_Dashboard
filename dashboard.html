@@ -10,14 +10,15 @@
 <div class="wrap">
   <div class="topbar">
     <p class="eyebrow" style="margin:0;">Übersicht</p>
-    <span style="display:flex; gap:10px; align-items:center;">
+    <span class="topbar-actions">
+      <span class="status-badge checking" id="serverStatusBadge" title="Zeigt, ob dieses Gerät gerade mit dem zentralen Server (Raspberry Pi/PC) verbunden ist.">● wird geprüft…</span>
       <a class="logout" href="08_Anleitung.html">📖 Anleitung</a>
       <a class="logout" href="#" onclick="logout(); return false;">Abmelden</a>
     </span>
   </div>
   <h1>Stocksport Trainings APP</h1>
   <p class="lead">Wähle ein Modul aus, um zu starten.</p>
-  <!-- ===== INFO-BANNER (NEU) ===== -->
+  <!-- ===== INFO-BANNER ===== -->
     <div class="info-banner" id="infoBanner">
         <div class="info-item">
             <span class="label">📍 Standort</span>
@@ -37,10 +38,11 @@
         </div>
     </div>
 
-    <!-- ===== MODUL-GRID ===== -->
-  <div class="grid">
+    <!-- ===== MODUL-GRID (nach Themen gruppiert für mehr Übersicht) ===== -->
+    <p class="section-title">🥌 Training</p>
+    <div class="grid">
     <a class="tile" href="05_Trainingsmodus_Pro.html">
-      <span class="num">01</span>
+      <span class="num">🕹️</span>
       <span>
         <div class="title">Trainingsmodus PRO</div>
         <div class="sub">Freies Training mit Zusatztastatur</div>
@@ -48,31 +50,35 @@
       <span class="arrow">&rarr;</span>
     </a>
     <a class="tile" href="05_Trainingsmodus_Pro_Tablet.html">
-      <span class="num">02</span>
+      <span class="num">📱</span>
       <span>
         <div class="title">Trainingsmodus</div>
         <div class="sub">Freies Training für Tablet und Touchscreen</div>
       </span>
       <span class="arrow">&rarr;</span>
     </a>
-    <a class="tile" href="04_Trainingsanalyse.html">
-      <span class="num">03</span>
-      <span>
-        <div class="title">Trainingsanalyse</div>
-        <div class="sub">Auswertung deiner Fortschritte</div>
-      </span>
-      <span class="arrow">&rarr;</span>
-    </a>
     <a class="tile" href="06_Einzeltraining.html">
-      <span class="num">04</span>
+      <span class="num">🎯</span>
       <span>
         <div class="title">Einzeltraining</div>
         <div class="sub">Mit Trainingsanleitung</div>
       </span>
       <span class="arrow">&rarr;</span>
     </a>
+    <a class="tile" href="04_Trainingsanalyse.html">
+      <span class="num">📊</span>
+      <span>
+        <div class="title">Trainingsanalyse</div>
+        <div class="sub">Auswertung deiner Fortschritte</div>
+      </span>
+      <span class="arrow">&rarr;</span>
+    </a>
+    </div>
+
+    <p class="section-title">🗂️ Verwaltung</p>
+    <div class="grid">
     <a class="tile" href="02_Spielerverwaltung.html">
-      <span class="num">05</span>
+      <span class="num">👥</span>
       <span>
         <div class="title">Spielerverwaltung</div>
         <div class="sub">Verwaltung der Spielerprofile</div>
@@ -80,28 +86,54 @@
       <span class="arrow">&rarr;</span>
     </a>
     <a class="tile" href="07_Spielermaterial.html">
-      <span class="num">06</span>
+      <span class="num">🧊</span>
       <span>
         <div class="title">Spielermaterial</div>
         <div class="sub">Plattenmaterial &amp; Stingel verwalten</div>
       </span>
       <span class="arrow">&rarr;</span>
     </a>
+    </div>
+
+    <p class="section-title">ℹ️ Hilfe</p>
+    <div class="grid">
     <a class="tile" href="08_Anleitung.html">
-      <span class="num">07</span>
+      <span class="num">📖</span>
       <span>
         <div class="title">Anleitung &amp; Hilfe</div>
         <div class="sub">Beschreibung und Bedienungsanleitung aller Module</div>
       </span>
       <span class="arrow">&rarr;</span>
     </a>
-  </div>
+    </div>
 </div>
 
 <div class="toast" id="toast"></div>
 
 <script src="auth.js"></script>
+<script src="sync-client.js"></script>
 <script>
+// ============================================================
+// SERVER-STATUS (zentraler Server auf Raspberry Pi/PC)
+// ============================================================
+function updateServerStatus() {
+    const badge = document.getElementById('serverStatusBadge');
+    if (!badge) return;
+    const available = Store.isServerAvailable();
+    if (available === null) {
+        badge.textContent = '● wird geprüft…';
+        badge.className = 'status-badge checking';
+    } else if (available) {
+        badge.textContent = '● Zentral verbunden';
+        badge.className = 'status-badge online';
+        badge.title = 'Alle Geräte im WLAN sehen denselben Datenstand (Server läuft auf Raspberry Pi/PC).';
+    } else {
+        badge.textContent = '● Nur dieses Gerät';
+        badge.className = 'status-badge offline';
+        badge.title = 'Kein lokaler Server erreichbar - es werden nur die Daten dieses Geräts angezeigt.';
+    }
+}
+
 // ============================================================
 // WETTER API
 // ============================================================
@@ -281,6 +313,13 @@ document.addEventListener('DOMContentLoaded', function() {
     setInterval(updateDateTime, 1000);
     // Wetter alle 5 Minuten aktualisieren (nutzt zuletzt ermittelten Standort)
     setInterval(fetchWeather, 300000);
+
+    // Server-Status (zentraler Server auf Raspberry Pi/PC) initial + laufend prüfen
+    updateServerStatus();
+    if (window.Store && typeof Store.init === 'function') {
+        Store.init().then(updateServerStatus);
+    }
+    setInterval(updateServerStatus, 4000);
 
     // Optional: Willkommens-Toast
     setTimeout(() => showToast('🏠 Willkommen beim Trainingsportal!', 'info'), 500);

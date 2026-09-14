@@ -610,6 +610,7 @@
 </div>
 
 <script src="auth.js"></script>
+<script src="sync-client.js"></script>
 <script>
     requireGate();
     requireLogin();
@@ -736,15 +737,12 @@
             trainingData[t.id] = arr;
             trainingTypen[t.id] = typArr;
             
-            // Lade gespeicherte Typen aus localStorage
-            const storedTypen = localStorage.getItem('boee_typen_' + t.id);
+            // Lade gespeicherte Typen (lokal + zentral über den lokalen Server, siehe sync-client.js)
+            const storedTypen = Store.get('boee_typen_' + t.id, null);
             if (storedTypen) {
-                try {
-                    const parsed = JSON.parse(storedTypen);
-                    Object.keys(parsed).forEach(key => {
-                        typArr[parseInt(key)] = parsed[key];
-                    });
-                } catch(e) {}
+                Object.keys(storedTypen).forEach(key => {
+                    typArr[parseInt(key)] = storedTypen[key];
+                });
             }
         });
 
@@ -864,7 +862,7 @@
         // ============================================
         function saveTypen(id) {
             const typen = trainingTypen[id];
-            localStorage.setItem('boee_typen_' + id, JSON.stringify(typen));
+            Store.set('boee_typen_' + id, typen);
         }
 
         // ============================================

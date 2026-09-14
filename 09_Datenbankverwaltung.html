@@ -238,7 +238,8 @@
     <div class="header">
         <h1>Datenbankverwaltung</h1>
         <p style="color: var(--text-dim); margin-top: 4px;">
-            Lokale IndexedDB-Datenbank – alle Daten bleiben auf diesem Gerät.
+            Zeigt den zentralen Datenstand vom lokalen Server (Raspberry Pi/PC) -
+            <span id="serverStatusText">wird geprüft…</span>
         </p>
     </div>
 
@@ -283,6 +284,7 @@
 
 <div class="toast" id="toast"></div>
 
+<script src="sync-client.js"></script>
 <script src="db_manager.js"></script>
 <script>
 // ============================================================
@@ -292,7 +294,7 @@
 // ============================================================
 // STATISTIKEN
 // ============================================================
-async function refreshStats() {
+async function refreshStats(silent) {
     try {
         const [spieler, trainings, platten, stingel, sessions] = await Promise.all([
             db.getSpieler(),
@@ -308,13 +310,12 @@ async function refreshStats() {
         document.getElementById('statStingel').textContent = stingel.length;
         document.getElementById('statSessions').textContent = sessions.length;
 
-        document.getElementById('dbStatus').textContent = '● Online';
-        document.getElementById('dbStatus').className = 'status-badge online';
-        showToast('📊 Statistiken aktualisiert', 'success');
+        updateServerStatus();
+        if (!silent) showToast('📊 Statistiken aktualisiert', 'success');
     } catch (error) {
         document.getElementById('dbStatus').textContent = '● Offline';
         document.getElementById('dbStatus').className = 'status-badge offline';
-        showToast('❌ Fehler beim Laden der Statistiken', 'error');
+        if (!silent) showToast('❌ Fehler beim Laden der Statistiken', 'error');
         console.error(error);
     }
 }
@@ -380,6 +381,9 @@ async function importDatabase(event) {
 async function backupToLocalStorage() {
     try {
         const data = await db.exportAllData();
+        // Bewusst NUR lokal (nicht über Store/den Server) - ein Backup soll
+        // unabhängig vom aktuellen zentralen Datenstand als Rückfallebene auf
+        // diesem einen Gerät liegen bleiben.
         localStorage.setItem('training_db_backup', JSON.stringify(data));
         showToast('💾 Backup im Browser gespeichert', 'success');
     } catch (error) {
@@ -466,10 +470,26 @@ function showToast(message, type = 'info') {
 // ============================================================
 // INIT
 // ============================================================
+function updateServerStatus() {
+    const available = Store.isServerAvailable();
+    const badge = document.getElementById('dbStatus');
+    const text = document.getElementById('serverStatusText');
+    if (available) {
+        badge.textContent = '● Server verbunden';
+        badge.className = 'status-badge online';
+        if (text) text.textContent = 'alle Geräte im WLAN sehen denselben Stand.';
+    } else {
+        badge.textContent = '● Nur dieses Gerät';
+        badge.className = 'status-badge offline';
+        if (text) text.textContent = 'kein lokaler Server erreichbar - es werden nur die Daten dieses Geräts angezeigt (server.py starten für den zentralen Modus).';
+    }
+}
+
 document.addEventListener('DOMContentLoaded', async function() {
     try {
         await db.init();
-        await refreshStats();
+        updateServerStatus();
+        await refreshStats(true);
         console.log('✅ Datenbankverwaltung geladen.');
     } catch (error) {
         console.error('Fehler beim Initialisieren:', error);
@@ -477,6 +497,11 @@ document.addEventListener('DOMContentLoaded', async function() {
         document.getElementById('dbStatus').className = 'status-badge offline';
         showToast('⚠️ Datenbank konnte nicht initialisiert werden', 'error');
     }
+
+    // Alle Geräte, die zentral speichern, lösen hier automatisch eine
+    // aktualisierte Statistik aus (z.B. neuer Spieler von einem Tablet).
+    ['esv_grein_spielerliste', 'esv_grein_plattenmaterial', 'esv_grein_stingel', 'trainingsmodus_pro_historie']
+        .forEach(function (key) { Store.onChange(key, function () { refreshStats(true); }); });
 });
 </script>
 

@@ -1,0 +1,110 @@
+/* ============================================================
+   theme.css - zentrales Design fuer alle Module des Trainingsportals
+   ============================================================
+   Wird von mehreren Modulen gemeinsam eingebunden (u.a.
+   05_Trainingsmodus_Pro.html, 05_Trainingsmodus_Pro_Tablet.html) und
+   liefert: Farbpalette, Schriftarten, Basis-Buttongroessen sowie die
+   gemeinsame Kopfzeile (.topbar / .club-brand).
+
+   Hinweis: Diese Datei wurde nachgebaut, weil im Projektordner kein
+   Original vorlag - Farben/Variablennamen sind 1:1 aus den Modulen
+   uebernommen (die sie bereits per var(--...) referenzieren), Logo/
+   Vereinsname in club.js sind bewusst neutral gehalten und lassen sich
+   dort mit wenigen Zeilen anpassen.
+   ============================================================ */
+
+:root{
+    --green:#1f5e3a;
+    --red:#b93a32;
+    --gold:#ffdf8c;
+    --dark:#102417;
+    --light:#eef5e9;
+    --border:#d7e4cf;
+
+    --bg-main:#0a0e14;
+    --bg-panel:#131b24;
+    --line:rgba(255,255,255,0.08);
+    --text-main:#eef2f6;
+    --text-dim:#8a97a6;
+    --accent:#33c5ff;
+    --accent-hover:#5fd4ff;
+    --font-display:"Space Grotesk","Inter",sans-serif;
+    --font-body:"Inter",Segoe UI,Arial,sans-serif;
+
+    --w-color:#4caf50;
+    --e-color:#ff6b6b;
+
+    /* Buttongroesse je Modul einstellbar (1 = Basisgroesse). Auf dem
+       Zuschauermonitor (Pro) bewusst etwas groesser fuer bessere Lesbarkeit
+       auf Distanz; bei Bedarf hier zentral je Modul anpassen. */
+    --btn-scale-pro: 1.05;
+}
+
+/* ===== GEMEINSAME KOPFZEILE (Start-Link, Spiel-Historie, Vollbild, Vereinslogo) ===== */
+.topbar{
+    position: sticky;
+    top: 0;
+    z-index: 501;
+    background:var(--bg-panel);
+    border-bottom:1px solid var(--line);
+    padding:6px 14px;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    flex-shrink:0;
+    font-size:13px;
+    gap:10px;
+    flex-wrap:wrap;
+}
+
+.topbar .topbar-links{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    flex-wrap:wrap;
+}
+
+.topbar a, .topbar button.linkish{
+    color:var(--text-dim);
+    text-decoration:none;
+    background:none;
+    border:1px solid var(--line);
+    padding:6px 12px;
+    border-radius:20px;
+    font-size:12.5px;
+    font-weight:600;
+    cursor:pointer;
+    font-family:inherit;
+}
+.topbar a:hover, .topbar button.linkish:hover{ color:var(--text-main); border-color:var(--text-dim); background:none; }
+
+.topbar .logout{
+    border:1px solid var(--line);
+    padding:6px 12px;
+    border-radius:20px;
+}
+.topbar .logout:hover{ border-color:var(--text-dim); }
+
+/* Vereinslogo/-name (Inhalt wird von club.js eingetragen) */
+.club-brand{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    flex-shrink:0;
+}
+.club-logo{
+    height:28px;
+    width:28px;
+    object-fit:contain;
+    border-radius:7px;
+    display:block;
+}
+.club-logo[src=""], .club-logo:not([src]){ display:none; }
+.club-name{
+    font-family:var(--font-display);
+    font-weight:700;
+    font-size:13.5px;
+    letter-spacing:0.02em;
+    color:var(--text-main);
+    white-space:nowrap;
+}

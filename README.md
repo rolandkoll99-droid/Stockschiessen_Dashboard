@@ -1,6 +1,10 @@
 # Trainingsportal
 
-Statische Website mit Passwortsperre, Login, Dashboard und 5 Trainingsmodulen.
+Website mit Passwortsperre, Login, Dashboard und mehreren Trainingsmodulen.
+Läuft über den mitgelieferten lokalen Server `server.py`, der neben den
+Seiten auch die Daten (Spieler, Material, Trainings-/Spielergebnisse)
+**zentral** speichert, sodass Pi und Tablets im selben WLAN denselben
+Datenstand sehen (siehe „Zentrale Datenablage" weiter unten).
 
 ## Design
 
@@ -21,14 +25,22 @@ Mannschaften, Blau für „Bahn 1") sind funktional und wurden nicht verändert.
 index.html                     Passwortschutz (Zugangscode-Eingabe)
 login.html                     Login (Benutzername + Passwort)
 dashboard.html                 Übersicht / Startseite nach dem Login
-01_Trainingsmodus.html         Modul 1: Freies Training ohne Zeitdruck
-05_Trainingsmodus_Pro.html     Modul 2: Freies Training mit Zusatztastatur
-04_Trainingsanalyse.html       Modul 3: Trainingsanalyse / Auswertung
-06_Einzeltraining.html         Modul 4: Einzeltraining mit Anleitung
-02_Spielerverwaltung.html      Modul 5: Verwaltung der Spielerprofile
+05_Trainingsmodus_Pro.html     Modul: Freies Training mit Zusatztastatur
+05_Trainingsmodus_Pro_Tablet.html  Modul: Freies Training für Tablet/Touchscreen (ohne Login)
+04_Trainingsanalyse.html       Modul: Trainingsanalyse / Auswertung
+06_Einzeltraining.html         Modul: Einzeltraining mit Anleitung
+02_Spielerverwaltung.html      Modul: Verwaltung der Spielerprofile
+07_Spielermaterial.html        Modul: Platten- & Stingel-Material verwalten
+09_Datenbankverwaltung.html    Modul: zentraler Datenstand – Export/Import/Reset
+08_Anleitung.html              Anleitung & Hilfe zu allen Modulen
 02_Spielerliste.xlsx           Beispiel-/Vorlagendatei für den Excel-Import
 style.css                      gemeinsames Design (Basistheme)
 auth.js                        zentrale, einfache Zugriffslogik (Passwort, Login, Logout)
+server.py                      lokaler Server (Python, ohne Zusatzinstallation) – liefert die
+                                Seiten aus UND speichert die Daten zentral (siehe unten)
+sync-client.js                 Client-Bibliothek ("Store"), die alle Module mit server.py
+                                synchronisiert – Ersatz für direkte localStorage-Aufrufe
+db_manager.js                  Datenzugriff für 09_Datenbankverwaltung.html
 Defensiv Basis.jpg             Situationsbilder für das Einzeltraining
 Defensiv Elite.jpg
 Offensiv Basic.jpg
@@ -87,6 +99,35 @@ Für echten Schutz gibt es zwei gängige Wege:
   privates Deployment über Vercel/Netlify), sodass nur eingeladene Personen
   überhaupt Zugriff auf den Code haben.
 
+## Zentrale Datenablage (Raspberry Pi / PC)
+
+Bisher speicherte jedes Gerät (Pi-Monitor, jedes Tablet) seine Daten nur im
+eigenen Browser (`localStorage`) – Spielerliste und Trainingsergebnisse
+waren dadurch auf jedem Gerät unterschiedlich. `server.py` löst das: er
+läuft als lokaler Webserver auf dem Pi (oder einem PC im selben Netzwerk)
+und bietet zusätzlich zur normalen Seitenauslieferung eine einfache
+Speicher-Schnittstelle (`/api/kv/...`) an, über die alle Module (via
+`sync-client.js`, global als `Store` verfügbar) automatisch im Hintergrund
+Daten abgleichen.
+
+- **Was wird zentral geteilt:** Spielerliste, Platten-/Stingel-Material,
+  Team-Namen/-Farben sowie alle Trainings- und Spielergebnisse (inkl.
+  Einzeltrainings-Historie).
+- **Wie läuft der Abgleich ab:** Jedes Gerät liest/schreibt weiterhin
+  sofort in seinen eigenen Browser-Speicher (schnell, funktioniert auch
+  offline), gleicht aber alle paar Sekunden im Hintergrund mit dem Server
+  ab. Ändert ein Gerät Daten, sehen andere Geräte die Änderung innerhalb
+  weniger Sekunden.
+- **Kein Server erreichbar?** Dann funktioniert jedes Gerät einfach mit
+  seinem zuletzt bekannten Stand weiter (wie bisher) und synchronisiert
+  automatisch wieder, sobald der Server wieder da ist. Es geht nichts
+  kaputt, wenn `server.py` mal nicht läuft.
+- **Status sehen:** Dashboard und Datenbankverwaltung (`09_`) zeigen oben
+  eine kleine Anzeige „● Zentral verbunden" bzw. „● Nur dieses Gerät".
+- **Starten:** `python3 server.py` (Standardport 8080, optional
+  `python3 server.py <Port>`) – siehe [`RASPBERRY_PI_SETUP.md`](RASPBERRY_PI_SETUP.md)
+  für den Dauerbetrieb als Systemdienst.
+
 ## Betrieb auf Raspberry Pi & Tablet (Kiosk-Modus)
 
 Für den Betrieb auf einem Raspberry Pi mit Touch-Monitor bzw. auf einem
@@ -115,12 +156,21 @@ Neue Module bindest du wie folgt ein:
 
 ## Zugriffsschutz an/aus
 
-In `auth.js` steuert die Konstante `PROTECTION_ENABLED`, ob Passwortschutz und
-Login aktiv sind:
-- `true` – Zugangscode (`index.html`) und Login (`login.html`) sind Pflicht.
-- `false` – alle Seiten sind frei zugänglich, `index.html` und `login.html`
-  leiten automatisch zum Dashboard weiter. Das ist der aktuelle Zustand
-  (praktisch für Entwicklung/Tests, siehe Sicherheitshinweis unten).
+`auth.js` stellt die Funktionen `requireGate()` (Zugangscode) und
+`requireLogin()` (Benutzername + Passwort) bereit. Jede Modulseite, die
+geschützt sein soll, ruft beide beim Laden auf und wird ohne gültige
+Anmeldung automatisch zu `index.html` umgeleitet – das betrifft aktuell
+`02_Spielerverwaltung.html`, `04_Trainingsanalyse.html`,
+`06_Einzeltraining.html` und `09_Datenbankverwaltung.html`.
+
+Die Tablet-/Kiosk-Trainingsansicht (`05_Trainingsmodus_Pro_Tablet.html`)
+ruft diese Funktionen **bewusst nicht** auf – sie ist als frei zugängliches
+Modul für Mitglieder am Trainingsplatz gedacht, ganz ohne An-/Abmelden.
+
+Um den Schutz für ein Modul zu entfernen, einfach den Aufruf von
+`requireGate(); requireLogin();` in der jeweiligen Datei löschen (wie im
+Tablet-Modul bereits gemacht). Einen globalen Ein/Aus-Schalter für alle
+Seiten gibt es nicht – jede Seite entscheidet für sich per Funktionsaufruf.
 
 ## Wetter-Anzeige im Dashboard
 

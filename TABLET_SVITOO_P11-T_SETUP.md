@@ -21,13 +21,16 @@ Einsatz sein sollen (z. B. Pi an der Bahn, Tablet beim Trainer).
 3. Auf dem Tablet **Chrome** öffnen und `http://192.168.1.42:8080/`
    aufrufen.
 
-> ⚠️ **Wichtig zur Datenhaltung:** Spielerliste und Trainingsergebnisse
-> werden im `localStorage` des jeweiligen **Browsers/Geräts** gespeichert,
-> nicht zentral auf dem Pi. Pi-Monitor und Tablet haben also – auch wenn
-> beide dieselbe URL aufrufen – jeweils **ihren eigenen Datenstand**. Für
-> einen Abgleich die Export-/Import-Funktion (CSV/Excel) in der
-> Spielerverwaltung nutzen, oder das Tablet nur als Zweitanzeige ohne
-> eigene Dateneingabe verwenden.
+> ✅ **Zentrale Daten:** Ruft das Tablet die Seite über die Pi-Adresse auf
+> (wie oben beschrieben), teilen sich Pi-Monitor und Tablet automatisch
+> denselben Datenstand – Spielerliste, Material und Trainings-/
+> Spielergebnisse werden zentral über `server.py` auf dem Pi abgeglichen
+> (siehe „Zentrale Datenablage" in der `README.md`). Ein manueller CSV-/
+> Excel-Abgleich ist für den Normalbetrieb nicht mehr nötig; ob das Tablet
+> gerade verbunden ist, zeigt die Status-Anzeige oben im Dashboard. Ist der
+> Pi kurz nicht erreichbar (WLAN-Aussetzer), arbeitet das Tablet einfach
+> mit seinem zuletzt bekannten Stand weiter und gleicht automatisch wieder
+> ab, sobald der Pi wieder da ist.
 
 ## Variante B: Tablet als eigenständiges Gerät (ohne Pi)
 
@@ -85,10 +88,13 @@ Zusatztastatur/Nummernblock** gebaut (Eingabetaste, `+`, `-`, `*`, `/`,
 angeschlossene Tastatur lassen sich diese Kurzbefehle **nicht** auslösen.
 Für dieses Modul auf dem Tablet entweder:
 - eine kleine **Bluetooth-Tastatur/Nummernblock** mit dem Tablet koppeln, oder
-- auf dem Tablet stattdessen die anderen, rein touch-bedienbaren Module
-  nutzen (01 Trainingsmodus, 02 Spielerverwaltung, 04 Trainingsanalyse,
-  06 Einzeltraining) und „Trainingsmodus Pro“ dem Pi mit angeschlossener
-  Tastatur vorbehalten.
+- auf dem Tablet stattdessen `05_Trainingsmodus_Pro_Tablet.html` nutzen –
+  das ist die eigens für Tablet/Touchscreen gebaute Variante desselben
+  Trainingsmodus (gleiche Funktionen, ganz ohne Tastatur bedienbar, und
+  ohne Login) – oder die übrigen touch-bedienbaren Module
+  (Spielerverwaltung, Spielermaterial, Trainingsanalyse, Einzeltraining)
+  und „Trainingsmodus PRO“ (`05_Trainingsmodus_Pro.html`) dem Pi mit
+  angeschlossener Tastatur vorbehalten.
 
 ## Browser-Empfehlung
 

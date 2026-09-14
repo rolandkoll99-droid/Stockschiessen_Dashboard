@@ -347,6 +347,7 @@
             touch-action: manipulation;
         }
         .modal .modal-actions button:active { transform: scale(0.95); }
+        .modal .modal-actions button:disabled { opacity: 0.4; cursor: not-allowed; }
 
         .modal .modal-actions .btn-cancel {
             background: rgba(255,255,255,0.08);
@@ -355,6 +356,82 @@
         .modal .modal-actions .btn-cancel:hover {
             background: rgba(255,255,255,0.15);
         }
+
+        /* Import-Vorschau: breiterer Modal-Dialog mit scrollbarer Tabelle,
+           bevor eine importierte Excel/CSV-Datei tatsächlich übernommen wird. */
+        .modal.modal-wide {
+            max-width: 720px;
+        }
+        .import-summary {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-bottom: 14px;
+        }
+        .import-summary .pill {
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 700;
+            background: rgba(255,255,255,0.06);
+            border: 1px solid var(--line);
+        }
+        .import-summary .pill.new { color: #6fe08a; border-color: rgba(111,224,138,0.35); }
+        .import-summary .pill.update { color: var(--accent); border-color: rgba(51,197,255,0.35); }
+        .import-summary .pill.skip { color: var(--text-dim); }
+        .import-option {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.85rem;
+            color: var(--text-main);
+            font-weight: 600;
+            margin-bottom: 14px;
+            cursor: pointer;
+        }
+        .import-option input[type="checkbox"] {
+            width: auto;
+            margin: 0;
+            accent-color: var(--accent);
+        }
+        .import-preview-table-wrap {
+            max-height: 320px;
+            overflow-y: auto;
+            border: 1px solid var(--line);
+            border-radius: 12px;
+            margin-bottom: 16px;
+        }
+        .import-preview-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.85rem;
+        }
+        .import-preview-table th {
+            position: sticky;
+            top: 0;
+            background: var(--bg-panel);
+            text-align: left;
+            padding: 8px 12px;
+            border-bottom: 1px solid var(--line);
+            color: var(--text-dim);
+            font-size: 0.72rem;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+        }
+        .import-preview-table td {
+            padding: 8px 12px;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+        .import-row-status {
+            font-size: 0.72rem;
+            font-weight: 700;
+            padding: 2px 10px;
+            border-radius: 12px;
+            white-space: nowrap;
+        }
+        .import-row-status.new { background: rgba(111,224,138,0.15); color: #6fe08a; }
+        .import-row-status.update { background: rgba(51,197,255,0.15); color: var(--accent); }
+        .import-row-status.skip { background: rgba(255,255,255,0.06); color: var(--text-dim); }
 
         /* Toast */
         .toast {
@@ -513,12 +590,44 @@
     </div>
 </div>
 
+<!-- Modal: Vorschau vor dem Excel/CSV-Import -->
+<div class="modal-overlay" id="importPreviewOverlay" onclick="if(event.target===this) closeImportPreview()">
+    <div class="modal modal-wide">
+        <h2>📋 Import-Vorschau</h2>
+        <div class="sub" id="importPreviewSub">Bitte prüfen, bevor die Datei übernommen wird.</div>
+
+        <div class="import-summary" id="importSummary"></div>
+
+        <label class="import-option">
+            <input type="checkbox" id="importUpdateExisting" onchange="renderImportPreviewTable()">
+            Bestehende Spieler bei Namens-Übereinstimmung mit den neuen Werten aktualisieren
+            (sonst werden Übereinstimmungen übersprungen)
+        </label>
+
+        <div class="import-preview-table-wrap">
+            <table class="import-preview-table">
+                <thead>
+                    <tr><th>Status</th><th>ID</th><th>Name</th><th>Verein</th></tr>
+                </thead>
+                <tbody id="importPreviewBody"></tbody>
+            </table>
+        </div>
+
+        <div class="modal-actions">
+            <button type="button" class="btn-cancel" onclick="closeImportPreview()">Abbrechen</button>
+            <button type="button" class="btn-primary" onclick="confirmImport()" id="importConfirmBtn">Import bestätigen</button>
+        </div>
+    </div>
+</div>
+
 <!-- Toast -->
 <div class="toast" id="toast"></div>
 
+<script src="sync-client.js"></script>
 <script>
 // ============================================================
-// SPIELERDATEN (lokal gespeichert)
+// SPIELERDATEN (lokal gespeichert + zentral über den lokalen Server, siehe
+// sync-client.js - Store.get()/Store.set() statt direktem localStorage)
 // ============================================================
 const STORAGE_KEY = 'esv_grein_spielerliste';
 
@@ -561,20 +670,19 @@ function generateId() {
 }
 
 function getPlayers() {
-    try {
-        const data = localStorage.getItem(STORAGE_KEY);
-        if (data) {
-            const parsed = JSON.parse(data);
-            if (Array.isArray(parsed) && parsed.length) return parsed;
-        }
-    } catch (e) {}
+    // Store.get() liest sofort aus dem Browser-Speicher (localStorage) -
+    // genauso schnell wie vorher. Store gleicht im Hintergrund zusätzlich
+    // mit dem lokalen Server ab (siehe sync-client.js), damit alle Geräte
+    // im Verein dieselbe Spielerliste sehen.
+    const parsed = Store.get(STORAGE_KEY, null);
+    if (Array.isArray(parsed) && parsed.length) return parsed;
     // Falls keine Daten: Standard speichern und zurückgeben
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(DEFAULT_PLAYERS));
+    Store.set(STORAGE_KEY, DEFAULT_PLAYERS);
     return [...DEFAULT_PLAYERS];
 }
 
 function savePlayers(players) {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(players));
+    Store.set(STORAGE_KEY, players);
     render();
 }
 
@@ -766,6 +874,15 @@ function exportExcel() {
     document.head.appendChild(script);
 }
 
+// ============================================================
+// IMPORT MIT VORSCHAU: die Datei wird zuerst nur eingelesen und analysiert
+// (neu / bereits vorhanden / ungültig), bevor tatsächlich etwas gespeichert
+// wird - das verhindert, dass eine falsche oder unerwartete Datei "blind"
+// die Spielerliste verändert. Erst nach Bestätigung im Vorschau-Dialog wird
+// wirklich importiert.
+// ============================================================
+let pendingImportRows = null; // von importExcel() befüllt, von confirmImport() verarbeitet
+
 function importExcel(event) {
     const file = event.target.files[0];
     if (!file) return;
@@ -773,10 +890,7 @@ function importExcel(event) {
     const reader = new FileReader();
     reader.onload = function(e) {
         try {
-            // SheetJS laden
-            const script = document.createElement('script');
-            script.src = 'https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js';
-            script.onload = function() {
+            loadXlsxLibP().then(function() {
                 try {
                     const data = new Uint8Array(e.target.result);
                     const workbook = XLSX.read(data, { type: 'array' });
@@ -788,60 +902,123 @@ function importExcel(event) {
                         return;
                     }
 
-                    let players = getPlayers();
-                    let added = 0;
-                    let skipped = 0;
+                    const players = getPlayers();
+                    pendingImportRows = jsonData.map(row => {
+                        const name = String(row['Name'] || row['name'] || row['Spieler'] || row['spieler'] || '').trim();
+                        const id = String(row['Spieler-ID'] || row['id'] || row['ID'] || '').trim();
+                        const verein = String(row['Verein'] || row['verein'] || '').trim();
 
-                    jsonData.forEach(row => {
-                        // Spalten erkennen (flexibel)
-                        const name = row['Name'] || row['name'] || row['Spieler'] || row['spieler'] || '';
-                        const id = row['Spieler-ID'] || row['id'] || row['ID'] || '';
-                        const verein = row['Verein'] || row['verein'] || '';
+                        if (!name) return { name, id, verein, matchIndex: -1, valid: false };
 
-                        if (!name.trim()) {
-                            skipped++;
-                            return;
-                        }
-
-                        // Prüfen ob bereits vorhanden (anhand Name + Verein)
-                        const exists = players.some(p => 
-                            p.name.toLowerCase() === name.trim().toLowerCase() &&
-                            (p.verein || '').toLowerCase() === (verein || '').toLowerCase()
+                        const matchIndex = players.findIndex(p =>
+                            p.name.toLowerCase() === name.toLowerCase() &&
+                            (p.verein || '').toLowerCase() === verein.toLowerCase()
                         );
-
-                        if (!exists) {
-                            const newId = id.trim() || getNextId(players);
-                            players.push({
-                                id: newId,
-                                name: name.trim(),
-                                verein: verein.trim() || ''
-                            });
-                            added++;
-                        } else {
-                            skipped++;
-                        }
+                        return { name, id, verein, matchIndex, valid: true };
                     });
 
-                    if (added > 0) {
-                        savePlayers(players);
-                        showToast(`📥 ${added} Spieler importiert. ${skipped} übersprungen (bereits vorhanden).`, 'success');
-                    } else {
-                        showToast(`ℹ️ Keine neuen Spieler gefunden. ${skipped} Einträge waren bereits vorhanden.`, 'info');
-                    }
+                    openImportPreview(file.name);
                 } catch (err) {
                     showToast('Fehler beim Verarbeiten der Datei: ' + err.message, 'error');
                 }
-            };
-            script.onerror = function() {
+            }, function() {
                 showToast('Fehler beim Laden der Excel-Bibliothek. Bitte Internetverbindung prüfen.', 'error');
-            };
-            document.head.appendChild(script);
+            });
         } catch (err) {
             showToast('Fehler beim Lesen der Datei: ' + err.message, 'error');
         }
     };
     reader.readAsArrayBuffer(file);
     event.target.value = ''; // Reset
+}
+
+function loadXlsxLibP() {
+    return new Promise(function(resolve, reject) {
+        if (typeof XLSX !== 'undefined') { resolve(); return; }
+        const script = document.createElement('script');
+        script.src = 'https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js';
+        script.onload = resolve;
+        script.onerror = reject;
+        document.head.appendChild(script);
+    });
+}
+
+function openImportPreview(fileName) {
+    document.getElementById('importPreviewSub').textContent =
+        `Datei "${fileName}" – ${pendingImportRows.length} Zeile(n) gefunden.`;
+    document.getElementById('importUpdateExisting').checked = false;
+    renderImportPreviewTable();
+    document.getElementById('importPreviewOverlay').classList.add('show');
+}
+
+function closeImportPreview() {
+    document.getElementById('importPreviewOverlay').classList.remove('show');
+    pendingImportRows = null;
+}
+
+function renderImportPreviewTable() {
+    if (!pendingImportRows) return;
+    const updateExisting = document.getElementById('importUpdateExisting').checked;
+
+    let countNew = 0, countUpdate = 0, countSkip = 0;
+    const rowsHtml = pendingImportRows.map(row => {
+        let status, label;
+        if (!row.valid) { status = 'skip'; label = 'Ohne Namen'; countSkip++; }
+        else if (row.matchIndex === -1) { status = 'new'; label = 'Neu'; countNew++; }
+        else if (updateExisting) { status = 'update'; label = 'Wird aktualisiert'; countUpdate++; }
+        else { status = 'skip'; label = 'Bereits vorhanden'; countSkip++; }
+
+        return `
+            <tr>
+                <td><span class="import-row-status ${status}">${label}</span></td>
+                <td>${escapeHtml(row.id || '–')}</td>
+                <td>${escapeHtml(row.name || '–')}</td>
+                <td>${escapeHtml(row.verein || '–')}</td>
+            </tr>`;
+    }).join('');
+
+    document.getElementById('importPreviewBody').innerHTML = rowsHtml;
+    document.getElementById('importSummary').innerHTML = `
+        <span class="pill new">➕ ${countNew} neu</span>
+        <span class="pill update">🔁 ${countUpdate} aktualisiert</span>
+        <span class="pill skip">⏭️ ${countSkip} übersprungen</span>
+    `;
+    document.getElementById('importConfirmBtn').disabled = (countNew + countUpdate) === 0;
+}
+
+function confirmImport() {
+    if (!pendingImportRows) return;
+    const updateExisting = document.getElementById('importUpdateExisting').checked;
+
+    let players = getPlayers();
+    let added = 0, updated = 0;
+
+    pendingImportRows.forEach(row => {
+        if (!row.valid) return;
+        if (row.matchIndex === -1) {
+            players.push({
+                id: row.id || getNextId(players),
+                name: row.name,
+                verein: row.verein || ''
+            });
+            added++;
+        } else if (updateExisting) {
+            const existing = players[row.matchIndex];
+            existing.name = row.name;
+            existing.verein = row.verein || '';
+            if (row.id) existing.id = row.id;
+            updated++;
+        }
+    });
+
+    if (added > 0 || updated > 0) {
+        savePlayers(players);
+        showToast(`📥 ${added} neu importiert, ${updated} aktualisiert.`, 'success');
+    } else {
+        showToast('ℹ️ Es wurde nichts importiert.', 'info');
+    }
+
+    closeImportPreview();
 }
 
 // ============================================================
@@ -861,6 +1038,11 @@ function showToast(message, type) {
 // INIT
 // ============================================================
 render();
+
+// Wird ein anderes Gerät (Tablet/PC) über den lokalen Server einen Spieler
+// hinzufügen/ändern/löschen, aktualisiert sich diese Ansicht automatisch -
+// ohne dass die Seite neu geladen werden muss.
+Store.onChange(STORAGE_KEY, function () { render(); });
 
 // ============================================================
 // GLOBALER ZUGRIFF FÜR ANDERE MODULE
@@ -889,6 +1071,9 @@ document.addEventListener('keydown', function(e) {
     if (e.key === 'Escape') {
         if (document.getElementById('modalOverlay').classList.contains('show')) {
             closeModal();
+        }
+        if (document.getElementById('importPreviewOverlay').classList.contains('show')) {
+            closeImportPreview();
         }
     }
 });

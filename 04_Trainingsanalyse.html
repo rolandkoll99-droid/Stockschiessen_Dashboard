@@ -1117,6 +1117,7 @@
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js">
 </script>
 <script src="auth.js"></script>
+<script src="sync-client.js"></script>
 <script>
 requireGate();
 requireLogin();
@@ -1126,15 +1127,10 @@ requireLogin();
 const PLAYER_STORAGE_KEY = 'esv_grein_spielerliste';
 
 function loadCentralPlayerList() {
-    try {
-        const data = localStorage.getItem(PLAYER_STORAGE_KEY);
-        if (data) {
-            const parsed = JSON.parse(data);
-            if (Array.isArray(parsed) && parsed.length) {
-                return parsed;
-            }
-        }
-    } catch (e) {}
+    const parsed = Store.get(PLAYER_STORAGE_KEY, null);
+    if (Array.isArray(parsed) && parsed.length) {
+        return parsed;
+    }
     // Noch keine zentrale Spielerliste vorhanden: Standard-Datensatz EINMALIG
     // speichern, damit dieses Modul und 02_Spielerverwaltung.html sofort densel-
     // ben Spielerstand zeigen (identisch mit DEFAULT_PLAYERS dort).
@@ -1162,7 +1158,7 @@ function loadCentralPlayerList() {
         { id: 'SP-021', name: 'Stefan Aichinger', verein: 'ESV Grein' },
         { id: 'SP-022', name: 'Walter Gstöttmaier', verein: 'ESV Grein' }
     ];
-    try { localStorage.setItem(PLAYER_STORAGE_KEY, JSON.stringify(defaults)); } catch (e) {}
+    Store.set(PLAYER_STORAGE_KEY, defaults);
     return defaults;
 }
 
@@ -1428,6 +1424,14 @@ function refreshPlayerList() {
     showToast('🔄 Spielerliste aktualisiert (' + count + ' Spieler)', 'success');
 }
 
+// Ändert ein anderes Gerät (Tablet/PC) über den lokalen Server die
+// Spielerliste, aktualisiert sich die Auswahl hier automatisch (still, ohne
+// Toast-Meldung - die ist nur für den manuellen Aktualisieren-Button).
+Store.onChange(PLAYER_STORAGE_KEY, function () {
+    centralPlayers = loadCentralPlayerList();
+    renderCentralPlayerList();
+});
+
 function openPlayerManager() {
     window.open('02_Spielerverwaltung.html', '_blank');
     showToast('📋 Spielerverwaltung geöffnet. Änderungen werden hier automatisch übernommen.', 'info');
@@ -1583,20 +1587,15 @@ function updatePlatteSelects() {
 }
 
 function savePlatesToLocal() {
-    localStorage.setItem('customPlates', JSON.stringify(plateOptions));
+    Store.set('customPlates', plateOptions);
 }
 
 function loadPlatesFromLocal() {
-    const saved = localStorage.getItem('customPlates');
-    if (saved) {
-        try {
-            const plates = JSON.parse(saved);
-            if (plates.length > 0) {
-                plateOptions = plates;
-                updatePlatteSelects();
-                return true;
-            }
-        } catch (e) {}
+    const plates = Store.get('customPlates', null);
+    if (Array.isArray(plates) && plates.length > 0) {
+        plateOptions = plates;
+        updatePlatteSelects();
+        return true;
     }
     plateOptions = [
         'Type 16/39/41/Glatt',
@@ -1611,20 +1610,15 @@ function loadPlatesFromLocal() {
 }
 
 function saveSticksToLocal() {
-    localStorage.setItem('customSticks', JSON.stringify(stickOptions));
+    Store.set('customSticks', stickOptions);
 }
 
 function loadSticksFromLocal() {
-    const saved = localStorage.getItem('customSticks');
-    if (saved) {
-        try {
-            const sticks = JSON.parse(saved);
-            if (sticks.length > 0) {
-                stickOptions = sticks;
-                updateStickSelects();
-                return true;
-            }
-        } catch (e) {}
+    const sticks = Store.get('customSticks', null);
+    if (Array.isArray(sticks) && sticks.length > 0) {
+        stickOptions = sticks;
+        updateStickSelects();
+        return true;
     }
     stickOptions = ['20/A', '21/A', '22/A', '23/A', '20/B', '21/B', '22/B', '23/B', '24/A', '24/B'];
     updateStickSelects();
@@ -2881,7 +2875,10 @@ function saveToLocalStorageAuto() {
 
         if (trainingData.playerId) {
             const key = `training_${trainingData.playerId}_${trainingData.datum}`;
-            localStorage.setItem(key, JSON.stringify(trainingData));
+            // Store.set() speichert sofort lokal (wie bisher) UND zentral über
+            // den lokalen Server, damit dieses Einzeltraining auch von anderen
+            // Geräten aus sichtbar ist (z.B. in db_manager.js/09_Datenbankverwaltung).
+            Store.set(key, trainingData);
             saveTrainingToDB(trainingData).catch(err => console.error('IndexedDB Fehler:', err));
         }
 
@@ -3184,10 +3181,9 @@ window.addEventListener('load', async function() {
     // Gespeichertes Training laden
     const playerId = playerIdInput.value.trim();
     if (playerId) {
-        const saved = localStorage.getItem(`training_${playerId}_${trainingData.datum}`);
-        if (saved) {
+        const data = Store.get(`training_${playerId}_${trainingData.datum}`, null);
+        if (data) {
             try {
-                const data = JSON.parse(saved);
                 trainingData = data;
                 playerNameInput.value = data.playerName || '';
                 sessionDateInput.value = data.datum || '';
